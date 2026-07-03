@@ -1,5 +1,5 @@
 import { type FormEvent, useState } from "react";
-import { Navigate } from "react-router-dom";
+import { Link, Navigate } from "react-router-dom";
 import { Loader2, LogIn, Sparkles } from "lucide-react";
 import { useAuth } from "../auth/AuthContext";
 import { IS_DEMO_MODE } from "../lib/dataSource";
@@ -37,7 +37,7 @@ export default function Login() {
     <div className="flex min-h-screen items-center justify-center bg-cream-100 px-4">
       <div className="w-full max-w-md rounded-2xl border border-[var(--border-subtle)] bg-white p-8 shadow-card">
         <div className="mb-7 flex flex-col items-center text-center">
-          <img src={logo} alt="Azahar Coffee Company" className="mb-4 h-16 w-16 rounded-full object-cover ring-1 ring-cream-200" />
+          <img src={logo} alt="Azahar Coffee Company" className="mb-4 h-14 w-auto object-contain" />
           <h1 className="font-heading text-xl font-bold text-brand-900">Portal Azahar</h1>
           <p className="mt-1 text-sm text-brand-600">Autoservicio de talento humano para el equipo Azahar</p>
         </div>
@@ -71,6 +71,13 @@ export default function Login() {
             Ingresar
           </Button>
         </form>
+
+        <p className="mt-5 text-center text-sm text-brand-600">
+          ¿No tienes cuenta?{" "}
+          <Link to="/registro" className="font-semibold text-brand-800 hover:underline">
+            Regístrate
+          </Link>
+        </p>
 
         {IS_DEMO_MODE && (
           <>

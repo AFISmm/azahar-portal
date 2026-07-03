@@ -19,6 +19,7 @@
 
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { createClient } from "@supabase/supabase-js";
+import { crearEmpleadoYUsuario } from "./_lib/crearEmpleado";
 
 interface EmpleadoCrearPayload {
   nombre: string;
@@ -98,47 +99,32 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   const payload = body as EmpleadoCrearPayload;
 
-  // 3. Crear el usuario de autenticación con una contraseña temporal.
+  // 3. Crear el usuario de autenticación (con contraseña temporal) y su fila
+  //    en `empleados`, delegando la lógica compartida a api/_lib/crearEmpleado.ts.
   const passwordTemporal = payload.passwordTemporal || generarPasswordTemporal();
-  const { data: nuevoUsuario, error: errorCrearUsuario } = await supabaseAdmin.auth.admin.createUser({
-    email: payload.correo,
-    password: passwordTemporal,
-    email_confirm: true,
-  });
 
-  if (errorCrearUsuario || !nuevoUsuario.user) {
-    return res.status(400).json({ error: errorCrearUsuario?.message ?? "No se pudo crear el usuario de autenticación." });
-  }
-
-  // 4. Insertar la fila en `empleados`, enlazada al usuario recién creado.
-  const { data: filaEmpleado, error: errorInsertar } = await supabaseAdmin
-    .from("empleados")
-    .insert({
-      auth_user_id: nuevoUsuario.user.id,
+  try {
+    const filaEmpleado = await crearEmpleadoYUsuario(supabaseAdmin, {
       nombre: payload.nombre,
       correo: payload.correo,
       cargo: payload.cargo,
       departamento: payload.departamento,
-      tipo_contrato: payload.tipoContrato,
-      fecha_ingreso: payload.fechaIngreso,
-      dias_vacaciones_disponibles: payload.diasVacacionesDisponibles,
+      tipoContrato: payload.tipoContrato,
+      fechaIngreso: payload.fechaIngreso,
+      diasVacacionesDisponibles: payload.diasVacacionesDisponibles,
       rol: payload.rol,
       salario: payload.salario ?? null,
       telefono: payload.telefono ?? null,
-    })
-    .select("*")
-    .single();
+      password: passwordTemporal,
+    });
 
-  if (errorInsertar) {
-    // Si falla la inserción, intentamos revertir la creación del usuario de auth
-    // para no dejar cuentas huérfanas sin fila de empleado.
-    await supabaseAdmin.auth.admin.deleteUser(nuevoUsuario.user.id);
-    return res.status(500).json({ error: errorInsertar.message });
+    return res.status(201).json({
+      empleado: filaEmpleado,
+      passwordTemporal,
+      mensaje: "Empleado creado. Comparte la contraseña temporal por un canal seguro para que la cambie en su primer ingreso.",
+    });
+  } catch (err) {
+    const mensaje = err instanceof Error ? err.message : "No se pudo crear el empleado.";
+    return res.status(400).json({ error: mensaje });
   }
-
-  return res.status(201).json({
-    empleado: filaEmpleado,
-    passwordTemporal,
-    mensaje: "Empleado creado. Comparte la contraseña temporal por un canal seguro para que la cambie en su primer ingreso.",
-  });
 }

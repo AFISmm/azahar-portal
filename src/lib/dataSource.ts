@@ -1,6 +1,7 @@
 import type {
   Documento,
   Empleado,
+  EstadoNomina,
   NominaPago,
   NuevoDocumentoInput,
   NuevoEmpleadoInput,
@@ -36,6 +37,7 @@ export interface DataSource {
   addDocumento(input: NuevoDocumentoInput): Promise<Documento>;
 
   listNominaPagos(params?: { empleadoId?: string }): Promise<NominaPago[]>;
+  actualizarEstadoNominaPago(id: string, estado: EstadoNomina): Promise<NominaPago>;
 }
 
 export { IS_DEMO_MODE };

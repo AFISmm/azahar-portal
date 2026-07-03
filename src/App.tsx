@@ -6,6 +6,7 @@ import { ToastProvider } from "./context/ToastContext";
 import { AppShell } from "./components/AppShell";
 
 import Login from "./pages/Login";
+import Registro from "./pages/Registro";
 import Inicio from "./pages/Inicio";
 import MiContrato from "./pages/MiContrato";
 import Vacaciones from "./pages/Vacaciones";
@@ -21,6 +22,11 @@ import AdminDocumentos from "./pages/admin/AdminDocumentos";
 import AdminEmpleados from "./pages/admin/AdminEmpleados";
 import EmpleadoDetalle from "./pages/admin/EmpleadoDetalle";
 
+import GestionEstrategica from "./pages/GestionEstrategica";
+import GestionComercial from "./pages/GestionComercial";
+import GestionOperativa from "./pages/GestionOperativa";
+import InformacionGeneral from "./pages/InformacionGeneral";
+
 export default function App() {
   return (
     <ThemeProvider>
@@ -29,6 +35,7 @@ export default function App() {
           <AuthProvider>
             <Routes>
               <Route path="/login" element={<Login />} />
+              <Route path="/registro" element={<Registro />} />
 
               <Route element={<ProtectedRoute />}>
                 <Route element={<AppShell />}>
@@ -48,6 +55,11 @@ export default function App() {
                     <Route path="/admin/documentos" element={<AdminDocumentos />} />
                     <Route path="/admin/empleados" element={<AdminEmpleados />} />
                     <Route path="/admin/empleados/:id" element={<EmpleadoDetalle />} />
+
+                    <Route path="/gestion-estrategica" element={<GestionEstrategica />} />
+                    <Route path="/gestion-comercial" element={<GestionComercial />} />
+                    <Route path="/gestion-operativa" element={<GestionOperativa />} />
+                    <Route path="/informacion-general" element={<InformacionGeneral />} />
                   </Route>
                 </Route>
               </Route>

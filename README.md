@@ -86,12 +86,58 @@ demo verás una insignia "Modo demo" en la parte inferior del menú lateral.
    Esta función crea el usuario de Supabase Auth y su fila en `empleados` en
    una sola operación cuando un admin usa "Nuevo empleado" en producción.
 
+## Registro de nuevos empleados con un equipo de agentes de IA
+
+La página `/registro` permite que cualquier persona cree su propia cuenta
+(nombre, correo, contraseña, cargo, departamento, tipo de contrato y fecha de
+ingreso). Detrás de "Crear cuenta" corre un **equipo de dos agentes de Claude**
+(`api/agentes/registrar.ts`, construido con `@anthropic-ai/sdk`) pensado
+explícitamente para evitar registros duplicados ("memoria de usuarios para que
+solo se registre una sola vez"):
+
+1. **Agente Verificador de Identidad**: antes de crear nada, consulta —
+   mediante una herramienta (`buscar_empleado_por_correo`) que ejecuta una
+   consulta real a Supabase con la llave de servicio — si el correo ya existe
+   en la tabla `empleados`. Esa tabla es la memoria persistente de todos los
+   registros anteriores. El agente responde con una decisión estructurada
+   (`permitido` + `razon`) a través de una segunda herramienta forzada
+   (`responder_decision`); el servidor además nunca confía ciegamente en el
+   modelo si la propia consulta a la base de datos ya encontró un duplicado.
+2. **Agente de Alta y Bienvenida**: solo se invoca si el verificador aprueba.
+   Llama a una herramienta (`crear_empleado_y_usuario`) que ejecuta
+   `crearEmpleadoYUsuario` (`api/_lib/crearEmpleado.ts`, la misma lógica que
+   usa `api/empleados-crear.ts` para altas manuales desde Administración) y
+   luego redacta un mensaje de bienvenida corto y personalizado en español.
+
+Contrato HTTP: `POST /api/agentes/registrar` con
+`{ nombre, correo, password, cargo, departamento, tipoContrato, fechaIngreso }`.
+Responde `200 { ok: true, empleadoId, mensajeBienvenida }` en éxito,
+`409 { ok: false, motivo: "correo_duplicado" }` si el correo ya existe, y
+`500 { ok: false, motivo: "config_faltante" | "error" }` si faltan credenciales
+o hay un error inesperado.
+
+**Este flujo se activa solo cuando `ANTHROPIC_API_KEY`, `SUPABASE_URL` y
+`SUPABASE_SERVICE_ROLE_KEY` están configuradas en Vercel** (ver
+`.env.example`). Mientras el portal corra sin backend configurado —el estado
+actual de este despliegue— `src/auth/AuthContext.tsx` detecta la respuesta
+`config_faltante` (o que el endpoint ni siquiera exista en este entorno) y
+cae automáticamente al registro local en modo demo: crea el empleado en
+`mockDataSource` e inicia sesión de inmediato, mostrando un aviso de que el
+equipo de agentes de IA se activará cuando se configuren esas credenciales.
+La base de datos también refuerza la unicidad del correo a nivel de esquema
+(`empleados.correo` es `unique`, ver `supabase/migrations/001_init.sql`) como
+respaldo del propio chequeo del agente.
+
 ## Estructura del proyecto
 
 ```
 azahar-portal/
 ├── api/
-│   └── empleados-crear.ts       # función serverless (Vercel) — crea usuarios reales
+│   ├── _lib/
+│   │   └── crearEmpleado.ts     # lógica compartida: crea usuario Supabase Auth + fila `empleados`
+│   ├── agentes/
+│   │   └── registrar.ts         # equipo de agentes de IA (Claude) para el autorregistro
+│   └── empleados-crear.ts       # función serverless (Vercel) — alta manual desde Administración
 ├── public/
 │   └── azahar-logo.png          # logo usado como favicon
 ├── supabase/
@@ -103,7 +149,7 @@ azahar-portal/
 │   │   └── admin/                 # componentes exclusivos de Administración
 │   ├── context/                  # ThemeContext (claro/oscuro) y ToastContext
 │   ├── lib/                      # tipos, formateo y la capa de datos (mock + Supabase)
-│   ├── pages/                    # una página por ruta de "Mi portal"
+│   ├── pages/                    # una página por ruta de "Mi portal" y "Gestión del negocio"
 │   │   └── admin/                 # páginas de "Administración"
 │   ├── App.tsx                   # definición de rutas
 │   └── main.tsx

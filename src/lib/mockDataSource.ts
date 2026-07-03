@@ -144,4 +144,11 @@ export const mockDataSource: DataSource = {
     resultado.sort((a, b) => (a.fechaPago < b.fechaPago ? 1 : -1));
     return delay(resultado);
   },
+
+  async actualizarEstadoNominaPago(id, estado) {
+    const idx = nominaPagos.findIndex((n) => n.id === id);
+    if (idx === -1) throw new Error("Pago de nómina no encontrado");
+    nominaPagos[idx] = { ...nominaPagos[idx], estado };
+    return delay(nominaPagos[idx]);
+  },
 };

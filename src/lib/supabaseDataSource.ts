@@ -3,6 +3,7 @@ import type { DataSource } from "./dataSource";
 import type {
   Documento,
   Empleado,
+  EstadoNomina,
   NominaPago,
   NuevoDocumentoInput,
   NuevoEmpleadoInput,
@@ -275,5 +276,11 @@ export const supabaseDataSource: DataSource = {
     const { data, error } = await query;
     if (error) throw error;
     return (data as NominaPagoRow[]).map(nominaPagoFromRow);
+  },
+
+  async actualizarEstadoNominaPago(id: string, estado: EstadoNomina) {
+    const { data, error } = await client().from("nomina_pagos").update({ estado }).eq("id", id).select("*").single();
+    if (error) throw error;
+    return nominaPagoFromRow(data as NominaPagoRow);
   },
 };

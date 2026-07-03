@@ -23,11 +23,11 @@ export interface DatosRegistro {
 
 export interface ResultadoRegistro {
   ok: true;
-  modo: "demo" | "agentes";
+  modo: "demo" | "real";
   mensajeBienvenida?: string;
 }
 
-interface RespuestaApiAgentesRegistrar {
+interface RespuestaApiRegistro {
   ok: boolean;
   motivo?: "correo_duplicado" | "config_faltante" | "error";
   mensaje?: string;
@@ -164,15 +164,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   /**
-   * Registra un nuevo empleado a través del equipo de agentes de IA
-   * (POST /api/agentes/registrar) con una vía de respaldo en modo demo.
+   * Registra un nuevo empleado (POST /api/registro) con una vía de respaldo
+   * en modo demo.
    *
    * 1. Verifica de inmediato (en el cliente) que el correo no exista ya en
    *    la fuente de datos actual — funciona igual en modo demo y en modo real.
-   * 2. Llama al endpoint de agentes. Si la llamada falla (red, o el endpoint
+   * 2. Llama al endpoint de registro. Si la llamada falla (red, o el endpoint
    *    no existe en este entorno) o responde 500 "config_faltante" (Postgres
-   *    o Anthropic no están configurados en este despliegue), cae al registro
-   *    local en modo demo.
+   *    no está configurado en este despliegue), cae al registro local en
+   *    modo demo.
    * 3. Si el endpoint responde 409, el correo ya está duplicado: lanza un error.
    * 4. Si responde 200, el servidor ya dejó la sesión iniciada (cookie) y
    *    devolvió el empleado creado: solo queda reflejarlo en el estado local.
@@ -186,7 +186,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     let respuesta: Response | null = null;
     try {
-      respuesta = await fetch("/api/agentes/registrar", {
+      respuesta = await fetch("/api/registro", {
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
@@ -196,10 +196,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       respuesta = null;
     }
 
-    let payload: RespuestaApiAgentesRegistrar | null = null;
+    let payload: RespuestaApiRegistro | null = null;
     if (respuesta) {
       try {
-        payload = (await respuesta.json()) as RespuestaApiAgentesRegistrar;
+        payload = (await respuesta.json()) as RespuestaApiRegistro;
       } catch {
         payload = null;
       }
@@ -208,7 +208,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const configFaltante = respuesta?.status === 500 && payload?.motivo === "config_faltante";
 
     // Sin respuesta utilizable (red caída, endpoint inexistente en este
-    // entorno) o backend de agentes sin configurar: registro local en modo demo.
+    // entorno) o backend sin configurar: registro local en modo demo.
     if (!respuesta || !payload || configFaltante) {
       const nuevo = await dataSource.createEmpleado({
         nombre: datos.nombre,
@@ -235,7 +235,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setEmpleado(payload.empleado);
     }
 
-    return { ok: true, modo: "agentes", mensajeBienvenida: payload.mensajeBienvenida };
+    return { ok: true, modo: "real", mensajeBienvenida: payload.mensajeBienvenida };
   }
 
   async function signOut() {

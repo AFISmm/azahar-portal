@@ -36,7 +36,7 @@ export default function Registro() {
       const resultado = await registrar({ nombre, correo, password, cargo, departamento, tipoContrato, fechaIngreso });
       if (resultado.modo === "demo") {
         showToast(
-          "Modo demo: registro procesado localmente. El equipo de agentes IA se activa cuando se configuren las credenciales de Postgres y Anthropic.",
+          "Modo demo: registro procesado localmente. Se usará la base de datos real cuando se configure Postgres en el despliegue.",
           "info",
         );
       } else {

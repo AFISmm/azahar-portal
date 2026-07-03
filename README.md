@@ -75,16 +75,15 @@ demo" en la parte inferior del menú lateral.
    Environment Variables*, define (además de la `POSTGRES_URL` ya creada):
    ```
    AUTH_SECRET=...          (genera un valor con: openssl rand -hex 32)
-   ANTHROPIC_API_KEY=...
    ```
 4. **Activa el flag del cliente**: define `VITE_ENABLE_BACKEND=true` (variable
    de entorno del proyecto en Vercel, o en tu `.env.local` para desarrollo
    local). Con esto la app deja el modo demo automáticamente y empieza a usar
    `httpDataSource`.
 5. **Crea tu primer administrador (bootstrap)**: no existe un flujo de
-   "invitar admin" — regístrate normalmente desde `/registro` (el equipo de
-   agentes de IA crea la cuenta con `rol = 'empleado'`) y luego, desde la
-   pestaña *Query* de Vercel Postgres, ejecuta:
+   "invitar admin" — regístrate normalmente desde `/registro` (queda con
+   `rol = 'empleado'`) y luego, desde la pestaña *Query* de Vercel Postgres,
+   ejecuta:
    ```sql
    update empleados set rol = 'admin' where correo = 'tu-correo@azaharcoffee.co';
    ```
@@ -92,31 +91,31 @@ demo" en la parte inferior del menú lateral.
    ahí ya puedes usar el módulo de Empleados para crear al resto del equipo
    (`POST /api/empleados-crear`, protegido con `requireAdmin`).
 
-## Registro de nuevos empleados con un equipo de agentes de IA
+## Registro de nuevos empleados
 
 La página `/registro` permite que cualquier persona cree su propia cuenta
 (nombre, correo, contraseña, cargo, departamento, tipo de contrato y fecha de
-ingreso). Detrás de "Crear cuenta" corre un **equipo de dos agentes de Claude**
-(`api/agentes/registrar.ts`, construido con `@anthropic-ai/sdk`) pensado
+ingreso). Detrás de "Crear cuenta" corre `api/registro.ts`, pensado
 explícitamente para evitar registros duplicados ("memoria de usuarios para que
 solo se registre una sola vez"):
 
-1. **Agente Verificador de Identidad**: antes de crear nada, consulta —
-   mediante una herramienta (`buscar_empleado_por_correo`) que ejecuta una
-   consulta real a Postgres — si el correo ya existe en la tabla `empleados`.
-   Esa tabla es la memoria persistente de todos los registros anteriores. El
-   agente responde con una decisión estructurada (`permitido` + `razon`) a
-   través de una segunda herramienta forzada (`responder_decision`); el
-   servidor además nunca confía ciegamente en el modelo si la propia consulta
-   a la base de datos ya encontró un duplicado.
-2. **Agente de Alta y Bienvenida**: solo se invoca si el verificador aprueba.
-   Llama a una herramienta (`crear_empleado_y_usuario`) que ejecuta
+1. Antes de crear nada, consulta directamente la tabla `empleados` (la
+   memoria persistente de todos los registros anteriores) para verificar si
+   el correo ya existe.
+2. Si el correo está disponible, crea la fila de empleado reutilizando
    `crearEmpleadoYUsuario` (`api/_lib/crearEmpleado.ts`, la misma lógica que
    usa `api/empleados-crear.ts` para altas manuales desde Administración —
-   hashea la contraseña con bcrypt e inserta la fila en `empleados`) y luego
-   redacta un mensaje de bienvenida corto y personalizado en español.
+   hashea la contraseña con bcrypt e inserta la fila en `empleados`) y
+   responde con un mensaje de bienvenida.
 
-Contrato HTTP: `POST /api/agentes/registrar` con
+> Esta ruta reemplazó a una versión anterior que delegaba estos dos pasos a
+> un equipo de agentes de Claude (`@anthropic-ai/sdk`). Se simplificó a
+> lógica directa porque el chequeo de duplicados no necesita un modelo de
+> lenguaje de por medio — la base de datos ya lo resuelve de forma confiable
+> y gratuita — y así se evita depender de una cuenta de facturación de un
+> proveedor de IA solo para esta función.
+
+Contrato HTTP: `POST /api/registro` con
 `{ nombre, correo, password, cargo, departamento, tipoContrato, fechaIngreso }`.
 Responde `200 { ok: true, empleado, mensajeBienvenida }` en éxito (y deja al
 usuario con sesión iniciada, vía la misma cookie que usa `/api/auth/login`),
@@ -124,16 +123,16 @@ usuario con sesión iniciada, vía la misma cookie que usa `/api/auth/login`),
 `500 { ok: false, motivo: "config_faltante" | "error" }` si faltan credenciales
 o hay un error inesperado.
 
-**Este flujo se activa solo cuando `ANTHROPIC_API_KEY`, `POSTGRES_URL` y
-`AUTH_SECRET` están configuradas en Vercel** (ver `.env.example`). Mientras el
-portal corra sin backend configurado —el estado actual de este despliegue—
-`src/auth/AuthContext.tsx` detecta la respuesta `config_faltante` (o que el
-endpoint ni siquiera exista en este entorno) y cae automáticamente al registro
-local en modo demo: crea el empleado en `mockDataSource` e inicia sesión de
-inmediato, mostrando un aviso de que el equipo de agentes de IA se activará
-cuando se configuren esas credenciales. La base de datos también refuerza la
-unicidad del correo a nivel de esquema (`empleados.correo` es `unique`, ver
-`db/schema.sql`) como respaldo del propio chequeo del agente.
+**Este flujo se activa solo cuando `POSTGRES_URL` y `AUTH_SECRET` están
+configuradas en Vercel** (ver `.env.example`). Mientras el portal corra sin
+backend configurado —el estado actual de este despliegue— `src/auth/AuthContext.tsx`
+detecta la respuesta `config_faltante` (o que el endpoint ni siquiera exista
+en este entorno) y cae automáticamente al registro local en modo demo: crea
+el empleado en `mockDataSource` e inicia sesión de inmediato, mostrando un
+aviso de que se usará la base de datos real cuando se configure Postgres. La
+base de datos también refuerza la unicidad del correo a nivel de esquema
+(`empleados.correo` es `unique`, ver `db/schema.sql`) como respaldo ante una
+posible condición de carrera entre dos registros simultáneos.
 
 ## Estructura del proyecto
 
@@ -145,8 +144,6 @@ azahar-portal/
 │   │   ├── auth.ts                # sesión JWT en cookie, requireAuth/requireAdmin, manejarError
 │   │   ├── mappers.ts             # filas de Postgres (snake_case) <-> tipos camelCase
 │   │   └── crearEmpleado.ts       # hashea password (bcrypt) + inserta fila en `empleados`
-│   ├── agentes/
-│   │   └── registrar.ts         # equipo de agentes de IA (Claude) para el autorregistro
 │   ├── auth/
 │   │   ├── login.ts              # POST — verifica credenciales, setea la cookie de sesión
 │   │   ├── logout.ts             # POST — limpia la cookie de sesión
@@ -162,6 +159,7 @@ azahar-portal/
 │   ├── nomina/
 │   │   ├── index.ts              # GET (propios o todos si admin)
 │   │   └── [id].ts               # PATCH — cambiar estado, solo admin
+│   ├── registro.ts              # función serverless (Vercel) — autorregistro desde /registro
 │   └── empleados-crear.ts       # función serverless (Vercel) — alta manual desde Administración
 ├── db/
 │   └── schema.sql                # esquema completo de Postgres (no se aplica automáticamente)

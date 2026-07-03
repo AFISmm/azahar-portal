@@ -14,9 +14,9 @@
 // jamás debe devolver más que un booleano de existencia: exponer el listado
 // completo (o siquiera el nombre) de empleados sin autenticar sería una fuga
 // de datos. La verificación real y definitiva del duplicado ocurre de todas
-// formas del lado del servidor en /api/agentes/registrar.ts (agente
-// verificador + restricción `unique` en la base de datos), así que esta ruta
-// es solo una ayuda de UX, no el mecanismo de seguridad.
+// formas del lado del servidor en /api/registro.ts (más la restricción
+// `unique` en la base de datos), así que esta ruta es solo una ayuda de UX,
+// no el mecanismo de seguridad.
 // ============================================================================
 
 import type { VercelRequest, VercelResponse } from "@vercel/node";

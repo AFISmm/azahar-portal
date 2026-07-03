@@ -6,7 +6,7 @@
 // auth.users como en Supabase.
 //
 // La usan tanto /api/empleados-crear.ts (alta manual por un admin) como
-// /api/agentes/registrar.ts (autorregistro vía el equipo de agentes de IA).
+// /api/registro.ts (autorregistro desde /registro).
 // ============================================================================
 
 import bcrypt from "bcryptjs";

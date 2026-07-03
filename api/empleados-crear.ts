@@ -19,7 +19,7 @@
 
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { createClient } from "@supabase/supabase-js";
-import { crearEmpleadoYUsuario } from "./_lib/crearEmpleado";
+import { crearEmpleadoYUsuario } from "./_lib/crearEmpleado.js";
 
 interface EmpleadoCrearPayload {
   nombre: string;

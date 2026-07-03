@@ -29,7 +29,7 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import Anthropic from "@anthropic-ai/sdk";
-import { crearEmpleadoYUsuario } from "../_lib/crearEmpleado";
+import { crearEmpleadoYUsuario } from "../_lib/crearEmpleado.js";
 
 // Modelo de Claude usado por los agentes. Configurable vía ANTHROPIC_MODEL
 // para poder cambiarlo sin tocar código; "claude-sonnet-5" es el modelo

@@ -109,8 +109,8 @@ export function EmpleadoForm({ valoresIniciales, modo, enviando, onSubmit, onCan
       {modo === "crear" && (
         <p className="rounded-lg bg-cream-200 px-3 py-2 text-xs text-brand-800">
           Modo demo: este empleado se agrega solo a los datos en memoria de esta sesión. En producción, este formulario llama a la
-          función serverless <code className="font-mono">/api/empleados-crear</code>, que crea el usuario de autenticación en Supabase
-          y su fila en <code className="font-mono">empleados</code> usando la llave de servicio.
+          función serverless <code className="font-mono">/api/empleados-crear</code>, que crea la fila en{" "}
+          <code className="font-mono">empleados</code> (con una contraseña temporal) directamente en la base de datos de Postgres.
         </p>
       )}
 

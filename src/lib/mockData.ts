@@ -11,7 +11,6 @@ import type { Documento, Empleado, NominaPago, Solicitud } from "./types";
 export const empleadosSeed: Empleado[] = [
   {
     id: "emp-1",
-    authUserId: null,
     nombre: "María Camila Restrepo",
     correo: "mariacamila.restrepo@azaharcoffee.co",
     cargo: "Gerente de Talento Humano",
@@ -28,7 +27,6 @@ export const empleadosSeed: Empleado[] = [
   },
   {
     id: "emp-2",
-    authUserId: null,
     nombre: "Juan Esteban Gómez",
     correo: "juanesteban.gomez@azaharcoffee.co",
     cargo: "Barista Senior",
@@ -45,7 +43,6 @@ export const empleadosSeed: Empleado[] = [
   },
   {
     id: "emp-3",
-    authUserId: null,
     nombre: "Laura Valentina Torres",
     correo: "lauravalentina.torres@azaharcoffee.co",
     cargo: "Gerente de Tienda",
@@ -62,7 +59,6 @@ export const empleadosSeed: Empleado[] = [
   },
   {
     id: "emp-4",
-    authUserId: null,
     nombre: "Andrés Felipe Muñoz",
     correo: "andresfelipe.munoz@azaharcoffee.co",
     cargo: "Jefe de Logística",
@@ -79,7 +75,6 @@ export const empleadosSeed: Empleado[] = [
   },
   {
     id: "emp-5",
-    authUserId: null,
     nombre: "Daniela Sofía Ramírez",
     correo: "danielasofia.ramirez@azaharcoffee.co",
     cargo: "Analista Contable",
@@ -96,7 +91,6 @@ export const empleadosSeed: Empleado[] = [
   },
   {
     id: "emp-6",
-    authUserId: null,
     nombre: "Santiago Zuluaga Ospina",
     correo: "santiago.zuluaga@azaharcoffee.co",
     cargo: "Barista",

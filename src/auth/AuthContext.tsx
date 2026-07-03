@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
-import { IS_DEMO_MODE, supabase } from "../lib/supabaseClient";
+import { IS_DEMO_MODE } from "../lib/backendMode";
 import { dataSource } from "../lib/dataSource";
 import type { Empleado, Rol } from "../lib/types";
 
@@ -31,8 +31,14 @@ interface RespuestaApiAgentesRegistrar {
   ok: boolean;
   motivo?: "correo_duplicado" | "config_faltante" | "error";
   mensaje?: string;
-  empleadoId?: string;
+  empleado?: Empleado;
   mensajeBienvenida?: string;
+}
+
+interface RespuestaApiAuth {
+  ok: boolean;
+  mensaje?: string;
+  empleado?: Empleado;
 }
 
 interface AuthContextValue {
@@ -48,6 +54,18 @@ interface AuthContextValue {
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
+
+/** Consulta la sesión real (cookie HttpOnly) contra /api/auth/me. Devuelve el empleado, o null si no hay sesión válida. */
+async function obtenerEmpleadoDeSesionReal(): Promise<Empleado | null> {
+  try {
+    const respuesta = await fetch("/api/auth/me", { credentials: "include" });
+    if (!respuesta.ok) return null;
+    const payload = (await respuesta.json()) as RespuestaApiAuth;
+    return payload.ok ? (payload.empleado ?? null) : null;
+  } catch {
+    return null;
+  }
+}
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
@@ -82,40 +100,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return;
       }
 
-      if (!supabase) {
-        if (activo) setLoading(false);
-        return;
+      const perfil = await obtenerEmpleadoDeSesionReal();
+      if (activo) {
+        if (perfil) {
+          setUser({ id: perfil.id, email: perfil.correo });
+          setEmpleado(perfil);
+        }
+        setLoading(false);
       }
-
-      const { data } = await supabase.auth.getSession();
-      const sesionUser = data.session?.user ?? null;
-      if (sesionUser) {
-        setUser({ id: sesionUser.id, email: sesionUser.email ?? "" });
-        const perfil = await dataSource.getEmpleadoByAuthUserId(sesionUser.id);
-        if (activo) setEmpleado(perfil);
-      }
-      if (activo) setLoading(false);
     }
 
     void iniciar();
-
-    if (!IS_DEMO_MODE && supabase) {
-      const { data: sub } = supabase.auth.onAuthStateChange(async (_event, session) => {
-        const sesionUser = session?.user ?? null;
-        if (!sesionUser) {
-          setUser(null);
-          setEmpleado(null);
-          return;
-        }
-        setUser({ id: sesionUser.id, email: sesionUser.email ?? "" });
-        const perfil = await dataSource.getEmpleadoByAuthUserId(sesionUser.id);
-        setEmpleado(perfil);
-      });
-      return () => {
-        activo = false;
-        sub.subscription.unsubscribe();
-      };
-    }
 
     return () => {
       activo = false;
@@ -139,16 +134,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return {};
     }
 
-    if (!supabase) return { error: "Supabase no está configurado." };
-    const { data, error } = await supabase.auth.signInWithPassword({ email: correo, password });
-    if (error) return { error: error.message };
-    const sesionUser = data.user;
-    if (sesionUser) {
-      setUser({ id: sesionUser.id, email: sesionUser.email ?? "" });
-      const perfil = await dataSource.getEmpleadoByAuthUserId(sesionUser.id);
-      setEmpleado(perfil);
-      if (!perfil) return { error: "Tu usuario no tiene un perfil de empleado asociado." };
+    let respuesta: Response;
+    try {
+      respuesta = await fetch("/api/auth/login", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ correo, password }),
+      });
+    } catch {
+      return { error: "No se pudo conectar con el servidor. Intenta de nuevo." };
     }
+
+    const payload = (await respuesta.json().catch(() => null)) as RespuestaApiAuth | null;
+    if (!respuesta.ok || !payload?.ok || !payload.empleado) {
+      return { error: payload?.mensaje ?? "Correo o contraseña incorrectos." };
+    }
+
+    setUser({ id: payload.empleado.id, email: payload.empleado.correo });
+    setEmpleado(payload.empleado);
     return {};
   }
 
@@ -166,11 +170,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
    * 1. Verifica de inmediato (en el cliente) que el correo no exista ya en
    *    la fuente de datos actual — funciona igual en modo demo y en modo real.
    * 2. Llama al endpoint de agentes. Si la llamada falla (red, o el endpoint
-   *    no existe en este entorno) o responde 500 "config_faltante" (Supabase
+   *    no existe en este entorno) o responde 500 "config_faltante" (Postgres
    *    o Anthropic no están configurados en este despliegue), cae al registro
    *    local en modo demo.
    * 3. Si el endpoint responde 409, el correo ya está duplicado: lanza un error.
-   * 4. Si responde 200, inicia sesión de verdad con la contraseña recién creada.
+   * 4. Si responde 200, el servidor ya dejó la sesión iniciada (cookie) y
+   *    devolvió el empleado creado: solo queda reflejarlo en el estado local.
    */
   async function registrar(datos: DatosRegistro): Promise<ResultadoRegistro> {
     const correoNormalizado = datos.correo.trim().toLowerCase();
@@ -183,6 +188,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       respuesta = await fetch("/api/agentes/registrar", {
         method: "POST",
+        credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(datos),
       });
@@ -222,17 +228,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       throw new Error(payload.mensaje ?? "No se pudo completar el registro.");
     }
 
-    // Registro exitoso en modo real: inicia sesión con la contraseña recién
-    // establecida, igual que la rama real de signIn.
-    if (supabase) {
-      const { data, error } = await supabase.auth.signInWithPassword({ email: datos.correo, password: datos.password });
-      if (error) throw new Error(error.message);
-      const sesionUser = data.user;
-      if (sesionUser) {
-        setUser({ id: sesionUser.id, email: sesionUser.email ?? "" });
-        const perfil = await dataSource.getEmpleadoByAuthUserId(sesionUser.id);
-        setEmpleado(perfil);
-      }
+    // Registro exitoso en modo real: el servidor ya dejó la cookie de sesión
+    // establecida y devolvió el perfil del empleado recién creado.
+    if (payload.empleado) {
+      setUser({ id: payload.empleado.id, email: payload.empleado.correo });
+      setEmpleado(payload.empleado);
     }
 
     return { ok: true, modo: "agentes", mensajeBienvenida: payload.mensajeBienvenida };
@@ -241,8 +241,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   async function signOut() {
     if (IS_DEMO_MODE) {
       window.localStorage.removeItem(DEMO_SESSION_KEY);
-    } else if (supabase) {
-      await supabase.auth.signOut();
+    } else {
+      try {
+        await fetch("/api/auth/logout", { method: "POST", credentials: "include" });
+      } catch {
+        // Si la petición falla igual limpiamos el estado local.
+      }
     }
     setUser(null);
     setEmpleado(null);
@@ -250,9 +254,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   async function refreshEmpleado() {
     if (!user) return;
-    const perfil = IS_DEMO_MODE
-      ? await dataSource.getEmpleado(user.id)
-      : await dataSource.getEmpleadoByAuthUserId(user.id);
+    const perfil = IS_DEMO_MODE ? await dataSource.getEmpleado(user.id) : await obtenerEmpleadoDeSesionReal();
     setEmpleado(perfil);
   }
 

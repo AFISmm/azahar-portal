@@ -42,14 +42,9 @@ export const mockDataSource: DataSource = {
     return delay(empleados.find((e) => e.correo.toLowerCase() === normalizado) ?? null);
   },
 
-  async getEmpleadoByAuthUserId(authUserId) {
-    return delay(empleados.find((e) => e.authUserId === authUserId) ?? null);
-  },
-
   async createEmpleado(input: NuevoEmpleadoInput) {
     const nuevo: Empleado = {
       id: `emp-${empleadoSeq++}`,
-      authUserId: null,
       estado: input.estado ?? "activo",
       avatarUrl: input.avatarUrl ?? null,
       telefono: input.telefono ?? null,

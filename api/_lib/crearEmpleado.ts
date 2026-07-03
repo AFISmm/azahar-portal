@@ -1,12 +1,20 @@
 // ============================================================================
-// Lógica compartida para crear un empleado "completo": un usuario de
-// autenticación en Supabase (auth.users) + su fila correspondiente en la
-// tabla `empleados`. La usan tanto /api/empleados-crear.ts (creación manual
-// por un admin) como /api/agentes/registrar.ts (autorregistro vía el equipo
-// de agentes de IA).
+// Lógica compartida para crear un empleado "completo": hashea la contraseña
+// con bcrypt e inserta la fila en `empleados` (Postgres). Ya no existe un
+// paso separado de "crear usuario de autenticación": cada empleado ES su
+// propia identidad de login (correo + password_hash), no hay una tabla
+// auth.users como en Supabase.
+//
+// La usan tanto /api/empleados-crear.ts (alta manual por un admin) como
+// /api/agentes/registrar.ts (autorregistro vía el equipo de agentes de IA).
 // ============================================================================
 
-import type { SupabaseClient } from "@supabase/supabase-js";
+import bcrypt from "bcryptjs";
+import { sql } from "./db.js";
+import { HttpError } from "./auth.js";
+import { mapEmpleadoRow, type EmpleadoPublico, type EmpleadoRow } from "./mappers.js";
+
+const RONDAS_SAL = 10;
 
 export interface CrearEmpleadoInput {
   nombre: string;
@@ -17,73 +25,52 @@ export interface CrearEmpleadoInput {
   fechaIngreso: string;
   diasVacacionesDisponibles: number;
   rol: "empleado" | "admin";
+  password: string;
   salario?: number | null;
   telefono?: string | null;
-  password: string;
+  estado?: "activo" | "inactivo";
 }
 
-export interface EmpleadoCreado {
-  id: string;
-  auth_user_id: string;
-  nombre: string;
-  correo: string;
-  cargo: string;
-  departamento: string;
-  tipo_contrato: string;
-  fecha_ingreso: string;
-  dias_vacaciones_disponibles: number;
-  rol: string;
-  salario: number | null;
-  telefono: string | null;
-  [key: string]: unknown;
+function esErrorCorreoDuplicado(err: unknown): boolean {
+  // Código de error estándar de Postgres para violación de restricción unique.
+  return typeof err === "object" && err !== null && (err as { code?: string }).code === "23505";
 }
 
 /**
- * Crea el usuario de Supabase Auth y su fila en `empleados` en una sola
- * operación. Si la inserción en `empleados` falla, revierte la creación del
- * usuario de auth para no dejar cuentas huérfanas.
- *
- * `supabaseAdmin` debe ser un cliente construido con la llave de servicio
- * (SUPABASE_SERVICE_ROLE_KEY) — nunca la llave anónima.
+ * Hashea la contraseña e inserta la fila en `empleados`. Si el correo ya
+ * existe, la restricción `unique` de la base de datos lanza un error con
+ * código 23505, que aquí se traduce a un HttpError 409 reconocible para que
+ * los callers (rutas de /api) lo devuelvan tal cual al cliente.
  */
-export async function crearEmpleadoYUsuario(
-  supabaseAdmin: SupabaseClient,
-  input: CrearEmpleadoInput,
-): Promise<EmpleadoCreado> {
-  const { data: nuevoUsuario, error: errorCrearUsuario } = await supabaseAdmin.auth.admin.createUser({
-    email: input.correo,
-    password: input.password,
-    email_confirm: true,
-  });
+export async function crearEmpleadoYUsuario(input: CrearEmpleadoInput): Promise<EmpleadoPublico> {
+  const passwordHash = await bcrypt.hash(input.password, RONDAS_SAL);
 
-  if (errorCrearUsuario || !nuevoUsuario.user) {
-    throw new Error(errorCrearUsuario?.message ?? "No se pudo crear el usuario de autenticación.");
+  try {
+    const { rows } = await sql<EmpleadoRow>`
+      insert into empleados (
+        nombre, correo, password_hash, cargo, departamento, tipo_contrato,
+        fecha_ingreso, dias_vacaciones_disponibles, salario, rol, estado, telefono
+      ) values (
+        ${input.nombre},
+        ${input.correo},
+        ${passwordHash},
+        ${input.cargo},
+        ${input.departamento},
+        ${input.tipoContrato},
+        ${input.fechaIngreso},
+        ${input.diasVacacionesDisponibles},
+        ${input.salario ?? null},
+        ${input.rol},
+        ${input.estado ?? "activo"},
+        ${input.telefono ?? null}
+      )
+      returning *
+    `;
+    return mapEmpleadoRow(rows[0]);
+  } catch (err) {
+    if (esErrorCorreoDuplicado(err)) {
+      throw new HttpError(409, "Ya existe una cuenta registrada con ese correo.");
+    }
+    throw err;
   }
-
-  const { data: filaEmpleado, error: errorInsertar } = await supabaseAdmin
-    .from("empleados")
-    .insert({
-      auth_user_id: nuevoUsuario.user.id,
-      nombre: input.nombre,
-      correo: input.correo,
-      cargo: input.cargo,
-      departamento: input.departamento,
-      tipo_contrato: input.tipoContrato,
-      fecha_ingreso: input.fechaIngreso,
-      dias_vacaciones_disponibles: input.diasVacacionesDisponibles,
-      rol: input.rol,
-      salario: input.salario ?? null,
-      telefono: input.telefono ?? null,
-    })
-    .select("*")
-    .single();
-
-  if (errorInsertar) {
-    // Revertimos la creación del usuario de auth para no dejar cuentas huérfanas
-    // sin fila de empleado asociada.
-    await supabaseAdmin.auth.admin.deleteUser(nuevoUsuario.user.id);
-    throw new Error(errorInsertar.message);
-  }
-
-  return filaEmpleado as EmpleadoCreado;
 }

@@ -1,13 +1,12 @@
 // Tipos de dominio compartidos por toda la aplicación.
-// Deben reflejar (en camelCase) las tablas definidas en
-// supabase/migrations/001_init.sql (snake_case en la base de datos).
+// Deben reflejar (en camelCase) las tablas definidas en db/schema.sql
+// (snake_case en la base de datos).
 
 export type Rol = "empleado" | "admin";
 export type EstadoEmpleado = "activo" | "inactivo";
 
 export interface Empleado {
   id: string;
-  authUserId: string | null;
   nombre: string;
   correo: string;
   cargo: string;
@@ -23,10 +22,7 @@ export interface Empleado {
   createdAt: string;
 }
 
-export type NuevoEmpleadoInput = Omit<
-  Empleado,
-  "id" | "authUserId" | "createdAt" | "estado" | "avatarUrl" | "telefono" | "salario"
-> &
+export type NuevoEmpleadoInput = Omit<Empleado, "id" | "createdAt" | "estado" | "avatarUrl" | "telefono" | "salario"> &
   Partial<Pick<Empleado, "estado" | "avatarUrl" | "telefono" | "salario">>;
 
 export type SolicitudTipo = "vacaciones" | "incapacidad" | "documento" | "certificado";

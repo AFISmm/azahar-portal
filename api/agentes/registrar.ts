@@ -6,17 +6,17 @@
 // empleados desde /registro:
 //
 //   1. Agente Verificador de Identidad: consulta la tabla `empleados`
-//      (la "memoria" persistente de usuarios ya registrados) para asegurar
-//      que el correo no tenga ya una cuenta — evita registros duplicados.
-//   2. Agente de Alta y Bienvenida: si el verificador aprueba, crea el
-//      usuario de autenticación + la fila de empleado (reutilizando
-//      api/_lib/crearEmpleado.ts) y redacta un mensaje de bienvenida.
+//      (la "memoria" persistente de usuarios ya registrados, en Postgres) para
+//      asegurar que el correo no tenga ya una cuenta — evita registros duplicados.
+//   2. Agente de Alta y Bienvenida: si el verificador aprueba, crea la fila de
+//      empleado (reutilizando api/_lib/crearEmpleado.ts, que hashea la
+//      contraseña con bcrypt) y redacta un mensaje de bienvenida.
 //
 // Requiere las siguientes variables de entorno configuradas directamente en
 // el proyecto de Vercel (Project Settings -> Environment Variables), NUNCA en
 // un archivo .env del cliente:
-//   - SUPABASE_URL
-//   - SUPABASE_SERVICE_ROLE_KEY
+//   - POSTGRES_URL       (se define sola al conectar un almacenamiento Postgres)
+//   - AUTH_SECRET        (firma la cookie de sesión)
 //   - ANTHROPIC_API_KEY
 //
 // Si alguna de estas variables no está configurada, el endpoint responde de
@@ -24,12 +24,18 @@
 // src/auth/AuthContext.tsx, función `registrar`) interpreta esa respuesta —
 // o un error de red si el endpoint ni siquiera existe en este despliegue —
 // como señal para usar el registro local en modo demo.
+//
+// En éxito, este endpoint también deja al usuario con sesión iniciada
+// (establece la cookie de sesión directamente, ver api/_lib/auth.ts) para que
+// el frontend no tenga que hacer una llamada adicional a /api/auth/login.
 // ============================================================================
 
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import Anthropic from "@anthropic-ai/sdk";
+import { sql } from "../_lib/db.js";
+import { HttpError, crearTokenSesion, setearCookieSesion } from "../_lib/auth.js";
 import { crearEmpleadoYUsuario } from "../_lib/crearEmpleado.js";
+import type { EmpleadoPublico } from "../_lib/mappers.js";
 
 // Modelo de Claude usado por los agentes. Configurable vía ANTHROPIC_MODEL
 // para poder cambiarlo sin tocar código; "claude-sonnet-5" es el modelo
@@ -49,6 +55,11 @@ interface RegistrarPayload {
 interface DecisionVerificador {
   permitido: boolean;
   razon: string;
+}
+
+interface EmpleadoEncontrado {
+  id: string;
+  nombre: string;
 }
 
 // ----------------------------------------------------------------------------
@@ -88,7 +99,7 @@ const HERRAMIENTA_DECISION: Anthropic.Tool = {
 const HERRAMIENTA_CREAR: Anthropic.Tool = {
   name: "crear_empleado_y_usuario",
   description:
-    "Confirma y ejecuta la creación del usuario de autenticación y la fila de empleado en la base de datos para completar el alta. " +
+    "Confirma y ejecuta la creación de la fila de empleado (con su contraseña ya protegida con hash) en la base de datos para completar el alta. " +
     "Llama a esta herramienta exactamente una vez, con confirmar=true, cuando estés listo para dar de alta al nuevo empleado.",
   input_schema: {
     type: "object",
@@ -103,11 +114,7 @@ const HERRAMIENTA_CREAR: Anthropic.Tool = {
 // Agente Verificador de Identidad
 // ----------------------------------------------------------------------------
 
-async function ejecutarAgenteVerificador(
-  anthropic: Anthropic,
-  supabaseAdmin: SupabaseClient,
-  correo: string,
-): Promise<DecisionVerificador> {
+async function ejecutarAgenteVerificador(anthropic: Anthropic, correo: string): Promise<DecisionVerificador> {
   const systemPrompt =
     "Eres el Agente Verificador de Identidad del portal de empleados de Azahar Coffee Company (una compañía colombiana de retail de café). " +
     "Tu única tarea es evitar registros duplicados: determinar si un correo corporativo ya tiene una cuenta registrada antes de permitir " +
@@ -141,17 +148,12 @@ async function ejecutarAgenteVerificador(
     throw new Error("El agente verificador no invocó la búsqueda de correo.");
   }
 
-  // Ejecutamos la búsqueda real contra Supabase con la llave de servicio —
-  // esto es la "memoria de usuarios" real, no una simulación del modelo.
-  const { data: empleadoExistente, error: errorBusqueda } = await supabaseAdmin
-    .from("empleados")
-    .select("id, nombre")
-    .ilike("correo", correo)
-    .limit(1)
-    .maybeSingle();
-  if (errorBusqueda) {
-    throw new Error(`Error consultando la tabla empleados: ${errorBusqueda.message}`);
-  }
+  // Ejecutamos la búsqueda real contra Postgres — esto es la "memoria de
+  // usuarios" real, no una simulación del modelo.
+  const { rows } = await sql<EmpleadoEncontrado>`
+    select id, nombre from empleados where lower(correo) = lower(${correo}) limit 1
+  `;
+  const empleadoExistente = rows[0] ?? null;
 
   messages.push({ role: "assistant", content: primeraRespuesta.content });
   messages.push({
@@ -162,7 +164,7 @@ async function ejecutarAgenteVerificador(
         tool_use_id: llamadaBusqueda.id,
         content: JSON.stringify({
           encontrado: Boolean(empleadoExistente),
-          empleado: empleadoExistente ?? null,
+          empleado: empleadoExistente,
         }),
       },
     ],
@@ -209,9 +211,8 @@ async function ejecutarAgenteVerificador(
 
 async function ejecutarAgenteAlta(
   anthropic: Anthropic,
-  supabaseAdmin: SupabaseClient,
   payload: RegistrarPayload,
-): Promise<{ empleadoId: string; mensajeBienvenida: string }> {
+): Promise<{ empleado: EmpleadoPublico; mensajeBienvenida: string }> {
   const systemPrompt =
     "Eres el Agente de Alta y Bienvenida del portal de empleados de Azahar Coffee Company. Se te invoca únicamente después de que el " +
     "Agente Verificador de Identidad confirmó que el correo del nuevo empleado no está duplicado.\n\n" +
@@ -250,7 +251,7 @@ async function ejecutarAgenteAlta(
   // Ejecutamos la creación real usando los datos validados del request, no
   // los que el modelo pudiera repetir en su llamada a la herramienta — así
   // evitamos que una alucinación del modelo altere la contraseña o el correo.
-  const filaEmpleado = await crearEmpleadoYUsuario(supabaseAdmin, {
+  const empleado = await crearEmpleadoYUsuario({
     nombre: payload.nombre,
     correo: payload.correo,
     cargo: payload.cargo,
@@ -269,7 +270,7 @@ async function ejecutarAgenteAlta(
       {
         type: "tool_result",
         tool_use_id: llamadaCrear.id,
-        content: JSON.stringify({ ok: true, empleadoId: filaEmpleado.id, nombre: payload.nombre, cargo: payload.cargo }),
+        content: JSON.stringify({ ok: true, empleadoId: empleado.id, nombre: payload.nombre, cargo: payload.cargo }),
       },
     ],
   });
@@ -289,7 +290,7 @@ async function ejecutarAgenteAlta(
     bloqueTexto?.text.trim() ||
     `¡Bienvenido(a) a Azahar Coffee Company, ${primerNombre}! Nos alegra que te unas como ${payload.cargo} en ${payload.departamento}.`;
 
-  return { empleadoId: filaEmpleado.id, mensajeBienvenida };
+  return { empleado, mensajeBienvenida };
 }
 
 // ----------------------------------------------------------------------------
@@ -302,19 +303,19 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(405).json({ ok: false, motivo: "error", mensaje: "Método no permitido. Usa POST." });
   }
 
-  const supabaseUrl = process.env.SUPABASE_URL;
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const postgresUrl = process.env.POSTGRES_URL;
+  const authSecret = process.env.AUTH_SECRET;
   const anthropicApiKey = process.env.ANTHROPIC_API_KEY;
 
   // Verificación explícita de configuración ANTES de construir cualquier
   // cliente: así devolvemos un 500 claro y predecible en vez de dejar que el
-  // SDK de Anthropic o de Supabase fallen de forma confusa.
-  if (!supabaseUrl || !serviceRoleKey || !anthropicApiKey) {
+  // SDK de Anthropic o la conexión a Postgres fallen de forma confusa.
+  if (!postgresUrl || !authSecret || !anthropicApiKey) {
     return res.status(500).json({
       ok: false,
       motivo: "config_faltante",
       mensaje:
-        "El servidor no tiene configuradas las credenciales necesarias (SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, ANTHROPIC_API_KEY). " +
+        "El servidor no tiene configuradas las credenciales necesarias (POSTGRES_URL, AUTH_SECRET, ANTHROPIC_API_KEY). " +
         "El equipo de agentes de IA se activa cuando estas variables se configuren en Vercel.",
     });
   }
@@ -335,13 +336,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
   const payload = body as RegistrarPayload;
 
-  const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey, {
-    auth: { autoRefreshToken: false, persistSession: false },
-  });
   const anthropic = new Anthropic({ apiKey: anthropicApiKey });
 
   try {
-    const decision = await ejecutarAgenteVerificador(anthropic, supabaseAdmin, payload.correo);
+    const decision = await ejecutarAgenteVerificador(anthropic, payload.correo);
 
     if (!decision.permitido) {
       return res.status(409).json({
@@ -351,10 +349,17 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       });
     }
 
-    const { empleadoId, mensajeBienvenida } = await ejecutarAgenteAlta(anthropic, supabaseAdmin, payload);
+    const { empleado, mensajeBienvenida } = await ejecutarAgenteAlta(anthropic, payload);
 
-    return res.status(200).json({ ok: true, empleadoId, mensajeBienvenida });
+    // Deja al usuario recién registrado con sesión iniciada de inmediato.
+    const token = crearTokenSesion(empleado.id);
+    setearCookieSesion(res, token, req);
+
+    return res.status(200).json({ ok: true, empleado, mensajeBienvenida });
   } catch (err) {
+    if (err instanceof HttpError && err.status === 409) {
+      return res.status(409).json({ ok: false, motivo: "correo_duplicado", mensaje: err.message });
+    }
     const mensaje = err instanceof Error ? err.message : "Error inesperado procesando el registro.";
     return res.status(500).json({ ok: false, motivo: "error", mensaje });
   }

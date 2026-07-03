@@ -3,7 +3,7 @@ import { UserPlus, Save } from "lucide-react";
 import type { Empleado, NuevoEmpleadoInput } from "../../lib/types";
 import { Button, Field, Input, Select } from "../ui";
 
-export const DEPARTAMENTOS = ["Talento Humano", "Operaciones de Tienda", "Logística y Abastecimiento", "Finanzas", "Mercadeo", "Producción y Calidad"];
+export const DEPARTAMENTOS = ["Talento Humano", "Operaciones de Tienda", "Logística y Abastecimiento", "Finanzas", "Mercadeo", "Producción y Calidad", "Tecnología y Desarrollo"];
 export const TIPOS_CONTRATO = ["Término indefinido", "Término fijo", "Aprendizaje SENA", "Prestación de servicios"];
 
 export interface EmpleadoFormValues extends NuevoEmpleadoInput {

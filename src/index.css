@@ -1,0 +1,114 @@
+@import "tailwindcss";
+
+/* ------------------------------------------------------------------
+   Portal Azahar — design tokens (Tailwind v4 CSS-first theme)
+   Paleta "café": marrón/oxblood (brand), caramelo (accent), crema.
+   ------------------------------------------------------------------ */
+@theme {
+  /* Brand (marrón oxblood, tono real del logo) */
+  --color-brand-900: #2a1515;
+  --color-brand-800: #412020;
+  --color-brand-600: #6b3a32;
+  --color-brand-400: #9c6b5e;
+
+  /* Accent (caramelo / dorado cálido) */
+  --color-accent-500: #c9852e;
+  --color-accent-300: #e0b26b;
+
+  /* Neutros cálidos */
+  --color-cream-100: #faf6f0;
+  --color-cream-200: #f1e9dd;
+
+  /* Estado de solicitudes */
+  --color-status-pendiente: #d9972b;
+  --color-status-pendiente-bg: #fbead1;
+  --color-status-aprobada: #3e8e5c;
+  --color-status-aprobada-bg: #e0f2e7;
+  --color-status-rechazada: #c1443b;
+  --color-status-rechazada-bg: #fbe2e0;
+
+  /* Tipografía */
+  --font-sans: "DM Sans", "Segoe UI", system-ui, sans-serif;
+  --font-heading: "Inter", "Segoe UI", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", monospace;
+
+  --shadow-card: 0 1px 2px rgba(42, 21, 21, 0.06), 0 8px 24px -12px rgba(42, 21, 21, 0.18);
+}
+
+/* ------------------------------------------------------------------
+   Tema claro (por defecto) y oscuro, controlado por [data-theme="dark"]
+   en <html>. En modo oscuro usamos marrones casi-negros, NO azul/navy.
+   ------------------------------------------------------------------ */
+:root {
+  --surface-app: var(--color-cream-100);
+  --surface-card: #ffffff;
+  --surface-sidebar: #ffffff;
+  --surface-muted: var(--color-cream-200);
+  --border-subtle: #e7dccd;
+  --text-primary: var(--color-brand-900);
+  --text-secondary: #6f5a52;
+  --text-muted: #9a8b83;
+}
+
+html[data-theme="dark"] {
+  --surface-app: #1a1211;
+  --surface-card: #241917;
+  --surface-sidebar: #201613;
+  --surface-muted: #2c1f1c;
+  --border-subtle: #3a2b26;
+  --text-primary: #f5ece4;
+  --text-secondary: #cbb4a8;
+  --text-muted: #9c8177;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--surface-app);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-heading);
+  color: var(--text-primary);
+}
+
+::selection {
+  background: var(--color-accent-300);
+  color: var(--color-brand-900);
+}
+
+/* Scrollbar sutil, coherente con la paleta */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-brand-400);
+  border-radius: 999px;
+  opacity: 0.4;
+}
+
+@keyframes azahar-fade-in {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.azahar-fade-in {
+  animation: azahar-fade-in 0.25s ease both;
+}

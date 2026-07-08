@@ -185,6 +185,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       throw new Error("Ya existe una cuenta registrada con ese correo.");
     }
 
+    async function registrarLocalEnModoDemo(): Promise<ResultadoRegistro> {
+      const nuevo = await dataSource.createEmpleado({
+        nombre: datos.nombre,
+        correo: datos.correo,
+        cargo: datos.cargo,
+        departamento: datos.departamento,
+        tipoContrato: datos.tipoContrato,
+        fechaIngreso: datos.fechaIngreso,
+        diasVacacionesDisponibles: 15,
+        rol: datos.rol,
+      });
+      entrarComoEmpleadoDemo(nuevo);
+      return { ok: true, modo: "demo" };
+    }
+
+    // Mientras el cliente esté en modo demo (VITE_ENABLE_BACKEND != "true"),
+    // el registro se procesa siempre localmente: ni siquiera se llama a
+    // /api/registro. Esto evita, por ejemplo, que si Postgres ya tiene
+    // POSTGRES_URL/AUTH_SECRET configuradas en Vercel pero todavía no se
+    // corrió `db/schema.sql`, el usuario vea un error crudo de base de datos
+    // en vez de simplemente seguir en modo demo como el resto de la app.
+    if (IS_DEMO_MODE) {
+      return registrarLocalEnModoDemo();
+    }
+
     let respuesta: Response | null = null;
     try {
       respuesta = await fetch("/api/registro", {
@@ -206,23 +231,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     }
 
-    const configFaltante = respuesta?.status === 500 && payload?.motivo === "config_faltante";
-
     // Sin respuesta utilizable (red caída, endpoint inexistente en este
-    // entorno) o backend sin configurar: registro local en modo demo.
-    if (!respuesta || !payload || configFaltante) {
-      const nuevo = await dataSource.createEmpleado({
-        nombre: datos.nombre,
-        correo: datos.correo,
-        cargo: datos.cargo,
-        departamento: datos.departamento,
-        tipoContrato: datos.tipoContrato,
-        fechaIngreso: datos.fechaIngreso,
-        diasVacacionesDisponibles: 15,
-        rol: datos.rol,
-      });
-      entrarComoEmpleadoDemo(nuevo);
-      return { ok: true, modo: "demo" };
+    // entorno) o backend sin configurar/no funcional: registro local en modo demo.
+    if (!respuesta || !payload || respuesta.status >= 500) {
+      return registrarLocalEnModoDemo();
     }
 
     if (respuesta.status === 409 || !payload.ok) {

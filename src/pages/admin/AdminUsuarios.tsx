@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { ShieldCheck, UserCog, Trash2 } from "lucide-react";
+import { ShieldCheck, Trash2 } from "lucide-react";
 import { dataSource } from "../../lib/dataSource";
 import type { Empleado, Rol } from "../../lib/types";
 import { formatDate, iniciales } from "../../lib/format";
@@ -8,16 +8,11 @@ import { useAuth } from "../../auth/AuthContext";
 import { PageHeader } from "../../components/PageHeader";
 import { Card } from "../../components/Card";
 import { Modal } from "../../components/Modal";
-import { Button } from "../../components/ui";
+import { Button, Select } from "../../components/ui";
 
 const ESTADO_ESTILO: Record<Empleado["estado"], string> = {
   activo: "bg-status-aprobada-bg text-status-aprobada",
   inactivo: "bg-status-rechazada-bg text-status-rechazada",
-};
-
-const ROL_ESTILO: Record<Rol, string> = {
-  admin: "bg-accent-300/40 text-accent-500",
-  empleado: "bg-cream-200 text-brand-800",
 };
 
 export default function AdminUsuarios() {
@@ -39,8 +34,8 @@ export default function AdminUsuarios() {
     void cargar();
   }, [cargar]);
 
-  async function handleCambiarRol(emp: Empleado) {
-    const nuevoRol: Rol = emp.rol === "admin" ? "empleado" : "admin";
+  async function handleCambiarRol(emp: Empleado, nuevoRol: Rol) {
+    if (nuevoRol === emp.rol) return;
     setProcesandoId(emp.id);
     try {
       const actualizado = await dataSource.updateEmpleado(emp.id, { rol: nuevoRol });
@@ -132,9 +127,16 @@ export default function AdminUsuarios() {
                         </div>
                       </td>
                       <td className="py-3 pr-4">
-                        <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${ROL_ESTILO[emp.rol]}`}>
-                          {emp.rol === "admin" ? "Administrador" : "Empleado"}
-                        </span>
+                        <Select
+                          className="w-auto min-w-[9.5rem] py-1.5 text-xs"
+                          value={emp.rol}
+                          disabled={esMiCuenta || procesando}
+                          title={esMiCuenta ? tituloBloqueo : undefined}
+                          onChange={(e) => void handleCambiarRol(emp, e.target.value as Rol)}
+                        >
+                          <option value="empleado">Empleado</option>
+                          <option value="admin">Administrador</option>
+                        </Select>
                       </td>
                       <td className="py-3 pr-4">
                         <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${ESTADO_ESTILO[emp.estado]}`}>
@@ -144,16 +146,6 @@ export default function AdminUsuarios() {
                       <td className="py-3 pr-4 text-[var(--text-secondary)]">{formatDate(emp.createdAt)}</td>
                       <td className="py-3 pr-4">
                         <div className="flex flex-wrap items-center gap-2">
-                          <Button
-                            variant="outline"
-                            className="px-2.5 py-1.5 text-xs"
-                            disabled={esMiCuenta || procesando}
-                            title={esMiCuenta ? tituloBloqueo : undefined}
-                            onClick={() => void handleCambiarRol(emp)}
-                          >
-                            <UserCog className="h-3.5 w-3.5" strokeWidth={1.75} />
-                            {emp.rol === "admin" ? "Quitar admin" : "Hacer admin"}
-                          </Button>
                           <Button
                             variant="outline"
                             className="px-2.5 py-1.5 text-xs"

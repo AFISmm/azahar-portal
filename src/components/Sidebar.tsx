@@ -68,14 +68,11 @@ export function Sidebar() {
 
   return (
     <aside className="fixed inset-y-0 left-0 z-30 flex w-64 flex-col border-r border-[var(--border-subtle)] bg-[var(--surface-sidebar)]">
-      <div className="flex items-center gap-2.5 px-5 py-6">
+      <div className="flex flex-col items-center gap-2.5 px-5 py-6">
         <div className="flex items-center justify-center rounded-xl bg-white px-3 py-2 ring-1 ring-[var(--border-subtle)]">
-          <img src={logo} alt="Azahar Coffee Company" className="h-7 w-auto object-contain" />
+          <img src={logo} alt="Azahar Coffee Company" className="h-9 w-auto object-contain" />
         </div>
-        <div className="leading-tight">
-          <p className="font-heading text-sm font-bold text-[var(--text-primary)]">Portal Azahar</p>
-          <p className="text-[11px] text-[var(--text-muted)]">Azahar Coffee Company</p>
-        </div>
+        <p className="text-[11px] font-bold uppercase tracking-wider text-[var(--text-muted)]">Azahar Coffee Company</p>
       </div>
 
       <nav className="flex-1 space-y-6 overflow-y-auto px-3 pb-4">

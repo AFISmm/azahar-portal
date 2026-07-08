@@ -70,6 +70,25 @@ export const mockDataSource: DataSource = {
     return delay(empleados[idx]);
   },
 
+  async deleteEmpleado(id) {
+    const idx = empleados.findIndex((e) => e.id === id);
+    if (idx === -1) throw new Error("Empleado no encontrado");
+    empleados.splice(idx, 1);
+    // Mismo comportamiento que los `on delete cascade` de db/schema.sql:
+    // al borrar el empleado también desaparecen sus solicitudes, documentos
+    // y pagos de nómina asociados.
+    for (let i = solicitudes.length - 1; i >= 0; i--) {
+      if (solicitudes[i].empleadoId === id) solicitudes.splice(i, 1);
+    }
+    for (let i = documentos.length - 1; i >= 0; i--) {
+      if (documentos[i].empleadoId === id) documentos.splice(i, 1);
+    }
+    for (let i = nominaPagos.length - 1; i >= 0; i--) {
+      if (nominaPagos[i].empleadoId === id) nominaPagos.splice(i, 1);
+    }
+    return delay(undefined);
+  },
+
   async listSolicitudes(params) {
     let resultado = [...solicitudes];
     if (params?.empleadoId) {

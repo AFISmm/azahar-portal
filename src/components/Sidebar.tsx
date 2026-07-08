@@ -12,6 +12,7 @@ import {
   Stethoscope,
   FolderCog,
   Users,
+  UserCog,
   LogOut,
   Sparkles,
   Compass,
@@ -41,6 +42,7 @@ const ADMINISTRACION = [
   { to: "/admin/incapacidades", label: "Incapacidades", Icon: Stethoscope },
   { to: "/admin/documentos", label: "Documentos", Icon: FolderCog },
   { to: "/admin/empleados", label: "Empleados", Icon: Users },
+  { to: "/admin/usuarios", label: "Gestión de usuarios", Icon: UserCog },
 ];
 
 const GESTION_NEGOCIO = [
@@ -62,7 +64,7 @@ export function Sidebar() {
   const { empleado, signOut } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
-  const enNomina = location.pathname.startsWith("/nomina");
+  const enNomina = location.pathname.startsWith("/nomina") || location.pathname.startsWith("/admin");
 
   return (
     <aside className="fixed inset-y-0 left-0 z-30 flex w-64 flex-col border-r border-[var(--border-subtle)] bg-[var(--surface-sidebar)]">
@@ -86,14 +88,31 @@ export function Sidebar() {
               <ChevronLeft className="h-4 w-4 shrink-0" strokeWidth={1.75} />
               Nómina
             </button>
-            <div className="space-y-1">
-              {NOMINA_ITEMS.map(({ to, label, Icon }) => (
-                <NavLink key={to} to={to} className={({ isActive }) => itemClase(isActive)}>
-                  <Icon className="h-4 w-4 shrink-0" strokeWidth={1.75} />
-                  {label}
-                </NavLink>
-              ))}
+            <div>
+              <p className="mb-2 px-3 text-[11px] font-bold uppercase tracking-wider text-[var(--text-muted)]">Mi portal</p>
+              <div className="space-y-1">
+                {NOMINA_ITEMS.map(({ to, label, Icon }) => (
+                  <NavLink key={to} to={to} className={({ isActive }) => itemClase(isActive)}>
+                    <Icon className="h-4 w-4 shrink-0" strokeWidth={1.75} />
+                    {label}
+                  </NavLink>
+                ))}
+              </div>
             </div>
+
+            {empleado?.rol === "admin" && (
+              <div className="mt-6">
+                <p className="mb-2 px-3 text-[11px] font-bold uppercase tracking-wider text-[var(--text-muted)]">Administración</p>
+                <div className="space-y-1">
+                  {ADMINISTRACION.map(({ to, label, Icon }) => (
+                    <NavLink key={to} to={to} className={({ isActive }) => itemClase(isActive)}>
+                      <Icon className="h-4 w-4 shrink-0" strokeWidth={1.75} />
+                      {label}
+                    </NavLink>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         ) : (
           <>
@@ -124,20 +143,6 @@ export function Sidebar() {
                 Nómina
               </NavLink>
             </div>
-
-            {empleado?.rol === "admin" && (
-              <div>
-                <p className="mb-2 px-3 text-[11px] font-bold uppercase tracking-wider text-[var(--text-muted)]">Administración</p>
-                <div className="space-y-1">
-                  {ADMINISTRACION.map(({ to, label, Icon }) => (
-                    <NavLink key={to} to={to} className={({ isActive }) => itemClase(isActive)}>
-                      <Icon className="h-4 w-4 shrink-0" strokeWidth={1.75} />
-                      {label}
-                    </NavLink>
-                  ))}
-                </div>
-              </div>
-            )}
           </>
         )}
       </nav>

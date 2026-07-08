@@ -1,6 +1,7 @@
 // ============================================================================
-// GET   /api/empleados/[id]  -> el propio empleado, o cualquiera si eres admin.
-// PATCH /api/empleados/[id]  -> actualización parcial, solo administradores.
+// GET    /api/empleados/[id]  -> el propio empleado, o cualquiera si eres admin.
+// PATCH  /api/empleados/[id]  -> actualización parcial, solo administradores.
+// DELETE /api/empleados/[id]  -> elimina la cuenta, solo administradores.
 // ============================================================================
 
 import type { VercelRequest, VercelResponse } from "@vercel/node";
@@ -106,7 +107,20 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
     }
 
-    res.setHeader("Allow", "GET, PATCH");
+    if (req.method === "DELETE") {
+      await requireAdmin(req);
+
+      const { rows: filasActuales } = await sql<EmpleadoRow>`select * from empleados where id = ${id} limit 1`;
+      if (!filasActuales[0]) throw new HttpError(404, "Empleado no encontrado.");
+
+      // Las llaves foráneas de solicitudes, documentos y nomina_pagos usan
+      // `on delete cascade` (ver db/schema.sql), así que este único DELETE
+      // ya se encarga de limpiar todas las filas relacionadas.
+      await sql`delete from empleados where id = ${id}`;
+      return res.status(200).json({ ok: true });
+    }
+
+    res.setHeader("Allow", "GET, PATCH, DELETE");
     return res.status(405).json({ ok: false, mensaje: "Método no permitido." });
   } catch (err) {
     return manejarError(res, err);

@@ -28,6 +28,7 @@ export interface DataSource {
   getEmpleadoByCorreo(correo: string): Promise<Empleado | null>;
   createEmpleado(input: NuevoEmpleadoInput): Promise<Empleado>;
   updateEmpleado(id: string, patch: Partial<NuevoEmpleadoInput>): Promise<Empleado>;
+  deleteEmpleado(id: string): Promise<void>;
 
   listSolicitudes(params?: { empleadoId?: string }): Promise<Solicitud[]>;
   createSolicitud(input: NuevaSolicitudInput): Promise<Solicitud>;

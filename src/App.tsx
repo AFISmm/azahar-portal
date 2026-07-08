@@ -23,6 +23,7 @@ import AdminIncapacidades from "./pages/admin/AdminIncapacidades";
 import AdminDocumentos from "./pages/admin/AdminDocumentos";
 import AdminEmpleados from "./pages/admin/AdminEmpleados";
 import EmpleadoDetalle from "./pages/admin/EmpleadoDetalle";
+import AdminUsuarios from "./pages/admin/AdminUsuarios";
 
 import GestionEstrategica from "./pages/GestionEstrategica";
 import GestionComercial from "./pages/GestionComercial";
@@ -61,6 +62,7 @@ export default function App() {
                     <Route path="/admin/documentos" element={<AdminDocumentos />} />
                     <Route path="/admin/empleados" element={<AdminEmpleados />} />
                     <Route path="/admin/empleados/:id" element={<EmpleadoDetalle />} />
+                    <Route path="/admin/usuarios" element={<AdminUsuarios />} />
 
                     <Route path="/gestion-estrategica" element={<GestionEstrategica />} />
                     <Route path="/gestion-comercial" element={<GestionComercial />} />

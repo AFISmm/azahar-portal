@@ -123,6 +123,12 @@ export const httpDataSource: DataSource = {
     return data.empleado;
   },
 
+  async deleteEmpleado(id) {
+    await fetchJson<{ ok: boolean }>(`/api/empleados/${encodeURIComponent(id)}`, {
+      method: "DELETE",
+    });
+  },
+
   async listSolicitudes(params) {
     const data = await fetchJson<{ ok: boolean; solicitudes: Solicitud[] }>(`/api/solicitudes${query(params)}`);
     return data.solicitudes;

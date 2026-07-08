@@ -1,4 +1,4 @@
-import { NavLink } from "react-router-dom";
+import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import {
   Home,
   FileText,
@@ -18,21 +18,22 @@ import {
   Store,
   Receipt,
   Info,
+  ChevronLeft,
 } from "lucide-react";
 import { useAuth } from "../auth/AuthContext";
 import { IS_DEMO_MODE } from "../lib/dataSource";
 import { iniciales } from "../lib/format";
 import logo from "../assets/azahar-logo.png";
 
-const MI_PORTAL = [
-  { to: "/inicio", label: "Inicio", Icon: Home },
-  { to: "/mi-contrato", label: "Mi contrato", Icon: FileText },
-  { to: "/vacaciones", label: "Vacaciones", Icon: CalendarDays },
-  { to: "/nomina", label: "Nómina", Icon: Banknote },
-  { to: "/mis-solicitudes", label: "Mis solicitudes", Icon: ClipboardList },
-  { to: "/incapacidades", label: "Incapacidades", Icon: HeartPulse },
-  { to: "/documentos", label: "Documentos", Icon: Folder },
-  { to: "/certificados", label: "Certificados", Icon: BadgeCheck },
+const NOMINA_ITEMS = [
+  { to: "/nomina/inicio", label: "Inicio", Icon: Home },
+  { to: "/nomina/mi-contrato", label: "Mi contrato", Icon: FileText },
+  { to: "/nomina/vacaciones", label: "Vacaciones", Icon: CalendarDays },
+  { to: "/nomina/pagos", label: "Nómina", Icon: Banknote },
+  { to: "/nomina/mis-solicitudes", label: "Mis solicitudes", Icon: ClipboardList },
+  { to: "/nomina/incapacidades", label: "Incapacidades", Icon: HeartPulse },
+  { to: "/nomina/documentos", label: "Documentos", Icon: Folder },
+  { to: "/nomina/certificados", label: "Certificados", Icon: BadgeCheck },
 ];
 
 const ADMINISTRACION = [
@@ -59,6 +60,9 @@ function itemClase(activo: boolean) {
 
 export function Sidebar() {
   const { empleado, signOut } = useAuth();
+  const location = useLocation();
+  const navigate = useNavigate();
+  const enNomina = location.pathname.startsWith("/nomina");
 
   return (
     <aside className="fixed inset-y-0 left-0 z-30 flex w-64 flex-col border-r border-[var(--border-subtle)] bg-[var(--surface-sidebar)]">
@@ -73,44 +77,68 @@ export function Sidebar() {
       </div>
 
       <nav className="flex-1 space-y-6 overflow-y-auto px-3 pb-4">
-        <div>
-          <p className="mb-2 px-3 text-[11px] font-bold uppercase tracking-wider text-[var(--text-muted)]">Mi portal</p>
-          <div className="space-y-1">
-            {MI_PORTAL.map(({ to, label, Icon }) => (
-              <NavLink key={to} to={to} className={({ isActive }) => itemClase(isActive)}>
-                <Icon className="h-4 w-4 shrink-0" strokeWidth={1.75} />
-                {label}
+        {enNomina ? (
+          <div>
+            <button
+              onClick={() => navigate("/inicio")}
+              className="mb-3 flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold text-[var(--text-secondary)] transition hover:bg-[var(--surface-muted)] hover:text-[var(--text-primary)]"
+            >
+              <ChevronLeft className="h-4 w-4 shrink-0" strokeWidth={1.75} />
+              Nómina
+            </button>
+            <div className="space-y-1">
+              {NOMINA_ITEMS.map(({ to, label, Icon }) => (
+                <NavLink key={to} to={to} className={({ isActive }) => itemClase(isActive)}>
+                  <Icon className="h-4 w-4 shrink-0" strokeWidth={1.75} />
+                  {label}
+                </NavLink>
+              ))}
+            </div>
+          </div>
+        ) : (
+          <>
+            <div className="space-y-1">
+              <NavLink to="/inicio" className={({ isActive }) => itemClase(isActive)}>
+                <Home className="h-4 w-4 shrink-0" strokeWidth={1.75} />
+                Inicio
               </NavLink>
-            ))}
-          </div>
-        </div>
-
-        {empleado?.rol === "admin" && (
-          <div>
-            <p className="mb-2 px-3 text-[11px] font-bold uppercase tracking-wider text-[var(--text-muted)]">Administración</p>
-            <div className="space-y-1">
-              {ADMINISTRACION.map(({ to, label, Icon }) => (
-                <NavLink key={to} to={to} className={({ isActive }) => itemClase(isActive)}>
-                  <Icon className="h-4 w-4 shrink-0" strokeWidth={1.75} />
-                  {label}
-                </NavLink>
-              ))}
             </div>
-          </div>
-        )}
 
-        {empleado?.rol === "admin" && (
-          <div>
-            <p className="mb-2 px-3 text-[11px] font-bold uppercase tracking-wider text-[var(--text-muted)]">Gestión del negocio</p>
+            {empleado?.rol === "admin" && (
+              <div>
+                <p className="mb-2 px-3 text-[11px] font-bold uppercase tracking-wider text-[var(--text-muted)]">Gestión del negocio</p>
+                <div className="space-y-1">
+                  {GESTION_NEGOCIO.map(({ to, label, Icon }) => (
+                    <NavLink key={to} to={to} className={({ isActive }) => itemClase(isActive)}>
+                      <Icon className="h-4 w-4 shrink-0" strokeWidth={1.75} />
+                      {label}
+                    </NavLink>
+                  ))}
+                </div>
+              </div>
+            )}
+
             <div className="space-y-1">
-              {GESTION_NEGOCIO.map(({ to, label, Icon }) => (
-                <NavLink key={to} to={to} className={({ isActive }) => itemClase(isActive)}>
-                  <Icon className="h-4 w-4 shrink-0" strokeWidth={1.75} />
-                  {label}
-                </NavLink>
-              ))}
+              <NavLink to="/nomina/inicio" className={({ isActive }) => itemClase(isActive)}>
+                <Banknote className="h-4 w-4 shrink-0" strokeWidth={1.75} />
+                Nómina
+              </NavLink>
             </div>
-          </div>
+
+            {empleado?.rol === "admin" && (
+              <div>
+                <p className="mb-2 px-3 text-[11px] font-bold uppercase tracking-wider text-[var(--text-muted)]">Administración</p>
+                <div className="space-y-1">
+                  {ADMINISTRACION.map(({ to, label, Icon }) => (
+                    <NavLink key={to} to={to} className={({ isActive }) => itemClase(isActive)}>
+                      <Icon className="h-4 w-4 shrink-0" strokeWidth={1.75} />
+                      {label}
+                    </NavLink>
+                  ))}
+                </div>
+              </div>
+            )}
+          </>
         )}
       </nav>
 

@@ -7,6 +7,8 @@ import { AppShell } from "./components/AppShell";
 
 import Login from "./pages/Login";
 import Registro from "./pages/Registro";
+import InicioMercado from "./pages/InicioMercado";
+import CadenaProduccion from "./pages/CadenaProduccion";
 import Inicio from "./pages/Inicio";
 import MiContrato from "./pages/MiContrato";
 import Vacaciones from "./pages/Vacaciones";
@@ -40,14 +42,18 @@ export default function App() {
               <Route element={<ProtectedRoute />}>
                 <Route element={<AppShell />}>
                   <Route path="/" element={<Navigate to="/inicio" replace />} />
-                  <Route path="/inicio" element={<Inicio />} />
-                  <Route path="/mi-contrato" element={<MiContrato />} />
-                  <Route path="/vacaciones" element={<Vacaciones />} />
-                  <Route path="/nomina" element={<Nomina />} />
-                  <Route path="/mis-solicitudes" element={<MisSolicitudes />} />
-                  <Route path="/incapacidades" element={<Incapacidades />} />
-                  <Route path="/documentos" element={<Documentos />} />
-                  <Route path="/certificados" element={<Certificados />} />
+                  <Route path="/inicio" element={<InicioMercado />} />
+                  <Route path="/cadena-produccion" element={<CadenaProduccion />} />
+
+                  <Route path="/nomina" element={<Navigate to="/nomina/inicio" replace />} />
+                  <Route path="/nomina/inicio" element={<Inicio />} />
+                  <Route path="/nomina/mi-contrato" element={<MiContrato />} />
+                  <Route path="/nomina/vacaciones" element={<Vacaciones />} />
+                  <Route path="/nomina/pagos" element={<Nomina />} />
+                  <Route path="/nomina/mis-solicitudes" element={<MisSolicitudes />} />
+                  <Route path="/nomina/incapacidades" element={<Incapacidades />} />
+                  <Route path="/nomina/documentos" element={<Documentos />} />
+                  <Route path="/nomina/certificados" element={<Certificados />} />
 
                   <Route element={<AdminRoute />}>
                     <Route path="/admin/solicitudes" element={<AdminSolicitudes />} />

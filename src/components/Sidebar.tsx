@@ -42,7 +42,6 @@ const ADMINISTRACION = [
   { to: "/admin/incapacidades", label: "Incapacidades", Icon: Stethoscope },
   { to: "/admin/documentos", label: "Documentos", Icon: FolderCog },
   { to: "/admin/empleados", label: "Empleados", Icon: Users },
-  { to: "/admin/usuarios", label: "Gestión de usuarios", Icon: UserCog },
 ];
 
 const GESTION_NEGOCIO = [
@@ -64,7 +63,8 @@ export function Sidebar() {
   const { empleado, signOut } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
-  const enNomina = location.pathname.startsWith("/nomina") || location.pathname.startsWith("/admin");
+  const enGestionUsuarios = location.pathname.startsWith("/admin/usuarios");
+  const enNomina = !enGestionUsuarios && (location.pathname.startsWith("/nomina") || location.pathname.startsWith("/admin"));
 
   return (
     <aside className="fixed inset-y-0 left-0 z-30 flex w-64 flex-col border-r border-[var(--border-subtle)] bg-[var(--surface-sidebar)]">
@@ -143,6 +143,15 @@ export function Sidebar() {
                 Nómina
               </NavLink>
             </div>
+
+            {empleado?.rol === "admin" && (
+              <div className="space-y-1">
+                <NavLink to="/admin/usuarios" className={({ isActive }) => itemClase(isActive)}>
+                  <UserCog className="h-4 w-4 shrink-0" strokeWidth={1.75} />
+                  Gestión de usuarios
+                </NavLink>
+              </div>
+            )}
           </>
         )}
       </nav>

@@ -91,7 +91,7 @@ export default function AdminUsuarios() {
   return (
     <div className="azahar-fade-in">
       <PageHeader
-        breadcrumb="Nómina / Administración"
+        breadcrumb="Portal Azahar"
         title="Gestión de usuarios"
         description="Administra quién tiene acceso al portal: su rol, si su cuenta está activa y desde cuándo está registrada. Para editar datos de personal (cargo, salario, vacaciones, etc.) usa Empleados."
       />

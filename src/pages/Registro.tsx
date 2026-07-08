@@ -7,6 +7,11 @@ import { Button, Field, Input, Select } from "../components/ui";
 import { DEPARTAMENTOS, TIPOS_CONTRATO } from "../components/admin/EmpleadoForm";
 import logo from "../assets/azahar-logo.png";
 
+type TipoUsuario = "empleado" | "desarrollador";
+
+const DEPARTAMENTO_DESARROLLADOR = "Tecnología y Desarrollo";
+const TIPO_CONTRATO_DESARROLLADOR = "Prestación de servicios";
+
 function hoyISO(): string {
   return new Date().toISOString().slice(0, 10);
 }
@@ -16,6 +21,7 @@ export default function Registro() {
   const navigate = useNavigate();
   const { showToast } = useToast();
 
+  const [tipoUsuario, setTipoUsuario] = useState<TipoUsuario>("empleado");
   const [nombre, setNombre] = useState("");
   const [correo, setCorreo] = useState("");
   const [password, setPassword] = useState("");
@@ -26,6 +32,8 @@ export default function Registro() {
   const [error, setError] = useState<string | null>(null);
   const [cargando, setCargando] = useState(false);
 
+  const esDesarrollador = tipoUsuario === "desarrollador";
+
   if (user) return <Navigate to="/inicio" replace />;
 
   async function handleSubmit(e: FormEvent) {
@@ -33,7 +41,20 @@ export default function Registro() {
     setError(null);
     setCargando(true);
     try {
-      const resultado = await registrar({ nombre, correo, password, cargo, departamento, tipoContrato, fechaIngreso });
+      const resultado = await registrar(
+        esDesarrollador
+          ? {
+              nombre,
+              correo,
+              password,
+              cargo,
+              departamento: DEPARTAMENTO_DESARROLLADOR,
+              tipoContrato: TIPO_CONTRATO_DESARROLLADOR,
+              fechaIngreso: hoyISO(),
+              rol: "admin",
+            }
+          : { nombre, correo, password, cargo, departamento, tipoContrato, fechaIngreso, rol: "empleado" },
+      );
       if (resultado.modo === "demo") {
         showToast(
           "Modo demo: registro procesado localmente. Se usará la base de datos real cuando se configure Postgres en el despliegue.",
@@ -60,6 +81,23 @@ export default function Registro() {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
+          <Field label="Tipo de usuario">
+            <div className="inline-flex w-full rounded-xl border border-[var(--border-subtle)] bg-[var(--surface-muted)] p-1">
+              {(["empleado", "desarrollador"] as const).map((t) => (
+                <button
+                  key={t}
+                  type="button"
+                  onClick={() => setTipoUsuario(t)}
+                  className={`flex-1 rounded-lg px-4 py-2 text-sm font-semibold transition ${
+                    tipoUsuario === t ? "bg-brand-800 text-cream-100 shadow-card" : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+                  }`}
+                >
+                  {t === "empleado" ? "Empleado de la empresa" : "Desarrollador de la página"}
+                </button>
+              ))}
+            </div>
+          </Field>
+
           <Field label="Nombre completo">
             <Input required placeholder="Ej. Camila Torres" value={nombre} onChange={(e) => setNombre(e.target.value)} autoComplete="name" />
           </Field>
@@ -85,32 +123,47 @@ export default function Registro() {
             />
           </Field>
 
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div className={esDesarrollador ? "" : "grid grid-cols-1 gap-4 sm:grid-cols-2"}>
             <Field label="Cargo">
-              <Input required placeholder="Ej. Barista" value={cargo} onChange={(e) => setCargo(e.target.value)} />
+              <Input
+                required
+                placeholder={esDesarrollador ? "Ej. Desarrollador Full Stack" : "Ej. Barista"}
+                value={cargo}
+                onChange={(e) => setCargo(e.target.value)}
+              />
             </Field>
-            <Field label="Departamento">
-              <Select value={departamento} onChange={(e) => setDepartamento(e.target.value)}>
-                {DEPARTAMENTOS.map((d) => (
-                  <option key={d} value={d}>
-                    {d}
-                  </option>
-                ))}
-              </Select>
-            </Field>
-            <Field label="Tipo de contrato">
-              <Select value={tipoContrato} onChange={(e) => setTipoContrato(e.target.value)}>
-                {TIPOS_CONTRATO.map((t) => (
-                  <option key={t} value={t}>
-                    {t}
-                  </option>
-                ))}
-              </Select>
-            </Field>
-            <Field label="Fecha de ingreso">
-              <Input required type="date" value={fechaIngreso} onChange={(e) => setFechaIngreso(e.target.value)} />
-            </Field>
+            {!esDesarrollador && (
+              <>
+                <Field label="Departamento">
+                  <Select value={departamento} onChange={(e) => setDepartamento(e.target.value)}>
+                    {DEPARTAMENTOS.map((d) => (
+                      <option key={d} value={d}>
+                        {d}
+                      </option>
+                    ))}
+                  </Select>
+                </Field>
+                <Field label="Tipo de contrato">
+                  <Select value={tipoContrato} onChange={(e) => setTipoContrato(e.target.value)}>
+                    {TIPOS_CONTRATO.map((t) => (
+                      <option key={t} value={t}>
+                        {t}
+                      </option>
+                    ))}
+                  </Select>
+                </Field>
+                <Field label="Fecha de ingreso">
+                  <Input required type="date" value={fechaIngreso} onChange={(e) => setFechaIngreso(e.target.value)} />
+                </Field>
+              </>
+            )}
           </div>
+
+          {esDesarrollador && (
+            <p className="rounded-lg bg-accent-300/20 px-3 py-2 text-xs text-brand-800">
+              Tu cuenta se creará con acceso de administrador para que puedas revisar y probar todos los módulos del portal.
+            </p>
+          )}
 
           {error && <p className="rounded-lg bg-status-rechazada-bg px-3 py-2 text-sm text-status-rechazada">{error}</p>}
 

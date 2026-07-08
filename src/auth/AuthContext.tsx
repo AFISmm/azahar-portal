@@ -19,6 +19,7 @@ export interface DatosRegistro {
   departamento: string;
   tipoContrato: string;
   fechaIngreso: string;
+  rol: Rol;
 }
 
 export interface ResultadoRegistro {
@@ -218,7 +219,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         tipoContrato: datos.tipoContrato,
         fechaIngreso: datos.fechaIngreso,
         diasVacacionesDisponibles: 15,
-        rol: "empleado",
+        rol: datos.rol,
       });
       entrarComoEmpleadoDemo(nuevo);
       return { ok: true, modo: "demo" };

@@ -48,6 +48,7 @@ interface RegistrarPayload {
   departamento: string;
   tipoContrato: string;
   fechaIngreso: string;
+  rol: "empleado" | "admin";
 }
 
 interface EmpleadoEncontrado {
@@ -89,10 +90,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     "departamento",
     "tipoContrato",
     "fechaIngreso",
+    "rol",
   ];
   const faltantes = camposRequeridos.filter((campo) => !body[campo]);
   if (faltantes.length > 0) {
     return res.status(400).json({ ok: false, motivo: "error", mensaje: `Faltan campos requeridos: ${faltantes.join(", ")}` });
+  }
+  if (body.rol !== "empleado" && body.rol !== "admin") {
+    return res.status(400).json({ ok: false, motivo: "error", mensaje: "Rol inválido." });
   }
   const payload = body as RegistrarPayload;
 
@@ -119,7 +124,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       tipoContrato: payload.tipoContrato,
       fechaIngreso: payload.fechaIngreso,
       diasVacacionesDisponibles: 15,
-      rol: "empleado",
+      rol: payload.rol,
       password: payload.password,
     });
 

@@ -67,7 +67,7 @@ export function Sidebar() {
   const enNomina = !enGestionUsuarios && (location.pathname.startsWith("/nomina") || location.pathname.startsWith("/admin"));
 
   return (
-    <aside className="fixed inset-y-0 left-0 z-30 flex w-64 flex-col border-r border-[var(--border-subtle)] bg-[var(--surface-sidebar)]">
+    <aside className="fixed left-0 top-9 bottom-0 z-30 flex w-64 flex-col border-r border-[var(--border-subtle)] bg-[var(--surface-sidebar)]">
       <div className="flex flex-col items-center gap-2.5 px-5 py-6">
         <div className="flex items-center justify-center rounded-xl bg-white px-3 py-2 ring-1 ring-[var(--border-subtle)]">
           <img src={logo} alt="Azahar Coffee Company" className="h-9 w-auto object-contain" />

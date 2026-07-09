@@ -112,3 +112,14 @@ h1, h2, h3, h4, h5, h6 {
 .azahar-fade-in {
   animation: azahar-fade-in 0.25s ease both;
 }
+
+@keyframes azahar-ticker-scroll {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+.azahar-ticker-track {
+  animation: azahar-ticker-scroll 38s linear infinite;
+}
+.azahar-ticker-track[data-pausado="true"] {
+  animation-play-state: paused;
+}

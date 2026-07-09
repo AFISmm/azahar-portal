@@ -12,7 +12,7 @@ interface ModalProps {
 export function Modal({ open, onClose, title, children, widthClassName = "max-w-lg" }: ModalProps) {
   if (!open) return null;
   return (
-    <div className="fixed inset-0 z-40 flex items-center justify-center px-4 py-6" onClick={onClose}>
+    <div className="fixed inset-0 z-40 flex items-center justify-center px-4 py-6 md:pl-64" onClick={onClose}>
       <div
         className={`azahar-fade-in flex max-h-[90vh] w-full ${widthClassName} flex-col rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface-card)] shadow-card`}
         role="dialog"

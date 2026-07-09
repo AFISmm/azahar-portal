@@ -1,5 +1,5 @@
 import { type FormEvent, useEffect, useState } from "react";
-import { Lock, MessageSquareWarning } from "lucide-react";
+import { ArrowLeft, Lock, MessageSquareWarning } from "lucide-react";
 import { useAuth } from "../auth/AuthContext";
 import { dataSource } from "../lib/dataSource";
 import type { DestinoPqr } from "../lib/types";
@@ -7,7 +7,6 @@ import { formatDate } from "../lib/format";
 import { useToast } from "../context/ToastContext";
 import { PageHeader } from "../components/PageHeader";
 import { Card } from "../components/Card";
-import { Modal } from "../components/Modal";
 import { Button, Field, Input, Select, Textarea } from "../components/ui";
 
 export default function MiPerfil() {
@@ -19,7 +18,7 @@ export default function MiPerfil() {
   const [password, setPassword] = useState("");
   const [guardando, setGuardando] = useState(false);
 
-  const [modalAbierto, setModalAbierto] = useState(false);
+  const [mostrarPqr, setMostrarPqr] = useState(false);
   const [destinos, setDestinos] = useState<DestinoPqr[]>([]);
   const [adminDestinoId, setAdminDestinoId] = useState("");
   const [cedulaPqr, setCedulaPqr] = useState("");
@@ -36,13 +35,13 @@ export default function MiPerfil() {
   }, [empleado]);
 
   useEffect(() => {
-    if (!modalAbierto) return;
+    if (!mostrarPqr) return;
     void (async () => {
       const lista = await dataSource.listDestinosPqr();
       setDestinos(lista);
       setAdminDestinoId(lista[0]?.id ?? "");
     })();
-  }, [modalAbierto]);
+  }, [mostrarPqr]);
 
   if (!empleado) return null;
 
@@ -88,7 +87,7 @@ export default function MiPerfil() {
       });
       showToast("Tu PQR fue radicada correctamente.", "success");
       setProblema("");
-      setModalAbierto(false);
+      setMostrarPqr(false);
     } catch (err) {
       showToast(err instanceof Error ? err.message : "No se pudo radicar la PQR.", "error");
     } finally {
@@ -100,30 +99,81 @@ export default function MiPerfil() {
     <div className="azahar-fade-in">
       <PageHeader breadcrumb="Portal Azahar" title="Mi perfil" description="Tus datos personales y las credenciales de acceso al Portal Azahar.">
         {!esDesarrollador && (
-          <Button variant="outline" onClick={() => setModalAbierto(true)}>
-            <MessageSquareWarning className="h-4 w-4" strokeWidth={1.75} />
-            Radicar PQR
+          <Button variant="outline" onClick={() => setMostrarPqr((v) => !v)}>
+            {mostrarPqr ? <ArrowLeft className="h-4 w-4" strokeWidth={1.75} /> : <MessageSquareWarning className="h-4 w-4" strokeWidth={1.75} />}
+            {mostrarPqr ? "Volver" : "Radicar PQR"}
           </Button>
         )}
       </PageHeader>
 
       <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
-        <Card title="Datos personales">
-          <ul className="divide-y divide-[var(--border-subtle)]">
-            {datosBloqueados.map(({ label, valor }) => (
-              <li key={label} className="flex items-center justify-between gap-4 py-3">
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]">{label}</p>
-                  <p className="mt-0.5 text-sm font-semibold text-[var(--text-primary)]">{valor}</p>
-                </div>
-                <Lock className="h-4 w-4 shrink-0 text-[var(--text-muted)]" strokeWidth={1.75} />
-              </li>
-            ))}
-          </ul>
-          <p className="mt-3 text-xs text-[var(--text-muted)]">
-            Estos datos son de solo lectura. Si necesitas corregir alguno, radica una PQR o contacta a Talento Humano.
-          </p>
-        </Card>
+        {mostrarPqr ? (
+          <Card
+            title="Radicar PQR"
+            actions={
+              <button
+                type="button"
+                onClick={() => setMostrarPqr(false)}
+                className="rounded-full p-1.5 text-[var(--text-muted)] transition hover:bg-[var(--surface-muted)] hover:text-[var(--text-primary)]"
+                aria-label="Volver a Datos personales"
+                title="Volver a Datos personales"
+              >
+                <ArrowLeft className="h-4 w-4" strokeWidth={1.75} />
+              </button>
+            }
+          >
+            <form onSubmit={radicarPqr} className="space-y-4">
+              <Field label="Nombre y apellido">
+                <Input value={empleado.nombre} disabled />
+              </Field>
+              <Field label="Número de cédula">
+                <Input required value={cedulaPqr} onChange={(e) => setCedulaPqr(e.target.value)} />
+              </Field>
+              <Field label="Correo electrónico">
+                <Input type="email" required value={correoPqr} onChange={(e) => setCorreoPqr(e.target.value)} />
+              </Field>
+              <Field label="Administrador destino">
+                <Select value={adminDestinoId} onChange={(e) => setAdminDestinoId(e.target.value)}>
+                  {destinos.length === 0 && <option value="">No hay cuentas de desarrollador disponibles</option>}
+                  {destinos.map((d) => (
+                    <option key={d.id} value={d.id}>
+                      {d.nombre}
+                    </option>
+                  ))}
+                </Select>
+              </Field>
+              <Field label="Describe tu problema">
+                <Textarea
+                  required
+                  rows={4}
+                  placeholder="Cuéntanos qué está pasando…"
+                  value={problema}
+                  onChange={(e) => setProblema(e.target.value)}
+                />
+              </Field>
+              <Button type="submit" disabled={enviandoPqr || !adminDestinoId} className="w-full">
+                Enviar PQR
+              </Button>
+            </form>
+          </Card>
+        ) : (
+          <Card title="Datos personales">
+            <ul className="divide-y divide-[var(--border-subtle)]">
+              {datosBloqueados.map(({ label, valor }) => (
+                <li key={label} className="flex items-center justify-between gap-4 py-3">
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]">{label}</p>
+                    <p className="mt-0.5 text-sm font-semibold text-[var(--text-primary)]">{valor}</p>
+                  </div>
+                  <Lock className="h-4 w-4 shrink-0 text-[var(--text-muted)]" strokeWidth={1.75} />
+                </li>
+              ))}
+            </ul>
+            <p className="mt-3 text-xs text-[var(--text-muted)]">
+              Estos datos son de solo lectura. Si necesitas corregir alguno, radica una PQR o contacta a Talento Humano.
+            </p>
+          </Card>
+        )}
 
         <Card title="Cuenta">
           <form onSubmit={guardarCuenta} className="space-y-4">
@@ -148,36 +198,6 @@ export default function MiPerfil() {
           </form>
         </Card>
       </div>
-
-      <Modal open={modalAbierto} onClose={() => setModalAbierto(false)} title="Radicar PQR">
-        <form onSubmit={radicarPqr} className="space-y-4">
-          <Field label="Nombre y apellido">
-            <Input value={empleado.nombre} disabled />
-          </Field>
-          <Field label="Número de cédula">
-            <Input required value={cedulaPqr} onChange={(e) => setCedulaPqr(e.target.value)} />
-          </Field>
-          <Field label="Correo electrónico">
-            <Input type="email" required value={correoPqr} onChange={(e) => setCorreoPqr(e.target.value)} />
-          </Field>
-          <Field label="Administrador destino">
-            <Select value={adminDestinoId} onChange={(e) => setAdminDestinoId(e.target.value)}>
-              {destinos.length === 0 && <option value="">No hay cuentas de desarrollador disponibles</option>}
-              {destinos.map((d) => (
-                <option key={d.id} value={d.id}>
-                  {d.nombre}
-                </option>
-              ))}
-            </Select>
-          </Field>
-          <Field label="Describe tu problema">
-            <Textarea required rows={4} placeholder="Cuéntanos qué está pasando…" value={problema} onChange={(e) => setProblema(e.target.value)} />
-          </Field>
-          <Button type="submit" disabled={enviandoPqr || !adminDestinoId} className="w-full">
-            Enviar PQR
-          </Button>
-        </form>
-      </Modal>
     </div>
   );
 }

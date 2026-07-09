@@ -8,8 +8,43 @@ interface Mensaje {
 
 const SALUDO: Mensaje = {
   rol: "assistant",
-  contenido: "¡Hola! Soy el asistente del Portal Azahar. Pregúntame qué hace algún módulo o cómo hacer algo (por ejemplo: \"¿cómo pido vacaciones?\").",
+  contenido:
+    "¡Hola! Soy JARVIS, el asistente del Portal Azahar. Pregúntame qué hace algún módulo o cómo hacer algo (por ejemplo: \"¿cómo pido vacaciones?\").",
 };
+
+const FRASE_BIENVENIDA = "Bienvenido al portal, mi nombre es JARVIS y estoy disponible para ayudarte en lo que necesites.";
+
+/** Busca la mejor voz en español disponible en el navegador para la síntesis de voz. */
+function elegirVozEspanol(voces: SpeechSynthesisVoice[]): SpeechSynthesisVoice | undefined {
+  return (
+    voces.find((v) => v.lang?.toLowerCase().startsWith("es") && /female|mujer|f\b/i.test(v.name)) ??
+    voces.find((v) => v.lang?.toLowerCase().startsWith("es")) ??
+    undefined
+  );
+}
+
+/** Reproduce la frase de bienvenida con la síntesis de voz nativa del navegador (sin costo, sin API externa). */
+function reproducirBienvenida() {
+  if (typeof window === "undefined" || !("speechSynthesis" in window)) return;
+
+  function hablar() {
+    const utterance = new SpeechSynthesisUtterance(FRASE_BIENVENIDA);
+    utterance.lang = "es-ES";
+    utterance.rate = 1;
+    utterance.pitch = 1;
+    const voz = elegirVozEspanol(window.speechSynthesis.getVoices());
+    if (voz) utterance.voice = voz;
+    window.speechSynthesis.cancel();
+    window.speechSynthesis.speak(utterance);
+  }
+
+  // Las voces a veces cargan de forma asíncrona la primera vez.
+  if (window.speechSynthesis.getVoices().length === 0) {
+    window.speechSynthesis.addEventListener("voiceschanged", hablar, { once: true });
+  } else {
+    hablar();
+  }
+}
 
 export function ChatbotWidget() {
   const [abierto, setAbierto] = useState(false);
@@ -17,10 +52,22 @@ export function ChatbotWidget() {
   const [entrada, setEntrada] = useState("");
   const [enviando, setEnviando] = useState(false);
   const finRef = useRef<HTMLDivElement>(null);
+  const yaSaludoRef = useRef(false);
 
   useEffect(() => {
     if (abierto) finRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [mensajes, abierto]);
+
+  function alternarChat() {
+    setAbierto((actual) => {
+      const nuevo = !actual;
+      if (nuevo && !yaSaludoRef.current) {
+        yaSaludoRef.current = true;
+        reproducirBienvenida();
+      }
+      return nuevo;
+    });
+  }
 
   async function enviarMensaje(e: FormEvent) {
     e.preventDefault();
@@ -46,7 +93,7 @@ export function ChatbotWidget() {
       if (datos?.ok && datos.respuesta) {
         respuesta = datos.respuesta;
       } else if (datos?.motivo === "config_faltante") {
-        respuesta = "El asistente todavía no está activado en este despliegue: falta configurar GEMINI_API_KEY en Vercel.";
+        respuesta = "Todavía no estoy activado del todo en este despliegue: falta configurar GEMINI_API_KEY en Vercel.";
       } else {
         respuesta = datos?.mensaje || "No pude responder en este momento. Intenta de nuevo en un momento.";
       }
@@ -54,7 +101,7 @@ export function ChatbotWidget() {
     } catch {
       setMensajes((actuales) => [
         ...actuales,
-        { rol: "assistant", contenido: "No pude conectarme con el asistente. Revisa tu conexión e intenta de nuevo." },
+        { rol: "assistant", contenido: "No pude conectarme en este momento. Revisa tu conexión e intenta de nuevo." },
       ]);
     } finally {
       setEnviando(false);
@@ -68,7 +115,7 @@ export function ChatbotWidget() {
           <div className="flex items-center justify-between bg-brand-800 px-4 py-3">
             <div className="flex items-center gap-2 text-cream-100">
               <Bot className="h-4 w-4" strokeWidth={1.75} />
-              <p className="font-heading text-sm font-semibold">Asistente Azahar</p>
+              <p className="font-heading text-sm font-semibold">JARVIS</p>
             </div>
             <button
               onClick={() => setAbierto(false)}
@@ -122,10 +169,10 @@ export function ChatbotWidget() {
       )}
 
       <button
-        onClick={() => setAbierto((a) => !a)}
+        onClick={alternarChat}
         className="fixed bottom-6 right-6 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-brand-800 text-cream-100 shadow-card transition hover:bg-brand-900"
-        aria-label={abierto ? "Cerrar asistente" : "Abrir asistente"}
-        title="Asistente del Portal Azahar"
+        aria-label={abierto ? "Cerrar a JARVIS" : "Abrir a JARVIS"}
+        title="JARVIS — asistente del Portal Azahar"
       >
         {abierto ? <X className="h-5 w-5" strokeWidth={1.75} /> : <MessageCircle className="h-6 w-6" strokeWidth={1.75} />}
       </button>

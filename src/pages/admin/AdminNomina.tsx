@@ -22,11 +22,16 @@ export default function AdminNomina() {
 
   const cargar = useCallback(async () => {
     setCargando(true);
-    const [emps, nom] = await Promise.all([dataSource.listEmpleados(), dataSource.listNominaPagos()]);
-    setEmpleados(emps);
-    setPagos(nom);
-    setCargando(false);
-  }, []);
+    try {
+      const [emps, nom] = await Promise.all([dataSource.listEmpleados(), dataSource.listNominaPagos()]);
+      setEmpleados(emps);
+      setPagos(nom);
+    } catch {
+      showToast("No se pudo cargar la nómina. Intenta de nuevo.", "error");
+    } finally {
+      setCargando(false);
+    }
+  }, [showToast]);
 
   useEffect(() => {
     void cargar();

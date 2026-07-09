@@ -108,7 +108,7 @@ export const httpDataSource: DataSource = {
   },
 
   async createEmpleado(input: NuevoEmpleadoInput) {
-    const data = await fetchJson<{ ok: boolean; empleado: Empleado }>("/api/empleados-crear", {
+    const data = await fetchJson<{ ok: boolean; empleado: Empleado }>("/api/empleados", {
       method: "POST",
       body: JSON.stringify(input),
     });

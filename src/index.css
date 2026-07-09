@@ -133,8 +133,8 @@ h1, h2, h3, h4, h5, h6 {
 .azahar-mosaic-bg {
   background-image: url(./assets/mosaic-light.png);
   background-repeat: repeat;
-  background-size: 180px 97px;
-  opacity: 0.55;
+  background-size: 220px 119px;
+  opacity: 0.14;
 }
 :root[data-theme="dark"] .azahar-mosaic-bg {
   background-image: url(./assets/mosaic-dark.png);

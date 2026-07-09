@@ -1,11 +1,13 @@
 import { Outlet } from "react-router-dom";
 import { Sidebar } from "./Sidebar";
 import { IndicadoresTicker } from "./IndicadoresTicker";
+import { ChatbotWidget } from "./ChatbotWidget";
 
 export function AppShell() {
   return (
     <div className="min-h-screen bg-[var(--surface-app)] pt-9">
       <IndicadoresTicker />
+      <ChatbotWidget />
       <div
         className="azahar-mosaic-bg pointer-events-none fixed"
         style={{ top: "-50vh", left: "-50vw", width: "200vw", height: "200vh", transform: "rotate(-22deg)" }}

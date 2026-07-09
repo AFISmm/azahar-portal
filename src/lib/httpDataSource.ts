@@ -144,8 +144,8 @@ export const httpDataSource: DataSource = {
 
   async resolverSolicitud(id, estado: SolicitudEstado) {
     // `resueltoPor` no se envía: el servidor siempre usa el id del admin de
-    // la sesión actual (ver api/solicitudes/[id].ts), nunca un valor del cliente.
-    const data = await fetchJson<{ ok: boolean; solicitud: Solicitud }>(`/api/solicitudes/${encodeURIComponent(id)}`, {
+    // la sesión actual (ver api/solicitudes/index.ts), nunca un valor del cliente.
+    const data = await fetchJson<{ ok: boolean; solicitud: Solicitud }>(`/api/solicitudes?id=${encodeURIComponent(id)}`, {
       method: "PATCH",
       body: JSON.stringify({ estado }),
     });
@@ -171,7 +171,7 @@ export const httpDataSource: DataSource = {
   },
 
   async actualizarEstadoNominaPago(id, estado: EstadoNomina) {
-    const data = await fetchJson<{ ok: boolean; pago: NominaPago }>(`/api/nomina/${encodeURIComponent(id)}`, {
+    const data = await fetchJson<{ ok: boolean; pago: NominaPago }>(`/api/nomina?id=${encodeURIComponent(id)}`, {
       method: "PATCH",
       body: JSON.stringify({ estado }),
     });

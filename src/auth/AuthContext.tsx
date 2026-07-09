@@ -256,7 +256,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       window.localStorage.removeItem(DEMO_SESSION_KEY);
     } else {
       try {
-        await fetch("/api/auth/logout", { method: "POST", credentials: "include" });
+        await fetch("/api/auth/login", { method: "DELETE", credentials: "include" });
       } catch {
         // Si la petición falla igual limpiamos el estado local.
       }

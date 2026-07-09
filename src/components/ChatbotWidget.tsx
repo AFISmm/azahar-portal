@@ -13,7 +13,7 @@ const SALUDO: Mensaje = {
 };
 
 const FRASE_BIENVENIDA = "Bienvenido al portal, mi nombre es JARVIS y estoy disponible para ayudarte en lo que necesites.";
-const FRASE_PRUEBA = "Hola, soy JARVIS. Así suena esta voz dentro del Portal Azahar.";
+const FRASE_PRUEBA = "Hola, bienvenido al portal de Azahar, acá estoy para ayudarte.";
 const STORAGE_KEY_VOZ = "jarvis-voz-uri";
 
 /** Busca la mejor voz en español disponible en el navegador para la síntesis de voz. */
@@ -82,11 +82,6 @@ export function ChatbotWidget() {
   const vocesEspanol = voces.filter((v) => v.lang?.toLowerCase().startsWith("es"));
   const listaVoces = vocesEspanol.length > 0 ? vocesEspanol : voces;
 
-  function elegirVoz(uri: string) {
-    setVozUri(uri);
-    if (typeof window !== "undefined") localStorage.setItem(STORAGE_KEY_VOZ, uri);
-  }
-
   function probarVoz(uri: string) {
     const voz = voces.find((v) => v.voiceURI === uri);
     const utterance = new SpeechSynthesisUtterance(FRASE_PRUEBA);
@@ -94,6 +89,12 @@ export function ChatbotWidget() {
     if (voz) utterance.voice = voz;
     window.speechSynthesis.cancel();
     window.speechSynthesis.speak(utterance);
+  }
+
+  function elegirVoz(uri: string) {
+    setVozUri(uri);
+    if (typeof window !== "undefined") localStorage.setItem(STORAGE_KEY_VOZ, uri);
+    probarVoz(uri);
   }
 
   function alternarChat() {

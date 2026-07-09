@@ -17,9 +17,9 @@ export function NotificacionesDrawer({ open, onClose, notificaciones, cargando, 
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex justify-end bg-brand-900/40 backdrop-blur-[2px]" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex justify-end" onClick={onClose}>
       <div
-        className="azahar-fade-in flex h-full w-full max-w-sm flex-col bg-[var(--surface-card)] shadow-card"
+        className="azahar-fade-in flex h-full w-full max-w-sm flex-col border-l border-[var(--border-subtle)] bg-[var(--surface-card)] shadow-card"
         role="dialog"
         aria-modal="true"
         aria-label="Notificaciones"

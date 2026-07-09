@@ -1,6 +1,6 @@
 import { type FormEvent, useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import { ArrowLeft, Lock, MessageSquareWarning } from "lucide-react";
+import { ArrowLeft, Lock, MessageSquareWarning, Paperclip } from "lucide-react";
 import { useAuth } from "../auth/AuthContext";
 import { dataSource } from "../lib/dataSource";
 import type { DestinoPqr, Pqr } from "../lib/types";
@@ -32,6 +32,7 @@ export default function MiPerfil() {
   const [cedulaPqr, setCedulaPqr] = useState("");
   const [correoPqr, setCorreoPqr] = useState("");
   const [problema, setProblema] = useState("");
+  const [archivoPqr, setArchivoPqr] = useState<File | null>(null);
   const [enviandoPqr, setEnviandoPqr] = useState(false);
 
   useEffect(() => {
@@ -87,15 +88,25 @@ export default function MiPerfil() {
     if (!empleado || !adminDestinoId) return;
     setEnviandoPqr(true);
     try {
+      let adjuntoUrl: string | undefined;
+      let adjuntoNombre: string | undefined;
+      if (archivoPqr) {
+        const subido = await dataSource.subirArchivoPqr(archivoPqr);
+        adjuntoUrl = subido.url;
+        adjuntoNombre = subido.nombre;
+      }
       await dataSource.createPqr({
         nombre: empleado.nombre,
         cedula: cedulaPqr.trim() || null,
         correo: correoPqr.trim(),
         adminDestinoId,
         problema: problema.trim(),
+        adjuntoUrl,
+        adjuntoNombre,
       });
       showToast("Tu PQR fue radicada correctamente.", "success");
       setProblema("");
+      setArchivoPqr(null);
       setMisPqr(await dataSource.listPqrPropias());
     } catch (err) {
       showToast(err instanceof Error ? err.message : "No se pudo radicar la PQR.", "error");
@@ -144,10 +155,32 @@ export default function MiPerfil() {
                         </span>
                       </div>
                       <p className="mt-1 text-[11px] text-[var(--text-muted)]">Radicada el {formatDateTime(p.creadoEn)}</p>
+                      {p.adjuntoUrl && (
+                        <a
+                          href={p.adjuntoUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="mt-1.5 inline-flex items-center gap-1 text-xs font-semibold text-brand-800 hover:underline"
+                        >
+                          <Paperclip className="h-3.5 w-3.5" strokeWidth={1.75} />
+                          {p.adjuntoNombre ?? "Ver adjunto"}
+                        </a>
+                      )}
                       {p.estado === "resuelta" && p.comentario && (
                         <div className="mt-2 rounded-lg bg-status-aprobada-bg/40 p-2.5">
                           <p className="text-xs font-semibold uppercase tracking-wide text-status-aprobada">Respuesta del desarrollador</p>
                           <p className="mt-1 text-sm text-[var(--text-secondary)]">{p.comentario}</p>
+                          {p.respuestaAdjuntoUrl && (
+                            <a
+                              href={p.respuestaAdjuntoUrl}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="mt-1.5 inline-flex items-center gap-1 text-xs font-semibold text-status-aprobada hover:underline"
+                            >
+                              <Paperclip className="h-3.5 w-3.5" strokeWidth={1.75} />
+                              {p.respuestaAdjuntoNombre ?? "Ver adjunto"}
+                            </a>
+                          )}
                         </div>
                       )}
                     </li>
@@ -185,6 +218,10 @@ export default function MiPerfil() {
                   value={problema}
                   onChange={(e) => setProblema(e.target.value)}
                 />
+              </Field>
+              <Field label="Adjuntar archivo o imagen (opcional)">
+                <Input type="file" onChange={(e) => setArchivoPqr(e.target.files?.[0] ?? null)} />
+                {archivoPqr && <p className="mt-1.5 text-xs text-[var(--text-secondary)]">Seleccionado: {archivoPqr.name}</p>}
               </Field>
               <Button type="submit" disabled={enviandoPqr || !adminDestinoId} className="w-full">
                 Enviar PQR

@@ -1,4 +1,5 @@
 import type {
+  ArchivoSubido,
   CertificadoFinca,
   DestinoPqr,
   Documento,
@@ -60,7 +61,14 @@ export interface DataSource {
   createPqr(input: NuevaPqrInput): Promise<Pqr>;
   listPqrRecibidas(): Promise<Pqr[]>;
   listPqrPropias(): Promise<Pqr[]>;
-  actualizarEstadoPqr(id: string, estado: PqrEstado, comentario?: string): Promise<Pqr>;
+  actualizarEstadoPqr(
+    id: string,
+    estado: PqrEstado,
+    comentario?: string,
+    respuestaAdjuntoUrl?: string,
+    respuestaAdjuntoNombre?: string,
+  ): Promise<Pqr>;
+  subirArchivoPqr(archivo: File): Promise<ArchivoSubido>;
 }
 
 export { IS_DEMO_MODE };

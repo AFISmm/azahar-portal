@@ -1,5 +1,6 @@
 import type { DataSource } from "./dataSource";
 import type {
+  ArchivoSubido,
   CertificadoFinca,
   Documento,
   Empleado,
@@ -269,8 +270,12 @@ export const mockDataSource: DataSource = {
       correo: input.correo,
       adminDestinoId: input.adminDestinoId,
       problema: input.problema,
+      adjuntoUrl: input.adjuntoUrl ?? null,
+      adjuntoNombre: input.adjuntoNombre ?? null,
       estado: "pendiente",
       comentario: null,
+      respuestaAdjuntoUrl: null,
+      respuestaAdjuntoNombre: null,
       resueltoEn: null,
       creadoEn: new Date().toISOString(),
     };
@@ -290,15 +295,31 @@ export const mockDataSource: DataSource = {
     return delay(resultado);
   },
 
-  async actualizarEstadoPqr(id: string, estado: PqrEstado, comentario?: string) {
+  async actualizarEstadoPqr(
+    id: string,
+    estado: PqrEstado,
+    comentario?: string,
+    respuestaAdjuntoUrl?: string,
+    respuestaAdjuntoNombre?: string,
+  ) {
     const idx = pqrs.findIndex((p) => p.id === id);
     if (idx === -1) throw new Error("PQR no encontrada");
     pqrs[idx] = {
       ...pqrs[idx],
       estado,
       comentario: comentario !== undefined ? comentario || null : pqrs[idx].comentario,
+      respuestaAdjuntoUrl: respuestaAdjuntoUrl !== undefined ? respuestaAdjuntoUrl || null : pqrs[idx].respuestaAdjuntoUrl,
+      respuestaAdjuntoNombre: respuestaAdjuntoNombre !== undefined ? respuestaAdjuntoNombre || null : pqrs[idx].respuestaAdjuntoNombre,
       resueltoEn: estado === "resuelta" ? new Date().toISOString() : null,
     };
     return delay(pqrs[idx]);
+  },
+
+  async subirArchivoPqr(archivo: File) {
+    // Modo demo: no hay backend real, así que solo se genera un URL local
+    // (blob:) válido en esta misma pestaña del navegador — suficiente para
+    // previsualizar el archivo durante la sesión de demostración.
+    const url = URL.createObjectURL(archivo);
+    return delay({ url, nombre: archivo.name } satisfies ArchivoSubido);
   },
 };

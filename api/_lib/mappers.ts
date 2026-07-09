@@ -296,8 +296,12 @@ export interface PqrRow {
   correo: string;
   admin_destino_id: string | null;
   problema: string;
+  adjunto_url: string | null;
+  adjunto_nombre: string | null;
   estado: PqrEstado;
   comentario: string | null;
+  respuesta_adjunto_url: string | null;
+  respuesta_adjunto_nombre: string | null;
   resuelto_en: string | null;
   creado_en: string;
 }
@@ -310,8 +314,12 @@ export interface PqrPublico {
   correo: string;
   adminDestinoId: string | null;
   problema: string;
+  adjuntoUrl: string | null;
+  adjuntoNombre: string | null;
   estado: PqrEstado;
   comentario: string | null;
+  respuestaAdjuntoUrl: string | null;
+  respuestaAdjuntoNombre: string | null;
   resueltoEn: string | null;
   creadoEn: string;
 }
@@ -325,8 +333,12 @@ export function mapPqrRow(row: PqrRow): PqrPublico {
     correo: row.correo,
     adminDestinoId: row.admin_destino_id,
     problema: row.problema,
+    adjuntoUrl: row.adjunto_url,
+    adjuntoNombre: row.adjunto_nombre,
     estado: row.estado,
     comentario: row.comentario,
+    respuestaAdjuntoUrl: row.respuesta_adjunto_url,
+    respuestaAdjuntoNombre: row.respuesta_adjunto_nombre,
     resueltoEn: row.resuelto_en,
     creadoEn: row.creado_en,
   };

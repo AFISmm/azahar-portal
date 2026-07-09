@@ -143,8 +143,12 @@ create table pqr (
   correo text not null,
   admin_destino_id uuid references empleados (id),
   problema text not null,
+  adjunto_url text,
+  adjunto_nombre text,
   estado text not null default 'pendiente' check (estado in ('pendiente', 'resuelta')),
   comentario text,
+  respuesta_adjunto_url text,
+  respuesta_adjunto_nombre text,
   resuelto_en timestamptz,
   creado_en timestamptz not null default now()
 );

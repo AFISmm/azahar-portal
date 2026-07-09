@@ -18,10 +18,21 @@
 // POST /api/auth/me?pqr=1         -> radica una PQR. Cualquier cuenta que NO
 //                                    sea de tipo 'desarrollador'.
 // PATCH /api/auth/me?pqr=<id>     -> cambia el estado de una PQR propia y,
-//                                    opcionalmente, adjunta el comentario de
-//                                    respuesta (pendiente/resuelta). Solo el
+//                                    opcionalmente, adjunta el comentario (y
+//                                    un archivo) de respuesta
+//                                    (pendiente/resuelta). Solo el
 //                                    destinatario ('desarrollador') puede
 //                                    resolverla.
+// POST /api/auth/me?subirArchivo=1&nombre=<nombreArchivo>
+//                                 -> sube un archivo (cualquier tipo/imagen)
+//                                    a Vercel Blob y devuelve { url, nombre }.
+//                                    El cuerpo de la petición ES el archivo
+//                                    crudo (no JSON): el cliente hace
+//                                    fetch(..., { headers: { "Content-Type":
+//                                    file.type }, body: file }). Cualquier
+//                                    sesión activa puede usarlo (empleados
+//                                    adjuntando evidencia en su PQR,
+//                                    desarrolladores adjuntando la solución).
 // La funcionalidad de PQR vive aquí (en vez de su propio api/pqr/index.ts)
 // para no superar el límite de 12 funciones serverless del plan Hobby de
 // Vercel — mismo criterio que ya se usó para fusionar login+logout o
@@ -30,6 +41,7 @@
 
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import bcrypt from "bcryptjs";
+import { put } from "@vercel/blob";
 import { sql } from "../_lib/db.js";
 import { HttpError, leerEmpleadoIdDeSesion, manejarError, requireAuth } from "../_lib/auth.js";
 import { mapEmpleadoRow, mapPqrRow, type EmpleadoRow, type PqrEstado, type PqrRow } from "../_lib/mappers.js";
@@ -48,6 +60,8 @@ interface PqrPayload {
   correo: string;
   adminDestinoId: string;
   problema: string;
+  adjuntoUrl?: string;
+  adjuntoNombre?: string;
 }
 
 function esErrorDuplicado(err: unknown): string | null {
@@ -130,8 +144,11 @@ async function radicarPqr(req: VercelRequest, res: VercelResponse) {
   }
 
   const { rows } = await sql<PqrRow>`
-    insert into pqr (empleado_id, nombre, cedula, correo, admin_destino_id, problema)
-    values (${empleadoId}, ${nombre}, ${body.cedula?.trim() || null}, ${correo}, ${adminDestinoId}, ${problema})
+    insert into pqr (empleado_id, nombre, cedula, correo, admin_destino_id, problema, adjunto_url, adjunto_nombre)
+    values (
+      ${empleadoId}, ${nombre}, ${body.cedula?.trim() || null}, ${correo}, ${adminDestinoId}, ${problema},
+      ${body.adjuntoUrl?.trim() || null}, ${body.adjuntoNombre?.trim() || null}
+    )
     returning *
   `;
   return res.status(201).json({ ok: true, pqr: mapPqrRow(rows[0]) });
@@ -139,7 +156,7 @@ async function radicarPqr(req: VercelRequest, res: VercelResponse) {
 
 async function actualizarEstadoPqr(req: VercelRequest, res: VercelResponse, pqrId: string) {
   const { empleadoId } = await requireAuth(req);
-  const body = req.body as { estado?: PqrEstado; comentario?: string };
+  const body = req.body as { estado?: PqrEstado; comentario?: string; respuestaAdjuntoUrl?: string; respuestaAdjuntoNombre?: string };
   if (body.estado !== "pendiente" && body.estado !== "resuelta") {
     throw new HttpError(400, "Estado inválido.");
   }
@@ -152,14 +169,35 @@ async function actualizarEstadoPqr(req: VercelRequest, res: VercelResponse, pqrI
   }
 
   const comentario = body.comentario !== undefined ? body.comentario.trim() || null : actual.comentario;
+  const respuestaAdjuntoUrl = body.respuestaAdjuntoUrl !== undefined ? body.respuestaAdjuntoUrl.trim() || null : actual.respuesta_adjunto_url;
+  const respuestaAdjuntoNombre =
+    body.respuestaAdjuntoNombre !== undefined ? body.respuestaAdjuntoNombre.trim() || null : actual.respuesta_adjunto_nombre;
   const resueltoEn = body.estado === "resuelta" ? new Date().toISOString() : null;
 
   const { rows: actualizadas } = await sql<PqrRow>`
-    update pqr set estado = ${body.estado}, comentario = ${comentario}, resuelto_en = ${resueltoEn}
+    update pqr set
+      estado = ${body.estado},
+      comentario = ${comentario},
+      respuesta_adjunto_url = ${respuestaAdjuntoUrl},
+      respuesta_adjunto_nombre = ${respuestaAdjuntoNombre},
+      resuelto_en = ${resueltoEn}
     where id = ${pqrId}
     returning *
   `;
   return res.status(200).json({ ok: true, pqr: mapPqrRow(actualizadas[0]) });
+}
+
+async function subirArchivo(req: VercelRequest, res: VercelResponse) {
+  const { empleadoId } = await requireAuth(req);
+  const nombreParam = req.query.nombre;
+  const nombreOriginal = (Array.isArray(nombreParam) ? nombreParam[0] : nombreParam) || "archivo";
+  if (!process.env.BLOB_READ_WRITE_TOKEN) {
+    throw new HttpError(500, "El almacenamiento de archivos no está configurado (falta BLOB_READ_WRITE_TOKEN).");
+  }
+
+  const rutaBlob = `pqr/${empleadoId}-${Date.now()}-${nombreOriginal}`;
+  const blob = await put(rutaBlob, req, { access: "public", contentType: req.headers["content-type"] || undefined });
+  return res.status(200).json({ ok: true, url: blob.url, nombre: nombreOriginal });
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -193,6 +231,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     if (req.method === "POST" && req.query.pqr === "1") {
       return await radicarPqr(req, res);
+    }
+
+    if (req.method === "POST" && req.query.subirArchivo === "1") {
+      return await subirArchivo(req, res);
     }
 
     res.setHeader("Allow", "GET, PATCH, POST");

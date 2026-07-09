@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { Navigate } from "react-router-dom";
-import { CheckCircle2, MessageSquareWarning } from "lucide-react";
+import { CheckCircle2, MessageSquareWarning, Paperclip } from "lucide-react";
 import { useAuth } from "../../auth/AuthContext";
 import { dataSource } from "../../lib/dataSource";
 import type { Pqr } from "../../lib/types";
@@ -8,7 +8,7 @@ import { formatDateTime } from "../../lib/format";
 import { useToast } from "../../context/ToastContext";
 import { PageHeader } from "../../components/PageHeader";
 import { Card } from "../../components/Card";
-import { Button, Field, Textarea } from "../../components/ui";
+import { Button, Field, Input, Textarea } from "../../components/ui";
 
 const ESTADO_ESTILO: Record<Pqr["estado"], string> = {
   pendiente: "bg-status-pendiente-bg text-status-pendiente",
@@ -22,6 +22,7 @@ export default function GestionPqr() {
   const [cargando, setCargando] = useState(true);
   const [procesando, setProcesando] = useState<string | null>(null);
   const [comentarios, setComentarios] = useState<Record<string, string>>({});
+  const [archivos, setArchivos] = useState<Record<string, File | null>>({});
 
   const cargar = useCallback(async () => {
     setCargando(true);
@@ -46,9 +47,21 @@ export default function GestionPqr() {
   async function marcarComoResuelta(pqr: Pqr) {
     setProcesando(pqr.id);
     try {
-      await dataSource.actualizarEstadoPqr(pqr.id, "resuelta", comentarios[pqr.id]?.trim() ?? "");
+      let respuestaAdjuntoUrl: string | undefined;
+      let respuestaAdjuntoNombre: string | undefined;
+      const archivo = archivos[pqr.id];
+      if (archivo) {
+        const subido = await dataSource.subirArchivoPqr(archivo);
+        respuestaAdjuntoUrl = subido.url;
+        respuestaAdjuntoNombre = subido.nombre;
+      }
+      await dataSource.actualizarEstadoPqr(pqr.id, "resuelta", comentarios[pqr.id]?.trim() ?? "", respuestaAdjuntoUrl, respuestaAdjuntoNombre);
       showToast("PQR marcada como resuelta. El empleado verá tu comentario en sus notificaciones.", "success");
       setComentarios((actuales) => {
+        const { [pqr.id]: _omitido, ...resto } = actuales;
+        return resto;
+      });
+      setArchivos((actuales) => {
         const { [pqr.id]: _omitido, ...resto } = actuales;
         return resto;
       });
@@ -115,6 +128,17 @@ export default function GestionPqr() {
                 </div>
 
                 <p className="mt-3 rounded-xl bg-[var(--surface-app)] p-3 text-sm text-[var(--text-secondary)]">{p.problema}</p>
+                {p.adjuntoUrl && (
+                  <a
+                    href={p.adjuntoUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="mt-1.5 inline-flex items-center gap-1 text-xs font-semibold text-brand-800 hover:underline"
+                  >
+                    <Paperclip className="h-3.5 w-3.5" strokeWidth={1.75} />
+                    {p.adjuntoNombre ?? "Ver adjunto"}
+                  </a>
+                )}
 
                 {p.estado === "pendiente" ? (
                   <div className="mt-3 space-y-2">
@@ -125,6 +149,13 @@ export default function GestionPqr() {
                         value={comentarios[p.id] ?? ""}
                         onChange={(e) => setComentarios((actuales) => ({ ...actuales, [p.id]: e.target.value }))}
                       />
+                    </Field>
+                    <Field label="Adjuntar archivo o imagen (opcional)">
+                      <Input
+                        type="file"
+                        onChange={(e) => setArchivos((actuales) => ({ ...actuales, [p.id]: e.target.files?.[0] ?? null }))}
+                      />
+                      {archivos[p.id] && <p className="mt-1.5 text-xs text-[var(--text-secondary)]">Seleccionado: {archivos[p.id]?.name}</p>}
                     </Field>
                     <div className="flex justify-end">
                       <Button
@@ -143,6 +174,17 @@ export default function GestionPqr() {
                     <div className="mt-3 rounded-xl border border-[var(--border-subtle)] bg-status-aprobada-bg/40 p-3">
                       <p className="text-xs font-semibold uppercase tracking-wide text-status-aprobada">Tu respuesta</p>
                       <p className="mt-1 text-sm text-[var(--text-secondary)]">{p.comentario}</p>
+                      {p.respuestaAdjuntoUrl && (
+                        <a
+                          href={p.respuestaAdjuntoUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="mt-1.5 inline-flex items-center gap-1 text-xs font-semibold text-status-aprobada hover:underline"
+                        >
+                          <Paperclip className="h-3.5 w-3.5" strokeWidth={1.75} />
+                          {p.respuestaAdjuntoNombre ?? "Ver adjunto"}
+                        </a>
+                      )}
                     </div>
                   )
                 )}

@@ -49,13 +49,26 @@ export interface Pqr {
   correo: string;
   adminDestinoId: string | null;
   problema: string;
+  adjuntoUrl: string | null;
+  adjuntoNombre: string | null;
   estado: PqrEstado;
   comentario: string | null;
+  respuestaAdjuntoUrl: string | null;
+  respuestaAdjuntoNombre: string | null;
   resueltoEn: string | null;
   creadoEn: string;
 }
 
-export type NuevaPqrInput = Pick<Pqr, "nombre" | "cedula" | "correo" | "problema"> & { adminDestinoId: string };
+export type NuevaPqrInput = Pick<Pqr, "nombre" | "cedula" | "correo" | "problema"> & {
+  adminDestinoId: string;
+  adjuntoUrl?: string | null;
+  adjuntoNombre?: string | null;
+};
+
+export interface ArchivoSubido {
+  url: string;
+  nombre: string;
+}
 
 export interface DestinoPqr {
   id: string;

@@ -1,5 +1,6 @@
 import type { DataSource } from "./dataSource";
 import type {
+  ArchivoSubido,
   CertificadoFinca,
   DestinoPqr,
   Documento,
@@ -252,11 +253,31 @@ export const httpDataSource: DataSource = {
     return data.pqr;
   },
 
-  async actualizarEstadoPqr(id: string, estado: PqrEstado, comentario?: string) {
+  async actualizarEstadoPqr(
+    id: string,
+    estado: PqrEstado,
+    comentario?: string,
+    respuestaAdjuntoUrl?: string,
+    respuestaAdjuntoNombre?: string,
+  ) {
     const data = await fetchJson<{ ok: boolean; pqr: Pqr }>(`/api/auth/me?pqr=${encodeURIComponent(id)}`, {
       method: "PATCH",
-      body: JSON.stringify({ estado, comentario }),
+      body: JSON.stringify({ estado, comentario, respuestaAdjuntoUrl, respuestaAdjuntoNombre }),
     });
     return data.pqr;
+  },
+
+  async subirArchivoPqr(archivo: File) {
+    const respuesta = await fetch(`/api/auth/me?subirArchivo=1&nombre=${encodeURIComponent(archivo.name)}`, {
+      method: "POST",
+      credentials: "include",
+      headers: { "Content-Type": archivo.type || "application/octet-stream" },
+      body: archivo,
+    });
+    const payload = (await respuesta.json().catch(() => null)) as { ok: boolean; url?: string; nombre?: string; mensaje?: string } | null;
+    if (!respuesta.ok || !payload?.ok || !payload.url) {
+      throw new HttpDataSourceError(respuesta.status, payload?.mensaje ?? `Error ${respuesta.status} subiendo el archivo.`);
+    }
+    return { url: payload.url, nombre: payload.nombre ?? archivo.name } satisfies ArchivoSubido;
   },
 };

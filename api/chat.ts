@@ -19,7 +19,7 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { manejarError, requireAuth } from "./_lib/auth.js";
 
-const GEMINI_MODEL = process.env.GEMINI_MODEL || "gemini-2.0-flash";
+const GEMINI_MODEL = process.env.GEMINI_MODEL || "gemini-3-flash-preview";
 
 const BASE_CONOCIMIENTO = `
 Te llamas JARVIS, el asistente virtual del Portal Azahar, el portal interno de Azahar Coffee Company (empresa colombiana de

@@ -30,7 +30,7 @@ const PERIODOS: { id: PeriodoBolsa; label: string }[] = [
 
 export default function InicioMercado() {
   const navigate = useNavigate();
-  const [periodo, setPeriodo] = useState<PeriodoBolsa>("semana");
+  const [periodo, setPeriodo] = useState<PeriodoBolsa>("mes");
 
   const ultimaVariacion = variacionAcumuladaMensual.at(-1)!;
   const ultimaProduccion = produccionAgricolaAnual.at(-1)!;
@@ -72,60 +72,8 @@ export default function InicioMercado() {
           <FuenteFooter fuente={FUENTE_BASE_MUNDIAL} />
         </Card>
 
-        {/* Card B — Cadena de producción del café (tarjeta completa clicable) */}
-        <Card
-          title="Cadena de producción del café"
-          icon={<Layers className="h-4 w-4" strokeWidth={1.75} />}
-          className="lg:col-span-3"
-          onClick={() => navigate("/cadena-produccion")}
-        >
-          <div className="flex flex-wrap items-start justify-between gap-4 sm:flex-nowrap">
-            {etapasProduccion.map((etapa) => {
-              const Icon = etapaIconos[etapa.id] ?? Layers;
-              return (
-                <div key={etapa.id} className="flex min-w-[70px] flex-1 flex-col items-center gap-2 text-center">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-cream-200 text-brand-800">
-                    <Icon className="h-5 w-5" strokeWidth={1.75} />
-                  </div>
-                  <p className="text-xs font-semibold text-[var(--text-primary)]">{etapa.titulo}</p>
-                </div>
-              );
-            })}
-          </div>
-          <p className="mt-5 flex items-center justify-end gap-1.5 text-sm font-semibold text-accent-500">
-            Ver proceso completo
-            <ArrowRight className="h-4 w-4" strokeWidth={1.75} />
-          </p>
-        </Card>
-
-        {/* Card C — Variación % acumulada, producción industrial */}
-        <Card title="Variación % acumulada — producción industrial" icon={<TrendingUp className="h-4 w-4" strokeWidth={1.75} />}>
-          <p className={`font-mono text-3xl font-bold ${ultimaVariacion.valor >= 0 ? "text-status-aprobada" : "text-status-rechazada"}`}>
-            {ultimaVariacion.valor >= 0 ? "+" : ""}
-            {ultimaVariacion.valor.toFixed(1)}%
-          </p>
-          <p className="mb-3 text-xs text-[var(--text-muted)]">Variación acumulada, últimos 12 meses</p>
-          <MiniLineChart data={variacionAcumuladaMensual.map((d) => d.valor)} labels={variacionAcumuladaMensual.map((d) => d.mes)} />
-          <div className="mt-1.5 flex justify-between text-[10px] text-[var(--text-muted)]">
-            <span>{variacionAcumuladaMensual[0].mes}</span>
-            <span>{ultimaVariacion.mes}</span>
-          </div>
-          <FuenteFooter fuente={FUENTE_VARIACION_INDUSTRIAL} />
-        </Card>
-
-        {/* Card D — Producción agrícola anual */}
-        <Card title="Producción agrícola anual" icon={<ChartColumn className="h-4 w-4" strokeWidth={1.75} />}>
-          <p className="font-mono text-3xl font-bold text-[var(--text-primary)]">{ultimaProduccion.valor.toLocaleString("es-CO")}</p>
-          <p className="mb-4 text-xs text-[var(--text-muted)]">miles de toneladas · {ultimaProduccion.anio}</p>
-          <MiniBarChart
-            data={produccionAgricolaAnual.map((d) => ({ label: d.anio, value: d.valor }))}
-            formatValue={(v) => `${v.toLocaleString("es-CO")} mil t`}
-          />
-          <FuenteFooter fuente={FUENTE_PRODUCCION_AGRICOLA} />
-        </Card>
-
-        {/* Card E — Valor del café en bolsa */}
-        <Card title="Valor del café en bolsa" icon={<Coffee className="h-4 w-4" strokeWidth={1.75} />}>
+        {/* Card E — Valor del café en bolsa (ahora en la posición ancha) */}
+        <Card title="Valor del café en bolsa" icon={<Coffee className="h-4 w-4" strokeWidth={1.75} />} className="lg:col-span-3">
           <div className="mb-4 inline-flex w-fit rounded-xl border border-[var(--border-subtle)] bg-[var(--surface-muted)] p-1">
             {PERIODOS.map((p) => (
               <button
@@ -163,6 +111,57 @@ export default function InicioMercado() {
 
           <p className="mt-2 text-[11px] text-[var(--text-muted)]">Precio interno de referencia por carga de 125 kg de café pergamino seco.</p>
           <FuenteFooter fuente={FUENTE_BOLSA} />
+        </Card>
+
+        {/* Card C — Variación % acumulada, producción industrial */}
+        <Card title="Variación % acumulada — producción industrial" icon={<TrendingUp className="h-4 w-4" strokeWidth={1.75} />}>
+          <p className={`font-mono text-3xl font-bold ${ultimaVariacion.valor >= 0 ? "text-status-aprobada" : "text-status-rechazada"}`}>
+            {ultimaVariacion.valor >= 0 ? "+" : ""}
+            {ultimaVariacion.valor.toFixed(1)}%
+          </p>
+          <p className="mb-3 text-xs text-[var(--text-muted)]">Variación acumulada, últimos 12 meses</p>
+          <MiniLineChart data={variacionAcumuladaMensual.map((d) => d.valor)} labels={variacionAcumuladaMensual.map((d) => d.mes)} />
+          <div className="mt-1.5 flex justify-between text-[10px] text-[var(--text-muted)]">
+            <span>{variacionAcumuladaMensual[0].mes}</span>
+            <span>{ultimaVariacion.mes}</span>
+          </div>
+          <FuenteFooter fuente={FUENTE_VARIACION_INDUSTRIAL} />
+        </Card>
+
+        {/* Card D — Producción agrícola anual */}
+        <Card title="Producción agrícola anual" icon={<ChartColumn className="h-4 w-4" strokeWidth={1.75} />}>
+          <p className="font-mono text-3xl font-bold text-[var(--text-primary)]">{ultimaProduccion.valor.toLocaleString("es-CO")}</p>
+          <p className="mb-4 text-xs text-[var(--text-muted)]">miles de toneladas · {ultimaProduccion.anio}</p>
+          <MiniBarChart
+            data={produccionAgricolaAnual.map((d) => ({ label: d.anio, value: d.valor }))}
+            formatValue={(v) => `${v.toLocaleString("es-CO")} mil t`}
+          />
+          <FuenteFooter fuente={FUENTE_PRODUCCION_AGRICOLA} />
+        </Card>
+
+        {/* Card B — Cadena de producción del café (ahora en la posición angosta, tarjeta completa clicable) */}
+        <Card
+          title="Cadena de producción del café"
+          icon={<Layers className="h-4 w-4" strokeWidth={1.75} />}
+          onClick={() => navigate("/cadena-produccion")}
+        >
+          <div className="grid grid-cols-4 gap-3">
+            {etapasProduccion.map((etapa) => {
+              const Icon = etapaIconos[etapa.id] ?? Layers;
+              return (
+                <div key={etapa.id} className="flex flex-col items-center gap-1.5 text-center">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-cream-200 text-brand-800">
+                    <Icon className="h-4 w-4" strokeWidth={1.75} />
+                  </div>
+                  <p className="text-[11px] font-semibold leading-tight text-[var(--text-primary)]">{etapa.titulo}</p>
+                </div>
+              );
+            })}
+          </div>
+          <p className="mt-4 flex items-center justify-end gap-1.5 text-sm font-semibold text-accent-500">
+            Ver proceso completo
+            <ArrowRight className="h-4 w-4" strokeWidth={1.75} />
+          </p>
         </Card>
       </div>
     </div>

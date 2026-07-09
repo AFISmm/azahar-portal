@@ -148,6 +148,22 @@ export interface SerieBolsa {
   labelAnterior: string;
 }
 
+/**
+ * Genera una serie diaria determinística (sin Math.random/Date.now) entre
+ * `inicio` y `fin`, con una leve ondulación para que no se vea como una
+ * línea recta perfecta.
+ */
+function generarSerieDiaria(inicio: number, fin: number, dias: number, semilla: number): number[] {
+  const paso = (fin - inicio) / (dias - 1);
+  return Array.from({ length: dias }, (_, i) => {
+    const base = inicio + paso * i;
+    const ondulacion = Math.sin((i + semilla) * 1.3) * (Math.abs(fin - inicio) * 0.012);
+    return Math.round((base + ondulacion) / 1000) * 1000;
+  });
+}
+
+const DIAS_MES_COMPLETO = 30;
+
 /** Precio interno de referencia (COP) por carga de 125 kg de café pergamino seco. */
 export const bolsaPorPeriodo: Record<PeriodoBolsa, SerieBolsa> = {
   dia: {
@@ -165,9 +181,10 @@ export const bolsaPorPeriodo: Record<PeriodoBolsa, SerieBolsa> = {
     labelAnterior: "La semana pasada",
   },
   mes: {
-    xLabels: ["1", "5", "10", "15", "20", "25", "30"],
-    actual: [2080000, 2100000, 2120000, 2150000, 2170000, 2190000, 2205000],
-    anterior: [2000000, 2010000, 2030000, 2050000, 2060000, 2075000, 2090000],
+    // Mes completo, día por día (no solo unos cuantos puntos muestreados).
+    xLabels: Array.from({ length: DIAS_MES_COMPLETO }, (_, i) => String(i + 1)),
+    actual: generarSerieDiaria(2_080_000, 2_205_000, DIAS_MES_COMPLETO, 1),
+    anterior: generarSerieDiaria(2_000_000, 2_090_000, DIAS_MES_COMPLETO, 4),
     labelActual: "Este mes",
     labelAnterior: "El mes pasado",
   },

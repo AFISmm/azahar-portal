@@ -118,11 +118,19 @@ export function LineChartComparativo({
 
       {xLabels && xLabels.length > 0 && (
         <div className="mt-1 flex justify-between text-[10px] text-[var(--text-muted)]">
-          {xLabels.map((label, i) => (
-            <span key={`${label}-${i}`} className={i === 0 || i === xLabels.length - 1 ? "" : "hidden sm:inline"}>
-              {label}
-            </span>
-          ))}
+          {xLabels.map((label, i) => {
+            // Con pocos puntos (semana, horas del día) se muestran todas las
+            // etiquetas; con muchos (mes completo, día a día) solo se
+            // muestran algunas parejas para que no se amontonen, aunque el
+            // arreglo completo sigue disponible para el tooltip al pasar el mouse.
+            const paso = Math.max(1, Math.ceil(xLabels.length / 8));
+            const esVisible = i === 0 || i === xLabels.length - 1 || i % paso === 0;
+            return (
+              <span key={`${label}-${i}`} className={esVisible ? "" : "invisible"}>
+                {label}
+              </span>
+            );
+          })}
         </div>
       )}
 

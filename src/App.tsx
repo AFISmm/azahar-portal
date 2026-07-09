@@ -24,10 +24,10 @@ import AdminDocumentos from "./pages/admin/AdminDocumentos";
 import AdminEmpleados from "./pages/admin/AdminEmpleados";
 import EmpleadoDetalle from "./pages/admin/EmpleadoDetalle";
 import AdminUsuarios from "./pages/admin/AdminUsuarios";
+import AdminNomina from "./pages/admin/AdminNomina";
 
 import GestionEstrategica from "./pages/GestionEstrategica";
 import GestionComercial from "./pages/GestionComercial";
-import GestionOperativa from "./pages/GestionOperativa";
 import InformacionGeneral from "./pages/InformacionGeneral";
 
 export default function App() {
@@ -63,10 +63,10 @@ export default function App() {
                     <Route path="/admin/empleados" element={<AdminEmpleados />} />
                     <Route path="/admin/empleados/:id" element={<EmpleadoDetalle />} />
                     <Route path="/admin/usuarios" element={<AdminUsuarios />} />
+                    <Route path="/admin/nomina" element={<AdminNomina />} />
 
                     <Route path="/gestion-estrategica" element={<GestionEstrategica />} />
                     <Route path="/gestion-comercial" element={<GestionComercial />} />
-                    <Route path="/gestion-operativa" element={<GestionOperativa />} />
                     <Route path="/informacion-general" element={<InformacionGeneral />} />
                   </Route>
                 </Route>

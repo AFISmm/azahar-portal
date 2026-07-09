@@ -42,12 +42,12 @@ const ADMINISTRACION = [
   { to: "/admin/incapacidades", label: "Incapacidades", Icon: Stethoscope },
   { to: "/admin/documentos", label: "Documentos", Icon: FolderCog },
   { to: "/admin/empleados", label: "Empleados", Icon: Users },
+  { to: "/admin/nomina", label: "Nómina", Icon: Receipt },
 ];
 
 const GESTION_NEGOCIO = [
   { to: "/gestion-estrategica", label: "Gestión Estratégica", Icon: Compass },
   { to: "/gestion-comercial", label: "Gestión Comercial", Icon: Store },
-  { to: "/gestion-operativa", label: "Gestión Operativa", Icon: Receipt },
   { to: "/informacion-general", label: "Información General", Icon: Info },
 ];
 

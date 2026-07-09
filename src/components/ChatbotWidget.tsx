@@ -149,7 +149,7 @@ export function ChatbotWidget() {
   return (
     <>
       {abierto && (
-        <div className="fixed bottom-24 right-6 z-40 flex h-[28rem] w-[22rem] flex-col overflow-hidden rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface-card)] shadow-card">
+        <div className="fixed inset-x-4 bottom-20 z-40 flex h-[70vh] max-h-[28rem] flex-col overflow-hidden rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface-card)] shadow-card sm:inset-x-auto sm:bottom-24 sm:right-6 sm:h-[28rem] sm:w-[22rem]">
           <div className="flex items-center justify-between bg-brand-800 px-4 py-3">
             <div className="flex items-center gap-2 text-cream-100">
               <Bot className="h-4 w-4" strokeWidth={1.75} />
@@ -257,7 +257,7 @@ export function ChatbotWidget() {
 
       <button
         onClick={alternarChat}
-        className="fixed bottom-6 right-6 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-brand-800 text-cream-100 shadow-card transition hover:bg-brand-900"
+        className="fixed bottom-4 right-4 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-brand-800 text-cream-100 shadow-card transition hover:bg-brand-900 sm:bottom-6 sm:right-6"
         aria-label={abierto ? "Cerrar a JARVIS" : "Abrir a JARVIS"}
         title="JARVIS — asistente del Portal Azahar"
       >

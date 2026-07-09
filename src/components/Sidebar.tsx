@@ -21,6 +21,7 @@ import {
   Info,
   Sprout,
   ChevronLeft,
+  X,
 } from "lucide-react";
 import { useAuth } from "../auth/AuthContext";
 import { IS_DEMO_MODE } from "../lib/dataSource";
@@ -65,7 +66,12 @@ function itemClase(activo: boolean) {
   }`;
 }
 
-export function Sidebar() {
+interface SidebarProps {
+  abierto?: boolean;
+  onCerrar?: () => void;
+}
+
+export function Sidebar({ abierto = false, onCerrar }: SidebarProps) {
   const { empleado, signOut } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
@@ -73,7 +79,11 @@ export function Sidebar() {
   const enNomina = !enGestionUsuarios && (location.pathname.startsWith("/nomina") || location.pathname.startsWith("/admin"));
 
   return (
-    <aside className="fixed left-0 top-9 bottom-0 z-30 flex w-64 flex-col overflow-hidden border-r border-white/10">
+    <aside
+      className={`fixed left-0 top-9 bottom-0 z-30 flex w-64 flex-col overflow-hidden border-r border-white/10 transition-transform duration-300 ease-in-out md:translate-x-0 ${
+        abierto ? "translate-x-0" : "-translate-x-full"
+      }`}
+    >
       <div
         className="absolute inset-0 -z-20 bg-cover bg-center"
         style={{ backgroundImage: `url(${sidebarBg})` }}
@@ -81,14 +91,21 @@ export function Sidebar() {
       />
       <div className="absolute inset-0 -z-10 bg-gradient-to-b from-brand-900/90 via-brand-900/85 to-brand-900/95" aria-hidden="true" />
 
-      <div className="flex flex-col items-center gap-2.5 px-5 py-6">
+      <div className="relative flex flex-col items-center gap-2.5 px-5 py-6">
+        <button
+          onClick={onCerrar}
+          className="absolute right-3 top-3 rounded-lg p-1.5 text-cream-200/70 transition hover:bg-white/10 hover:text-cream-100 md:hidden"
+          aria-label="Cerrar menú"
+        >
+          <X className="h-4 w-4" strokeWidth={1.75} />
+        </button>
         <div className="flex items-center justify-center rounded-xl bg-white px-3 py-2 ring-1 ring-white/20">
           <img src={logo} alt="Azahar Coffee Company" className="h-9 w-auto object-contain" />
         </div>
         <p className="text-[11px] font-bold uppercase tracking-wider text-cream-200/80">Azahar Coffee Company</p>
       </div>
 
-      <nav className="flex-1 space-y-6 overflow-y-auto px-3 pb-4">
+      <nav onClick={() => onCerrar?.()} className="flex-1 space-y-6 overflow-y-auto px-3 pb-4">
         {enNomina ? (
           <div>
             <button

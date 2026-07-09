@@ -145,7 +145,7 @@ export default function InicioMercado() {
           icon={<Layers className="h-4 w-4" strokeWidth={1.75} />}
           onClick={() => navigate("/cadena-produccion")}
         >
-          <div className="grid grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
             {etapasProduccion.map((etapa) => {
               const Icon = etapaIconos[etapa.id] ?? Layers;
               return (

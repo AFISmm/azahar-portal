@@ -57,7 +57,7 @@ export function LineChartComparativo({
           ref={svgRef}
           viewBox={`0 0 ${ancho} ${height}`}
           preserveAspectRatio="none"
-          className="h-28 w-full cursor-crosshair"
+          className="h-28 w-full cursor-default"
           onMouseMove={manejarMovimiento}
           onMouseLeave={() => setHoverIndex(null)}
         >

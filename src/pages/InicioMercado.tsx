@@ -215,7 +215,7 @@ function MiniLineChart({ data, labels }: { data: number[]; labels: string[] }) {
         ref={svgRef}
         viewBox={`0 0 ${ancho} ${alto}`}
         preserveAspectRatio="none"
-        className="h-20 w-full cursor-crosshair"
+        className="h-20 w-full cursor-default"
         onMouseMove={manejarMovimiento}
         onMouseLeave={() => setHoverIndex(null)}
       >

@@ -26,6 +26,7 @@ import { useAuth } from "../auth/AuthContext";
 import { IS_DEMO_MODE } from "../lib/dataSource";
 import { iniciales } from "../lib/format";
 import logo from "../assets/azahar-logo.png";
+import sidebarBg from "../assets/sidebar-bg.jpg";
 
 const NOMINA_ITEMS = [
   { to: "/nomina/inicio", label: "Inicio", Icon: Home },
@@ -53,11 +54,14 @@ const GESTION_NEGOCIO = [
   { to: "/informacion-general", label: "Información General", Icon: Info },
 ];
 
+// El sidebar ahora lleva una foto de fondo fija (finca cafetera) con un velo
+// oscuro encima, por lo que su paleta de texto deja de depender de las
+// variables de tema claro/oscuro (--text-*) y usa tonos crema/claros fijos,
+// para que siempre se lea bien sobre la fotografía sin importar el tema
+// general de la app.
 function itemClase(activo: boolean) {
   return `flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition ${
-    activo
-      ? "bg-brand-800 text-cream-100 shadow-card"
-      : "text-[var(--text-secondary)] hover:bg-[var(--surface-muted)] hover:text-[var(--text-primary)]"
+    activo ? "bg-accent-500 text-brand-900 shadow-card" : "text-cream-200/80 hover:bg-white/10 hover:text-cream-100"
   }`;
 }
 
@@ -69,12 +73,19 @@ export function Sidebar() {
   const enNomina = !enGestionUsuarios && (location.pathname.startsWith("/nomina") || location.pathname.startsWith("/admin"));
 
   return (
-    <aside className="fixed left-0 top-9 bottom-0 z-30 flex w-64 flex-col border-r border-[var(--border-subtle)] bg-[var(--surface-sidebar)]">
+    <aside className="fixed left-0 top-9 bottom-0 z-30 flex w-64 flex-col overflow-hidden border-r border-white/10">
+      <div
+        className="absolute inset-0 -z-20 bg-cover bg-center"
+        style={{ backgroundImage: `url(${sidebarBg})` }}
+        aria-hidden="true"
+      />
+      <div className="absolute inset-0 -z-10 bg-gradient-to-b from-brand-900/90 via-brand-900/85 to-brand-900/95" aria-hidden="true" />
+
       <div className="flex flex-col items-center gap-2.5 px-5 py-6">
-        <div className="flex items-center justify-center rounded-xl bg-white px-3 py-2 ring-1 ring-[var(--border-subtle)]">
+        <div className="flex items-center justify-center rounded-xl bg-white px-3 py-2 ring-1 ring-white/20">
           <img src={logo} alt="Azahar Coffee Company" className="h-9 w-auto object-contain" />
         </div>
-        <p className="text-[11px] font-bold uppercase tracking-wider text-[var(--text-muted)]">Azahar Coffee Company</p>
+        <p className="text-[11px] font-bold uppercase tracking-wider text-cream-200/80">Azahar Coffee Company</p>
       </div>
 
       <nav className="flex-1 space-y-6 overflow-y-auto px-3 pb-4">
@@ -82,13 +93,13 @@ export function Sidebar() {
           <div>
             <button
               onClick={() => navigate("/inicio")}
-              className="mb-3 flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold text-[var(--text-secondary)] transition hover:bg-[var(--surface-muted)] hover:text-[var(--text-primary)]"
+              className="mb-3 flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold text-cream-200/80 transition hover:bg-white/10 hover:text-cream-100"
             >
               <ChevronLeft className="h-4 w-4 shrink-0" strokeWidth={1.75} />
               Nómina
             </button>
             <div>
-              <p className="mb-2 px-3 text-[11px] font-bold uppercase tracking-wider text-[var(--text-muted)]">Mi portal</p>
+              <p className="mb-2 px-3 text-[11px] font-bold uppercase tracking-wider text-cream-200/60">Mi portal</p>
               <div className="space-y-1">
                 {NOMINA_ITEMS.map(({ to, label, Icon }) => (
                   <NavLink key={to} to={to} className={({ isActive }) => itemClase(isActive)}>
@@ -101,7 +112,7 @@ export function Sidebar() {
 
             {empleado?.rol === "admin" && (
               <div className="mt-6">
-                <p className="mb-2 px-3 text-[11px] font-bold uppercase tracking-wider text-[var(--text-muted)]">Administración</p>
+                <p className="mb-2 px-3 text-[11px] font-bold uppercase tracking-wider text-cream-200/60">Administración</p>
                 <div className="space-y-1">
                   {ADMINISTRACION.map(({ to, label, Icon }) => (
                     <NavLink key={to} to={to} className={({ isActive }) => itemClase(isActive)}>
@@ -124,7 +135,7 @@ export function Sidebar() {
 
             {empleado?.rol === "admin" && (
               <div>
-                <p className="mb-2 px-3 text-[11px] font-bold uppercase tracking-wider text-[var(--text-muted)]">Gestión del negocio</p>
+                <p className="mb-2 px-3 text-[11px] font-bold uppercase tracking-wider text-cream-200/60">Gestión del negocio</p>
                 <div className="space-y-1">
                   {GESTION_NEGOCIO.map(({ to, label, Icon }) => (
                     <NavLink key={to} to={to} className={({ isActive }) => itemClase(isActive)}>
@@ -155,25 +166,25 @@ export function Sidebar() {
         )}
       </nav>
 
-      <div className="border-t border-[var(--border-subtle)] p-3">
+      <div className="border-t border-white/10 p-3">
         {IS_DEMO_MODE && (
-          <div className="mb-3 flex items-center gap-1.5 rounded-lg bg-accent-300/30 px-3 py-1.5 text-[11px] font-semibold text-accent-500">
+          <div className="mb-3 flex items-center gap-1.5 rounded-lg bg-accent-300/30 px-3 py-1.5 text-[11px] font-semibold text-accent-300">
             <Sparkles className="h-3.5 w-3.5" strokeWidth={1.75} />
             Modo demo — datos en memoria
           </div>
         )}
         {empleado && (
           <div className="flex items-center gap-3 rounded-lg px-2 py-2">
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand-800 font-heading text-xs font-bold text-cream-100">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-accent-500 font-heading text-xs font-bold text-brand-900">
               {iniciales(empleado.nombre)}
             </div>
             <div className="min-w-0 flex-1 leading-tight">
-              <p className="truncate text-sm font-semibold text-[var(--text-primary)]">{empleado.nombre}</p>
-              <p className="truncate text-xs text-[var(--text-muted)]">{empleado.cargo}</p>
+              <p className="truncate text-sm font-semibold text-cream-100">{empleado.nombre}</p>
+              <p className="truncate text-xs text-cream-200/70">{empleado.cargo}</p>
             </div>
             <button
               onClick={() => void signOut()}
-              className="shrink-0 rounded-lg p-2 text-[var(--text-muted)] transition hover:bg-status-rechazada-bg hover:text-status-rechazada"
+              className="shrink-0 rounded-lg p-2 text-cream-200/70 transition hover:bg-status-rechazada-bg hover:text-status-rechazada"
               title="Cerrar sesión"
               aria-label="Cerrar sesión"
             >

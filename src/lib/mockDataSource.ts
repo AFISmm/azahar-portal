@@ -1,15 +1,19 @@
 import type { DataSource } from "./dataSource";
 import type {
+  CertificadoFinca,
   Documento,
   Empleado,
+  Finca,
   NominaPago,
+  NuevoCertificadoInput,
   NuevoDocumentoInput,
   NuevoEmpleadoInput,
+  NuevaFincaInput,
   NuevaSolicitudInput,
   Solicitud,
   SolicitudEstado,
 } from "./types";
-import { documentosSeed, empleadosSeed, nominaPagosSeed, solicitudesSeed } from "./mockData";
+import { certificadosFincaSeed, documentosSeed, empleadosSeed, fincasSeed, nominaPagosSeed, solicitudesSeed } from "./mockData";
 
 // Arreglos en memoria (module-level) que se mutan directamente. Como los
 // módulos de ES se cargan una sola vez, todas las páginas comparten la misma
@@ -18,10 +22,14 @@ const empleados: Empleado[] = [...empleadosSeed];
 const solicitudes: Solicitud[] = [...solicitudesSeed];
 const documentos: Documento[] = [...documentosSeed];
 const nominaPagos: NominaPago[] = [...nominaPagosSeed];
+const fincas: Finca[] = [...fincasSeed];
+const certificadosFinca: CertificadoFinca[] = [...certificadosFincaSeed];
 
 let empleadoSeq = empleados.length + 1;
 let solicitudSeq = solicitudes.length + 1;
 let documentoSeq = documentos.length + 1;
+let fincaSeq = fincas.length + 1;
+let certificadoSeq = certificadosFinca.length + 1;
 
 function delay<T>(valor: T): Promise<T> {
   // Pequeña espera simulada para que las pantallas de carga tengan sentido.
@@ -164,5 +172,58 @@ export const mockDataSource: DataSource = {
     if (idx === -1) throw new Error("Pago de nómina no encontrado");
     nominaPagos[idx] = { ...nominaPagos[idx], estado };
     return delay(nominaPagos[idx]);
+  },
+
+  async listFincas() {
+    const resultado = [...fincas].sort((a, b) => a.nombre.localeCompare(b.nombre));
+    return delay(resultado);
+  },
+
+  async createFinca(input: NuevaFincaInput) {
+    const numero = fincaSeq++;
+    const nueva: Finca = {
+      id: `fin-${numero}`,
+      codigo: `FIN-${String(numero).padStart(4, "0")}`,
+      vereda: input.vereda ?? null,
+      latitud: input.latitud ?? null,
+      longitud: input.longitud ?? null,
+      creadoEn: new Date().toISOString(),
+      nombre: input.nombre,
+      municipio: input.municipio,
+      departamento: input.departamento,
+      propietario: input.propietario,
+      cedulaPropietario: input.cedulaPropietario,
+      areaTotal: input.areaTotal,
+      areaCafe: input.areaCafe,
+      numeroArboles: input.numeroArboles,
+      variedad: input.variedad,
+    };
+    fincas.push(nueva);
+    return delay(nueva);
+  },
+
+  async listCertificados(params) {
+    let resultado = [...certificadosFinca];
+    if (params?.fincaId) {
+      resultado = resultado.filter((c) => c.fincaId === params.fincaId);
+    }
+    resultado.sort((a, b) => (a.creadoEn < b.creadoEn ? 1 : -1));
+    return delay(resultado);
+  },
+
+  async createCertificado(input: NuevoCertificadoInput) {
+    const nuevo: CertificadoFinca = {
+      id: `cert-${certificadoSeq++}`,
+      fincaId: input.fincaId,
+      nombre: input.nombre,
+      entidadCertificadora: input.entidadCertificadora,
+      numeroCertificado: input.numeroCertificado ?? null,
+      fechaEmision: input.fechaEmision,
+      fechaVencimiento: input.fechaVencimiento ?? null,
+      creadoEn: new Date().toISOString(),
+      creadoPor: null,
+    };
+    certificadosFinca.push(nuevo);
+    return delay(nuevo);
   },
 };

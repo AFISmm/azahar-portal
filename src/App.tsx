@@ -28,6 +28,7 @@ import AdminNomina from "./pages/admin/AdminNomina";
 
 import GestionEstrategica from "./pages/GestionEstrategica";
 import GestionComercial from "./pages/GestionComercial";
+import GestionOperativa from "./pages/GestionOperativa";
 import InformacionGeneral from "./pages/InformacionGeneral";
 
 export default function App() {
@@ -67,6 +68,7 @@ export default function App() {
 
                     <Route path="/gestion-estrategica" element={<GestionEstrategica />} />
                     <Route path="/gestion-comercial" element={<GestionComercial />} />
+                    <Route path="/gestion-operativa" element={<GestionOperativa />} />
                     <Route path="/informacion-general" element={<InformacionGeneral />} />
                   </Route>
                 </Route>

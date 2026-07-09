@@ -69,3 +69,39 @@ export interface NominaPago {
   monto: number;
   estado: EstadoNomina;
 }
+
+export interface Finca {
+  id: string;
+  codigo: string;
+  nombre: string;
+  vereda: string | null;
+  municipio: string;
+  departamento: string;
+  propietario: string;
+  cedulaPropietario: string;
+  areaTotal: number;
+  areaCafe: number;
+  numeroArboles: number;
+  variedad: string;
+  latitud: number | null;
+  longitud: number | null;
+  creadoEn: string;
+}
+
+export type NuevaFincaInput = Omit<Finca, "id" | "codigo" | "creadoEn" | "vereda" | "latitud" | "longitud"> &
+  Partial<Pick<Finca, "vereda" | "latitud" | "longitud">>;
+
+export interface CertificadoFinca {
+  id: string;
+  fincaId: string;
+  nombre: string;
+  entidadCertificadora: string;
+  numeroCertificado: string | null;
+  fechaEmision: string;
+  fechaVencimiento: string | null;
+  creadoEn: string;
+  creadoPor: string | null;
+}
+
+export type NuevoCertificadoInput = Omit<CertificadoFinca, "id" | "creadoEn" | "creadoPor" | "numeroCertificado" | "fechaVencimiento"> &
+  Partial<Pick<CertificadoFinca, "numeroCertificado" | "fechaVencimiento">>;

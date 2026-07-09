@@ -1,11 +1,15 @@
 import type { DataSource } from "./dataSource";
 import type {
+  CertificadoFinca,
   Documento,
   Empleado,
   EstadoNomina,
+  Finca,
   NominaPago,
+  NuevoCertificadoInput,
   NuevoDocumentoInput,
   NuevoEmpleadoInput,
+  NuevaFincaInput,
   NuevaSolicitudInput,
   Solicitud,
   SolicitudEstado,
@@ -51,6 +55,10 @@ async function fetchJson<T>(url: string, options?: RequestInit): Promise<T> {
 
 function query(params?: { empleadoId?: string }): string {
   return params?.empleadoId ? `?empleadoId=${encodeURIComponent(params.empleadoId)}` : "";
+}
+
+function queryCertificados(params?: { fincaId?: string }): string {
+  return params?.fincaId ? `?fincaId=${encodeURIComponent(params.fincaId)}` : "";
 }
 
 /**
@@ -176,5 +184,31 @@ export const httpDataSource: DataSource = {
       body: JSON.stringify({ estado }),
     });
     return data.pago;
+  },
+
+  async listFincas() {
+    const data = await fetchJson<{ ok: boolean; fincas: Finca[] }>("/api/fincas");
+    return data.fincas;
+  },
+
+  async createFinca(input: NuevaFincaInput) {
+    const data = await fetchJson<{ ok: boolean; finca: Finca }>("/api/fincas", {
+      method: "POST",
+      body: JSON.stringify(input),
+    });
+    return data.finca;
+  },
+
+  async listCertificados(params) {
+    const data = await fetchJson<{ ok: boolean; certificados: CertificadoFinca[] }>(`/api/certificados${queryCertificados(params)}`);
+    return data.certificados;
+  },
+
+  async createCertificado(input: NuevoCertificadoInput) {
+    const data = await fetchJson<{ ok: boolean; certificado: CertificadoFinca }>("/api/certificados", {
+      method: "POST",
+      body: JSON.stringify(input),
+    });
+    return data.certificado;
   },
 };

@@ -177,3 +177,97 @@ export function mapNominaPagoRow(row: NominaPagoRow): NominaPagoPublico {
     estado: row.estado,
   };
 }
+
+export interface FincaRow {
+  id: string;
+  codigo: string;
+  nombre: string;
+  vereda: string | null;
+  municipio: string;
+  departamento: string;
+  propietario: string;
+  cedula_propietario: string;
+  area_total: string | number;
+  area_cafe: string | number;
+  numero_arboles: string | number;
+  variedad: string;
+  latitud: string | number | null;
+  longitud: string | number | null;
+  creado_en: string;
+}
+
+export interface FincaPublica {
+  id: string;
+  codigo: string;
+  nombre: string;
+  vereda: string | null;
+  municipio: string;
+  departamento: string;
+  propietario: string;
+  cedulaPropietario: string;
+  areaTotal: number;
+  areaCafe: number;
+  numeroArboles: number;
+  variedad: string;
+  latitud: number | null;
+  longitud: number | null;
+  creadoEn: string;
+}
+
+export function mapFincaRow(row: FincaRow): FincaPublica {
+  return {
+    id: row.id,
+    codigo: row.codigo,
+    nombre: row.nombre,
+    vereda: row.vereda,
+    municipio: row.municipio,
+    departamento: row.departamento,
+    propietario: row.propietario,
+    cedulaPropietario: row.cedula_propietario,
+    areaTotal: Number(row.area_total),
+    areaCafe: Number(row.area_cafe),
+    numeroArboles: Number(row.numero_arboles),
+    variedad: row.variedad,
+    latitud: row.latitud === null ? null : Number(row.latitud),
+    longitud: row.longitud === null ? null : Number(row.longitud),
+    creadoEn: row.creado_en,
+  };
+}
+
+export interface CertificadoFincaRow {
+  id: string;
+  finca_id: string;
+  nombre: string;
+  entidad_certificadora: string;
+  numero_certificado: string | null;
+  fecha_emision: string;
+  fecha_vencimiento: string | null;
+  creado_en: string;
+  creado_por: string | null;
+}
+
+export interface CertificadoFincaPublico {
+  id: string;
+  fincaId: string;
+  nombre: string;
+  entidadCertificadora: string;
+  numeroCertificado: string | null;
+  fechaEmision: string;
+  fechaVencimiento: string | null;
+  creadoEn: string;
+  creadoPor: string | null;
+}
+
+export function mapCertificadoFincaRow(row: CertificadoFincaRow): CertificadoFincaPublico {
+  return {
+    id: row.id,
+    fincaId: row.finca_id,
+    nombre: row.nombre,
+    entidadCertificadora: row.entidad_certificadora,
+    numeroCertificado: row.numero_certificado,
+    fechaEmision: row.fecha_emision,
+    fechaVencimiento: row.fecha_vencimiento,
+    creadoEn: row.creado_en,
+    creadoPor: row.creado_por,
+  };
+}

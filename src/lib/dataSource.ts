@@ -1,10 +1,14 @@
 import type {
+  CertificadoFinca,
   Documento,
   Empleado,
   EstadoNomina,
+  Finca,
   NominaPago,
+  NuevoCertificadoInput,
   NuevoDocumentoInput,
   NuevoEmpleadoInput,
+  NuevaFincaInput,
   NuevaSolicitudInput,
   Solicitud,
   SolicitudEstado,
@@ -39,6 +43,12 @@ export interface DataSource {
 
   listNominaPagos(params?: { empleadoId?: string }): Promise<NominaPago[]>;
   actualizarEstadoNominaPago(id: string, estado: EstadoNomina): Promise<NominaPago>;
+
+  listFincas(): Promise<Finca[]>;
+  createFinca(input: NuevaFincaInput): Promise<Finca>;
+
+  listCertificados(params?: { fincaId?: string }): Promise<CertificadoFinca[]>;
+  createCertificado(input: NuevoCertificadoInput): Promise<CertificadoFinca>;
 }
 
 export { IS_DEMO_MODE };

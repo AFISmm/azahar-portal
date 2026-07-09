@@ -19,6 +19,7 @@ import {
   Store,
   Receipt,
   Info,
+  Sprout,
   ChevronLeft,
 } from "lucide-react";
 import { useAuth } from "../auth/AuthContext";
@@ -48,6 +49,7 @@ const ADMINISTRACION = [
 const GESTION_NEGOCIO = [
   { to: "/gestion-estrategica", label: "Gestión Estratégica", Icon: Compass },
   { to: "/gestion-comercial", label: "Gestión Comercial", Icon: Store },
+  { to: "/gestion-operativa", label: "Gestión Operativa", Icon: Sprout },
   { to: "/informacion-general", label: "Información General", Icon: Info },
 ];
 

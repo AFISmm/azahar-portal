@@ -16,6 +16,8 @@
 export type Rol = "empleado" | "admin";
 export type EstadoEmpleado = "activo" | "inactivo";
 
+export type TipoCuenta = "empleado" | "desarrollador";
+
 export interface EmpleadoRow {
   id: string;
   nombre: string;
@@ -31,6 +33,10 @@ export interface EmpleadoRow {
   estado: EstadoEmpleado;
   avatar_url: string | null;
   telefono: string | null;
+  fecha_nacimiento: string | null;
+  numero_identificacion: string | null;
+  username: string | null;
+  tipo_cuenta: TipoCuenta;
   created_at: string;
 }
 
@@ -49,6 +55,10 @@ export interface EmpleadoPublico {
   estado: EstadoEmpleado;
   avatarUrl: string | null;
   telefono: string | null;
+  fechaNacimiento: string | null;
+  numeroIdentificacion: string | null;
+  username: string | null;
+  tipoCuenta: TipoCuenta;
   createdAt: string;
 }
 
@@ -67,6 +77,10 @@ export function mapEmpleadoRow(row: EmpleadoRow): EmpleadoPublico {
     estado: row.estado,
     avatarUrl: row.avatar_url,
     telefono: row.telefono,
+    fechaNacimiento: row.fecha_nacimiento,
+    numeroIdentificacion: row.numero_identificacion,
+    username: row.username,
+    tipoCuenta: row.tipo_cuenta,
     createdAt: row.created_at,
   };
 }
@@ -269,5 +283,45 @@ export function mapCertificadoFincaRow(row: CertificadoFincaRow): CertificadoFin
     fechaVencimiento: row.fecha_vencimiento,
     creadoEn: row.creado_en,
     creadoPor: row.creado_por,
+  };
+}
+
+export type PqrEstado = "pendiente" | "resuelta";
+
+export interface PqrRow {
+  id: string;
+  empleado_id: string;
+  nombre: string;
+  cedula: string | null;
+  correo: string;
+  admin_destino_id: string | null;
+  problema: string;
+  estado: PqrEstado;
+  creado_en: string;
+}
+
+export interface PqrPublico {
+  id: string;
+  empleadoId: string;
+  nombre: string;
+  cedula: string | null;
+  correo: string;
+  adminDestinoId: string | null;
+  problema: string;
+  estado: PqrEstado;
+  creadoEn: string;
+}
+
+export function mapPqrRow(row: PqrRow): PqrPublico {
+  return {
+    id: row.id,
+    empleadoId: row.empleado_id,
+    nombre: row.nombre,
+    cedula: row.cedula,
+    correo: row.correo,
+    adminDestinoId: row.admin_destino_id,
+    problema: row.problema,
+    estado: row.estado,
+    creadoEn: row.creado_en,
   };
 }

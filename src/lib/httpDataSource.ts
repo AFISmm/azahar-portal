@@ -1,16 +1,20 @@
 import type { DataSource } from "./dataSource";
 import type {
   CertificadoFinca,
+  DestinoPqr,
   Documento,
   Empleado,
   EstadoNomina,
   Finca,
   NominaPago,
+  NuevaPqrInput,
   NuevoCertificadoInput,
   NuevoDocumentoInput,
   NuevoEmpleadoInput,
   NuevaFincaInput,
   NuevaSolicitudInput,
+  PerfilPropioInput,
+  Pqr,
   Solicitud,
   SolicitudEstado,
 } from "./types";
@@ -84,6 +88,10 @@ function empleadoSentinela(correo: string): Empleado {
     estado: "activo",
     avatarUrl: null,
     telefono: null,
+    fechaNacimiento: null,
+    numeroIdentificacion: null,
+    username: null,
+    tipoCuenta: "empleado",
     createdAt: "",
   };
 }
@@ -210,5 +218,26 @@ export const httpDataSource: DataSource = {
       body: JSON.stringify(input),
     });
     return data.certificado;
+  },
+
+  async actualizarPerfilPropio(patch: PerfilPropioInput) {
+    const data = await fetchJson<{ ok: boolean; empleado: Empleado }>("/api/auth/me", {
+      method: "PATCH",
+      body: JSON.stringify(patch),
+    });
+    return data.empleado;
+  },
+
+  async listDestinosPqr() {
+    const data = await fetchJson<{ ok: boolean; destinos: DestinoPqr[] }>("/api/auth/me?pqr=destinos");
+    return data.destinos;
+  },
+
+  async createPqr(input: NuevaPqrInput) {
+    const data = await fetchJson<{ ok: boolean; pqr: Pqr }>("/api/auth/me?pqr=1", {
+      method: "POST",
+      body: JSON.stringify(input),
+    });
+    return data.pqr;
   },
 };

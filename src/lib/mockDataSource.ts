@@ -5,15 +5,23 @@ import type {
   Empleado,
   Finca,
   NominaPago,
+  NuevaPqrInput,
   NuevoCertificadoInput,
   NuevoDocumentoInput,
   NuevoEmpleadoInput,
   NuevaFincaInput,
   NuevaSolicitudInput,
+  PerfilPropioInput,
+  Pqr,
   Solicitud,
   SolicitudEstado,
 } from "./types";
 import { certificadosFincaSeed, documentosSeed, empleadosSeed, fincasSeed, nominaPagosSeed, solicitudesSeed } from "./mockData";
+
+// Misma llave que usa AuthContext.tsx (DEMO_SESSION_KEY) para saber qué
+// empleado es "yo" en modo demo. Se duplica aquí en vez de importarla para
+// no crear una dependencia circular entre el data source y el contexto de auth.
+const DEMO_SESSION_KEY = "azahar_demo_empleado_id";
 
 // Arreglos en memoria (module-level) que se mutan directamente. Como los
 // módulos de ES se cargan una sola vez, todas las páginas comparten la misma
@@ -24,12 +32,14 @@ const documentos: Documento[] = [...documentosSeed];
 const nominaPagos: NominaPago[] = [...nominaPagosSeed];
 const fincas: Finca[] = [...fincasSeed];
 const certificadosFinca: CertificadoFinca[] = [...certificadosFincaSeed];
+const pqrs: Pqr[] = [];
 
 let empleadoSeq = empleados.length + 1;
 let solicitudSeq = solicitudes.length + 1;
 let documentoSeq = documentos.length + 1;
 let fincaSeq = fincas.length + 1;
 let certificadoSeq = certificadosFinca.length + 1;
+let pqrSeq = 1;
 
 function delay<T>(valor: T): Promise<T> {
   // Pequeña espera simulada para que las pantallas de carga tengan sentido.
@@ -57,6 +67,10 @@ export const mockDataSource: DataSource = {
       avatarUrl: input.avatarUrl ?? null,
       telefono: input.telefono ?? null,
       salario: input.salario ?? null,
+      fechaNacimiento: input.fechaNacimiento ?? null,
+      numeroIdentificacion: input.numeroIdentificacion ?? null,
+      username: input.username ?? null,
+      tipoCuenta: input.tipoCuenta ?? "empleado",
       createdAt: new Date().toISOString(),
       nombre: input.nombre,
       correo: input.correo,
@@ -224,6 +238,40 @@ export const mockDataSource: DataSource = {
       creadoPor: null,
     };
     certificadosFinca.push(nuevo);
+    return delay(nuevo);
+  },
+
+  async actualizarPerfilPropio(patch: PerfilPropioInput) {
+    const id = typeof window !== "undefined" ? window.localStorage.getItem(DEMO_SESSION_KEY) : null;
+    const idx = empleados.findIndex((e) => e.id === id);
+    if (idx === -1) throw new Error("No hay sesión demo activa.");
+    empleados[idx] = {
+      ...empleados[idx],
+      correo: patch.correo ?? empleados[idx].correo,
+      username: patch.username !== undefined ? patch.username || null : empleados[idx].username,
+    };
+    return delay(empleados[idx]);
+  },
+
+  async listDestinosPqr() {
+    const destinos = empleados.filter((e) => e.tipoCuenta === "desarrollador").map((e) => ({ id: e.id, nombre: e.nombre }));
+    return delay(destinos);
+  },
+
+  async createPqr(input: NuevaPqrInput) {
+    const id = typeof window !== "undefined" ? window.localStorage.getItem(DEMO_SESSION_KEY) : null;
+    const nuevo: Pqr = {
+      id: `pqr-${pqrSeq++}`,
+      empleadoId: id ?? "",
+      nombre: input.nombre,
+      cedula: input.cedula ?? null,
+      correo: input.correo,
+      adminDestinoId: input.adminDestinoId,
+      problema: input.problema,
+      estado: "pendiente",
+      creadoEn: new Date().toISOString(),
+    };
+    pqrs.push(nuevo);
     return delay(nuevo);
   },
 };

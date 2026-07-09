@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import { IS_DEMO_MODE } from "../lib/backendMode";
 import { dataSource } from "../lib/dataSource";
-import type { Empleado, Rol } from "../lib/types";
+import type { Empleado, Rol, TipoCuenta } from "../lib/types";
 
 const DEMO_SESSION_KEY = "azahar_demo_empleado_id";
 const DEMO_ADMIN_CORREO = "mariacamila.restrepo@azaharcoffee.co";
@@ -19,7 +19,10 @@ export interface DatosRegistro {
   departamento: string;
   tipoContrato: string;
   fechaIngreso: string;
+  fechaNacimiento: string;
+  numeroIdentificacion: string;
   rol: Rol;
+  tipoCuenta: TipoCuenta;
 }
 
 export interface ResultadoRegistro {
@@ -195,6 +198,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         fechaIngreso: datos.fechaIngreso,
         diasVacacionesDisponibles: 15,
         rol: datos.rol,
+        fechaNacimiento: datos.fechaNacimiento || null,
+        numeroIdentificacion: datos.numeroIdentificacion || null,
+        tipoCuenta: datos.tipoCuenta,
       });
       entrarComoEmpleadoDemo(nuevo);
       return { ok: true, modo: "demo" };

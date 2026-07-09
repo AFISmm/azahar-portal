@@ -49,6 +49,9 @@ interface RegistrarPayload {
   tipoContrato: string;
   fechaIngreso: string;
   rol: "empleado" | "admin";
+  fechaNacimiento?: string;
+  numeroIdentificacion?: string;
+  tipoCuenta?: "empleado" | "desarrollador";
 }
 
 interface EmpleadoEncontrado {
@@ -126,6 +129,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       diasVacacionesDisponibles: 15,
       rol: payload.rol,
       password: payload.password,
+      fechaNacimiento: payload.fechaNacimiento || null,
+      numeroIdentificacion: payload.numeroIdentificacion || null,
+      tipoCuenta: payload.tipoCuenta ?? "empleado",
     });
 
     // Deja al usuario recién registrado con sesión iniciada de inmediato.

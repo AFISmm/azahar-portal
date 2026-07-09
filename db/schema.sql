@@ -37,6 +37,10 @@ create table empleados (
   estado text not null default 'activo' check (estado in ('activo', 'inactivo')),
   avatar_url text,
   telefono text,
+  fecha_nacimiento date,
+  numero_identificacion text,
+  username text unique,
+  tipo_cuenta text not null default 'empleado' check (tipo_cuenta in ('empleado', 'desarrollador')),
   created_at timestamptz not null default now()
 );
 
@@ -126,12 +130,31 @@ create table certificados_finca (
 );
 
 -- ----------------------------------------------------------------------------
+-- Tabla: pqr
+-- Peticiones/quejas/reclamos sobre la plataforma, radicadas por cualquier
+-- cuenta que no sea de tipo 'desarrollador' hacia una cuenta que sí lo sea
+-- (ver empleados.tipo_cuenta).
+-- ----------------------------------------------------------------------------
+create table pqr (
+  id uuid primary key default gen_random_uuid(),
+  empleado_id uuid not null references empleados (id) on delete cascade,
+  nombre text not null,
+  cedula text,
+  correo text not null,
+  admin_destino_id uuid references empleados (id),
+  problema text not null,
+  estado text not null default 'pendiente' check (estado in ('pendiente', 'resuelta')),
+  creado_en timestamptz not null default now()
+);
+
+-- ----------------------------------------------------------------------------
 -- Índices recomendados
 -- ----------------------------------------------------------------------------
 create index idx_solicitudes_empleado on solicitudes (empleado_id);
 create index idx_documentos_empleado on documentos (empleado_id);
 create index idx_nomina_pagos_empleado on nomina_pagos (empleado_id);
 create index idx_certificados_finca on certificados_finca (finca_id);
+create index idx_pqr_empleado on pqr (empleado_id);
 
 -- ----------------------------------------------------------------------------
 -- Bootstrap: primer administrador

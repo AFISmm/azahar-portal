@@ -30,6 +30,8 @@ export default function Registro() {
   const [departamento, setDepartamento] = useState(DEPARTAMENTOS[0]);
   const [tipoContrato, setTipoContrato] = useState(TIPOS_CONTRATO[0]);
   const [fechaIngreso, setFechaIngreso] = useState(hoyISO());
+  const [fechaNacimiento, setFechaNacimiento] = useState("");
+  const [numeroIdentificacion, setNumeroIdentificacion] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [cargando, setCargando] = useState(false);
 
@@ -52,9 +54,24 @@ export default function Registro() {
               departamento: DEPARTAMENTO_DESARROLLADOR,
               tipoContrato: TIPO_CONTRATO_DESARROLLADOR,
               fechaIngreso: hoyISO(),
+              fechaNacimiento,
+              numeroIdentificacion,
               rol: "admin",
+              tipoCuenta: "desarrollador",
             }
-          : { nombre, correo, password, cargo, departamento, tipoContrato, fechaIngreso, rol: "empleado" },
+          : {
+              nombre,
+              correo,
+              password,
+              cargo,
+              departamento,
+              tipoContrato,
+              fechaIngreso,
+              fechaNacimiento,
+              numeroIdentificacion,
+              rol: "empleado",
+              tipoCuenta: "empleado",
+            },
       );
       if (resultado.modo === "demo") {
         showToast(
@@ -128,6 +145,20 @@ export default function Registro() {
               autoComplete="new-password"
             />
           </Field>
+
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <Field label="Fecha de nacimiento">
+              <Input required type="date" value={fechaNacimiento} onChange={(e) => setFechaNacimiento(e.target.value)} />
+            </Field>
+            <Field label="Número de identificación">
+              <Input
+                required
+                placeholder="Ej. 1020304050"
+                value={numeroIdentificacion}
+                onChange={(e) => setNumeroIdentificacion(e.target.value)}
+              />
+            </Field>
+          </div>
 
           <div className={esDesarrollador ? "" : "grid grid-cols-1 gap-4 sm:grid-cols-2"}>
             <Field label="Cargo">

@@ -25,6 +25,7 @@ import AdminEmpleados from "./pages/admin/AdminEmpleados";
 import EmpleadoDetalle from "./pages/admin/EmpleadoDetalle";
 import AdminUsuarios from "./pages/admin/AdminUsuarios";
 import AdminNomina from "./pages/admin/AdminNomina";
+import MiPerfil from "./pages/MiPerfil";
 
 import GestionEstrategica from "./pages/GestionEstrategica";
 import GestionComercial from "./pages/GestionComercial";
@@ -56,6 +57,8 @@ export default function App() {
                   <Route path="/nomina/incapacidades" element={<Incapacidades />} />
                   <Route path="/nomina/documentos" element={<Documentos />} />
                   <Route path="/nomina/certificados" element={<Certificados />} />
+
+                  <Route path="/mi-perfil" element={<MiPerfil />} />
 
                   <Route element={<AdminRoute />}>
                     <Route path="/admin/solicitudes" element={<AdminSolicitudes />} />

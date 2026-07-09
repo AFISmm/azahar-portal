@@ -4,6 +4,7 @@
 
 export type Rol = "empleado" | "admin";
 export type EstadoEmpleado = "activo" | "inactivo";
+export type TipoCuenta = "empleado" | "desarrollador";
 
 export interface Empleado {
   id: string;
@@ -19,11 +20,45 @@ export interface Empleado {
   estado: EstadoEmpleado;
   avatarUrl: string | null;
   telefono: string | null;
+  fechaNacimiento: string | null;
+  numeroIdentificacion: string | null;
+  username: string | null;
+  tipoCuenta: TipoCuenta;
   createdAt: string;
 }
 
-export type NuevoEmpleadoInput = Omit<Empleado, "id" | "createdAt" | "estado" | "avatarUrl" | "telefono" | "salario"> &
-  Partial<Pick<Empleado, "estado" | "avatarUrl" | "telefono" | "salario">>;
+export type NuevoEmpleadoInput = Omit<
+  Empleado,
+  "id" | "createdAt" | "estado" | "avatarUrl" | "telefono" | "salario" | "fechaNacimiento" | "numeroIdentificacion" | "username" | "tipoCuenta"
+> &
+  Partial<Pick<Empleado, "estado" | "avatarUrl" | "telefono" | "salario" | "fechaNacimiento" | "numeroIdentificacion" | "username" | "tipoCuenta">>;
+
+export interface PerfilPropioInput {
+  correo?: string;
+  password?: string;
+  username?: string;
+}
+
+export type PqrEstado = "pendiente" | "resuelta";
+
+export interface Pqr {
+  id: string;
+  empleadoId: string;
+  nombre: string;
+  cedula: string | null;
+  correo: string;
+  adminDestinoId: string | null;
+  problema: string;
+  estado: PqrEstado;
+  creadoEn: string;
+}
+
+export type NuevaPqrInput = Pick<Pqr, "nombre" | "cedula" | "correo" | "problema"> & { adminDestinoId: string };
+
+export interface DestinoPqr {
+  id: string;
+  nombre: string;
+}
 
 export type SolicitudTipo = "vacaciones" | "incapacidad" | "documento" | "certificado";
 export type SolicitudEstado = "pendiente" | "aprobada" | "rechazada";

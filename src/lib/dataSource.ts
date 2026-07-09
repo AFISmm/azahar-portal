@@ -1,15 +1,19 @@
 import type {
   CertificadoFinca,
+  DestinoPqr,
   Documento,
   Empleado,
   EstadoNomina,
   Finca,
   NominaPago,
+  NuevaPqrInput,
   NuevoCertificadoInput,
   NuevoDocumentoInput,
   NuevoEmpleadoInput,
   NuevaFincaInput,
   NuevaSolicitudInput,
+  PerfilPropioInput,
+  Pqr,
   Solicitud,
   SolicitudEstado,
 } from "./types";
@@ -49,6 +53,10 @@ export interface DataSource {
 
   listCertificados(params?: { fincaId?: string }): Promise<CertificadoFinca[]>;
   createCertificado(input: NuevoCertificadoInput): Promise<CertificadoFinca>;
+
+  actualizarPerfilPropio(patch: PerfilPropioInput): Promise<Empleado>;
+  listDestinosPqr(): Promise<DestinoPqr[]>;
+  createPqr(input: NuevaPqrInput): Promise<Pqr>;
 }
 
 export { IS_DEMO_MODE };

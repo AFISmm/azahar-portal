@@ -22,6 +22,7 @@ import {
   Sprout,
   ChevronLeft,
   X,
+  IdCard,
 } from "lucide-react";
 import { useAuth } from "../auth/AuthContext";
 import { IS_DEMO_MODE } from "../lib/dataSource";
@@ -168,6 +169,13 @@ export function Sidebar({ abierto = false, onCerrar }: SidebarProps) {
               <NavLink to="/nomina/inicio" className={({ isActive }) => itemClase(isActive)}>
                 <Banknote className="h-4 w-4 shrink-0" strokeWidth={1.75} />
                 Nómina
+              </NavLink>
+            </div>
+
+            <div className="space-y-1">
+              <NavLink to="/mi-perfil" className={({ isActive }) => itemClase(isActive)}>
+                <IdCard className="h-4 w-4 shrink-0" strokeWidth={1.75} />
+                Mi Perfil
               </NavLink>
             </div>
 

@@ -1,11 +1,20 @@
 import { type FormEvent, useState } from "react";
 import { Link, Navigate } from "react-router-dom";
-import { Loader2, LogIn, Sparkles } from "lucide-react";
+import { Loader2, LogIn, ShieldCheck, Sparkles, User } from "lucide-react";
 import { useAuth } from "../auth/AuthContext";
 import { IS_DEMO_MODE } from "../lib/dataSource";
 import { Button, Field, Input } from "../components/ui";
 import logo from "../assets/azahar-logo.png";
 import sidebarBg from "../assets/sidebar-bg.jpg";
+
+// Cuentas reales (no en memoria) que sirven como acceso rápido de
+// demostración desde el botón "DEMO EMPLEADO" / "DEMO ADMINISTRADOR" del
+// login. Cualquiera puede ver estas credenciales en el código del cliente a
+// propósito: son cuentas de ejemplo, no privilegiadas más allá de su rol.
+const CUENTAS_DEMO = {
+  empleado: { correo: "carlosandres.perez@azaharcoffee.co", password: "Azahar2026!" },
+  admin: { correo: "mariacamila.restrepo@azaharcoffee.co", password: "Azahar2026!" },
+} as const;
 
 export default function Login() {
   const { user, signIn, signInDemo } = useAuth();
@@ -14,6 +23,7 @@ export default function Login() {
   const [error, setError] = useState<string | null>(null);
   const [cargando, setCargando] = useState(false);
   const [cargandoDemo, setCargandoDemo] = useState(false);
+  const [cargandoDemoRol, setCargandoDemoRol] = useState<"empleado" | "admin" | null>(null);
 
   if (user) return <Navigate to="/inicio" replace />;
 
@@ -32,6 +42,15 @@ export default function Login() {
     const { error: errorDemo } = await signInDemo();
     setCargandoDemo(false);
     if (errorDemo) setError(errorDemo);
+  }
+
+  async function handleDemoRol(tipo: "empleado" | "admin") {
+    setError(null);
+    setCargandoDemoRol(tipo);
+    const cuenta = CUENTAS_DEMO[tipo];
+    const { error: errorIngreso } = await signIn(cuenta.correo, cuenta.password);
+    setCargandoDemoRol(null);
+    if (errorIngreso) setError(errorIngreso);
   }
 
   return (
@@ -84,6 +103,41 @@ export default function Login() {
             Regístrate
           </Link>
         </p>
+
+        <div className="my-5 flex items-center gap-3 text-xs uppercase tracking-wide text-brand-400">
+          <div className="h-px flex-1 bg-cream-200" />o entra con una cuenta demo
+          <div className="h-px flex-1 bg-cream-200" />
+        </div>
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => void handleDemoRol("empleado")}
+            disabled={cargandoDemoRol !== null}
+            className="w-full"
+          >
+            {cargandoDemoRol === "empleado" ? (
+              <Loader2 className="h-4 w-4 animate-spin" strokeWidth={1.75} />
+            ) : (
+              <User className="h-4 w-4" strokeWidth={1.75} />
+            )}
+            Demo empleado
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => void handleDemoRol("admin")}
+            disabled={cargandoDemoRol !== null}
+            className="w-full"
+          >
+            {cargandoDemoRol === "admin" ? (
+              <Loader2 className="h-4 w-4 animate-spin" strokeWidth={1.75} />
+            ) : (
+              <ShieldCheck className="h-4 w-4" strokeWidth={1.75} />
+            )}
+            Demo administrador
+          </Button>
+        </div>
 
         {IS_DEMO_MODE && (
           <>

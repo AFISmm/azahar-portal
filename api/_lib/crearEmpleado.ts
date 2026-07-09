@@ -29,6 +29,9 @@ export interface CrearEmpleadoInput {
   salario?: number | null;
   telefono?: string | null;
   estado?: "activo" | "inactivo";
+  fechaNacimiento?: string | null;
+  numeroIdentificacion?: string | null;
+  tipoCuenta?: "empleado" | "desarrollador";
 }
 
 function esErrorCorreoDuplicado(err: unknown): boolean {
@@ -49,7 +52,8 @@ export async function crearEmpleadoYUsuario(input: CrearEmpleadoInput): Promise<
     const { rows } = await sql<EmpleadoRow>`
       insert into empleados (
         nombre, correo, password_hash, cargo, departamento, tipo_contrato,
-        fecha_ingreso, dias_vacaciones_disponibles, salario, rol, estado, telefono
+        fecha_ingreso, dias_vacaciones_disponibles, salario, rol, estado, telefono,
+        fecha_nacimiento, numero_identificacion, tipo_cuenta
       ) values (
         ${input.nombre},
         ${input.correo},
@@ -62,7 +66,10 @@ export async function crearEmpleadoYUsuario(input: CrearEmpleadoInput): Promise<
         ${input.salario ?? null},
         ${input.rol},
         ${input.estado ?? "activo"},
-        ${input.telefono ?? null}
+        ${input.telefono ?? null},
+        ${input.fechaNacimiento ?? null},
+        ${input.numeroIdentificacion ?? null},
+        ${input.tipoCuenta ?? "empleado"}
       )
       returning *
     `;

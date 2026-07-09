@@ -1,24 +1,32 @@
 import { type FormEvent, useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { ArrowLeft, Lock, MessageSquareWarning } from "lucide-react";
 import { useAuth } from "../auth/AuthContext";
 import { dataSource } from "../lib/dataSource";
-import type { DestinoPqr } from "../lib/types";
-import { formatDate } from "../lib/format";
+import type { DestinoPqr, Pqr } from "../lib/types";
+import { formatDate, formatDateTime } from "../lib/format";
 import { useToast } from "../context/ToastContext";
 import { PageHeader } from "../components/PageHeader";
 import { Card } from "../components/Card";
 import { Button, Field, Input, Select, Textarea } from "../components/ui";
 
+const ESTADO_ESTILO: Record<Pqr["estado"], string> = {
+  pendiente: "bg-status-pendiente-bg text-status-pendiente",
+  resuelta: "bg-status-aprobada-bg text-status-aprobada",
+};
+
 export default function MiPerfil() {
   const { empleado, refreshEmpleado } = useAuth();
   const { showToast } = useToast();
+  const [searchParams] = useSearchParams();
 
   const [correo, setCorreo] = useState("");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [guardando, setGuardando] = useState(false);
 
-  const [mostrarPqr, setMostrarPqr] = useState(false);
+  const [mostrarPqr, setMostrarPqr] = useState(() => searchParams.get("pqr") === "1");
+  const [misPqr, setMisPqr] = useState<Pqr[]>([]);
   const [destinos, setDestinos] = useState<DestinoPqr[]>([]);
   const [adminDestinoId, setAdminDestinoId] = useState("");
   const [cedulaPqr, setCedulaPqr] = useState("");
@@ -37,9 +45,10 @@ export default function MiPerfil() {
   useEffect(() => {
     if (!mostrarPqr) return;
     void (async () => {
-      const lista = await dataSource.listDestinosPqr();
-      setDestinos(lista);
-      setAdminDestinoId(lista[0]?.id ?? "");
+      const [listaDestinos, listaMias] = await Promise.all([dataSource.listDestinosPqr(), dataSource.listPqrPropias()]);
+      setDestinos(listaDestinos);
+      setAdminDestinoId(listaDestinos[0]?.id ?? "");
+      setMisPqr(listaMias);
     })();
   }, [mostrarPqr]);
 
@@ -87,7 +96,7 @@ export default function MiPerfil() {
       });
       showToast("Tu PQR fue radicada correctamente.", "success");
       setProblema("");
-      setMostrarPqr(false);
+      setMisPqr(await dataSource.listPqrPropias());
     } catch (err) {
       showToast(err instanceof Error ? err.message : "No se pudo radicar la PQR.", "error");
     } finally {
@@ -109,7 +118,7 @@ export default function MiPerfil() {
       <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
         {mostrarPqr ? (
           <Card
-            title="Radicar PQR"
+            title="PQR"
             actions={
               <button
                 type="button"
@@ -122,6 +131,32 @@ export default function MiPerfil() {
               </button>
             }
           >
+            {misPqr.length > 0 && (
+              <div className="mb-5 space-y-3">
+                <p className="text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]">Tus PQR radicadas</p>
+                <ul className="max-h-64 space-y-3 overflow-y-auto">
+                  {misPqr.map((p) => (
+                    <li key={p.id} className="rounded-xl border border-[var(--border-subtle)] p-3">
+                      <div className="flex items-start justify-between gap-3">
+                        <p className="text-sm text-[var(--text-secondary)]">{p.problema}</p>
+                        <span className={`inline-flex shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold ${ESTADO_ESTILO[p.estado]}`}>
+                          {p.estado === "resuelta" ? "Resuelta" : "Pendiente"}
+                        </span>
+                      </div>
+                      <p className="mt-1 text-[11px] text-[var(--text-muted)]">Radicada el {formatDateTime(p.creadoEn)}</p>
+                      {p.estado === "resuelta" && p.comentario && (
+                        <div className="mt-2 rounded-lg bg-status-aprobada-bg/40 p-2.5">
+                          <p className="text-xs font-semibold uppercase tracking-wide text-status-aprobada">Respuesta del desarrollador</p>
+                          <p className="mt-1 text-sm text-[var(--text-secondary)]">{p.comentario}</p>
+                        </div>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]">Radicar una nueva PQR</p>
             <form onSubmit={radicarPqr} className="space-y-4">
               <Field label="Nombre y apellido">
                 <Input value={empleado.nombre} disabled />

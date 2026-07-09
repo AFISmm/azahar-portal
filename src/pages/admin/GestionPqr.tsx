@@ -8,7 +8,7 @@ import { formatDateTime } from "../../lib/format";
 import { useToast } from "../../context/ToastContext";
 import { PageHeader } from "../../components/PageHeader";
 import { Card } from "../../components/Card";
-import { Button } from "../../components/ui";
+import { Button, Field, Textarea } from "../../components/ui";
 
 const ESTADO_ESTILO: Record<Pqr["estado"], string> = {
   pendiente: "bg-status-pendiente-bg text-status-pendiente",
@@ -21,6 +21,7 @@ export default function GestionPqr() {
   const [pqrs, setPqrs] = useState<Pqr[]>([]);
   const [cargando, setCargando] = useState(true);
   const [procesando, setProcesando] = useState<string | null>(null);
+  const [comentarios, setComentarios] = useState<Record<string, string>>({});
 
   const cargar = useCallback(async () => {
     setCargando(true);
@@ -45,8 +46,12 @@ export default function GestionPqr() {
   async function marcarComoResuelta(pqr: Pqr) {
     setProcesando(pqr.id);
     try {
-      await dataSource.actualizarEstadoPqr(pqr.id, "resuelta");
-      showToast("PQR marcada como resuelta.", "success");
+      await dataSource.actualizarEstadoPqr(pqr.id, "resuelta", comentarios[pqr.id]?.trim() ?? "");
+      showToast("PQR marcada como resuelta. El empleado verá tu comentario en sus notificaciones.", "success");
+      setComentarios((actuales) => {
+        const { [pqr.id]: _omitido, ...resto } = actuales;
+        return resto;
+      });
       await cargar();
     } catch {
       showToast("No se pudo actualizar la PQR.", "error");
@@ -104,11 +109,24 @@ export default function GestionPqr() {
                     </p>
                     <p className="mt-1 text-[11px] text-[var(--text-muted)]">Radicada el {formatDateTime(p.creadoEn)}</p>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${ESTADO_ESTILO[p.estado]}`}>
-                      {p.estado === "resuelta" ? "Resuelta" : "Pendiente"}
-                    </span>
-                    {p.estado === "pendiente" && (
+                  <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${ESTADO_ESTILO[p.estado]}`}>
+                    {p.estado === "resuelta" ? "Resuelta" : "Pendiente"}
+                  </span>
+                </div>
+
+                <p className="mt-3 rounded-xl bg-[var(--surface-app)] p-3 text-sm text-[var(--text-secondary)]">{p.problema}</p>
+
+                {p.estado === "pendiente" ? (
+                  <div className="mt-3 space-y-2">
+                    <Field label="Comentario de solución (se le enviará al empleado)">
+                      <Textarea
+                        rows={2}
+                        placeholder="Ej. Ya corregí el problema, actualiza la página e inténtalo de nuevo…"
+                        value={comentarios[p.id] ?? ""}
+                        onChange={(e) => setComentarios((actuales) => ({ ...actuales, [p.id]: e.target.value }))}
+                      />
+                    </Field>
+                    <div className="flex justify-end">
                       <Button
                         variant="outline"
                         className="px-3 py-1.5 text-xs"
@@ -118,10 +136,16 @@ export default function GestionPqr() {
                         <CheckCircle2 className="h-3.5 w-3.5" strokeWidth={1.75} />
                         Marcar como resuelta
                       </Button>
-                    )}
+                    </div>
                   </div>
-                </div>
-                <p className="mt-3 rounded-xl bg-[var(--surface-app)] p-3 text-sm text-[var(--text-secondary)]">{p.problema}</p>
+                ) : (
+                  p.comentario && (
+                    <div className="mt-3 rounded-xl border border-[var(--border-subtle)] bg-status-aprobada-bg/40 p-3">
+                      <p className="text-xs font-semibold uppercase tracking-wide text-status-aprobada">Tu respuesta</p>
+                      <p className="mt-1 text-sm text-[var(--text-secondary)]">{p.comentario}</p>
+                    </div>
+                  )
+                )}
               </li>
             ))}
           </ul>

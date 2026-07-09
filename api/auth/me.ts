@@ -12,10 +12,14 @@
 //                                    sesión activa puede consultarla.
 // GET  /api/auth/me?pqr=recibidas -> PQR radicadas hacia la sesión actual.
 //                                    Solo cuentas de tipo 'desarrollador'.
+// GET  /api/auth/me?pqr=mias      -> PQR radicadas POR la sesión actual
+//                                    (para que el empleado vea el estado y el
+//                                    comentario de respuesta del desarrollador).
 // POST /api/auth/me?pqr=1         -> radica una PQR. Cualquier cuenta que NO
 //                                    sea de tipo 'desarrollador'.
-// PATCH /api/auth/me?pqr=<id>     -> cambia el estado de una PQR propia
-//                                    (pendiente/resuelta). Solo el
+// PATCH /api/auth/me?pqr=<id>     -> cambia el estado de una PQR propia y,
+//                                    opcionalmente, adjunta el comentario de
+//                                    respuesta (pendiente/resuelta). Solo el
 //                                    destinatario ('desarrollador') puede
 //                                    resolverla.
 // La funcionalidad de PQR vive aquí (en vez de su propio api/pqr/index.ts)
@@ -98,6 +102,12 @@ async function listarPqrRecibidas(req: VercelRequest, res: VercelResponse) {
   return res.status(200).json({ ok: true, pqr: rows.map(mapPqrRow) });
 }
 
+async function listarPqrPropias(req: VercelRequest, res: VercelResponse) {
+  const { empleadoId } = await requireAuth(req);
+  const { rows } = await sql<PqrRow>`select * from pqr where empleado_id = ${empleadoId} order by creado_en desc`;
+  return res.status(200).json({ ok: true, pqr: rows.map(mapPqrRow) });
+}
+
 async function radicarPqr(req: VercelRequest, res: VercelResponse) {
   const { empleadoId } = await requireAuth(req);
   const { rows: filasSolicitante } = await sql<EmpleadoRow>`select * from empleados where id = ${empleadoId} limit 1`;
@@ -129,7 +139,7 @@ async function radicarPqr(req: VercelRequest, res: VercelResponse) {
 
 async function actualizarEstadoPqr(req: VercelRequest, res: VercelResponse, pqrId: string) {
   const { empleadoId } = await requireAuth(req);
-  const body = req.body as { estado?: PqrEstado };
+  const body = req.body as { estado?: PqrEstado; comentario?: string };
   if (body.estado !== "pendiente" && body.estado !== "resuelta") {
     throw new HttpError(400, "Estado inválido.");
   }
@@ -141,7 +151,14 @@ async function actualizarEstadoPqr(req: VercelRequest, res: VercelResponse, pqrI
     throw new HttpError(403, "No puedes modificar una PQR que no fue radicada hacia tu cuenta.");
   }
 
-  const { rows: actualizadas } = await sql<PqrRow>`update pqr set estado = ${body.estado} where id = ${pqrId} returning *`;
+  const comentario = body.comentario !== undefined ? body.comentario.trim() || null : actual.comentario;
+  const resueltoEn = body.estado === "resuelta" ? new Date().toISOString() : null;
+
+  const { rows: actualizadas } = await sql<PqrRow>`
+    update pqr set estado = ${body.estado}, comentario = ${comentario}, resuelto_en = ${resueltoEn}
+    where id = ${pqrId}
+    returning *
+  `;
   return res.status(200).json({ ok: true, pqr: mapPqrRow(actualizadas[0]) });
 }
 
@@ -150,6 +167,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (req.method === "GET") {
       if (req.query.pqr === "destinos") return await listarDestinosPqr(req, res);
       if (req.query.pqr === "recibidas") return await listarPqrRecibidas(req, res);
+      if (req.query.pqr === "mias") return await listarPqrPropias(req, res);
 
       const empleadoId = leerEmpleadoIdDeSesion(req);
       if (!empleadoId) {

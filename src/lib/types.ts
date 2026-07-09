@@ -50,6 +50,8 @@ export interface Pqr {
   adminDestinoId: string | null;
   problema: string;
   estado: PqrEstado;
+  comentario: string | null;
+  resueltoEn: string | null;
   creadoEn: string;
 }
 

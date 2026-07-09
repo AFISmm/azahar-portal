@@ -297,6 +297,8 @@ export interface PqrRow {
   admin_destino_id: string | null;
   problema: string;
   estado: PqrEstado;
+  comentario: string | null;
+  resuelto_en: string | null;
   creado_en: string;
 }
 
@@ -309,6 +311,8 @@ export interface PqrPublico {
   adminDestinoId: string | null;
   problema: string;
   estado: PqrEstado;
+  comentario: string | null;
+  resueltoEn: string | null;
   creadoEn: string;
 }
 
@@ -322,6 +326,8 @@ export function mapPqrRow(row: PqrRow): PqrPublico {
     adminDestinoId: row.admin_destino_id,
     problema: row.problema,
     estado: row.estado,
+    comentario: row.comentario,
+    resueltoEn: row.resuelto_en,
     creadoEn: row.creado_en,
   };
 }

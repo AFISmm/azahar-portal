@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useAuth } from "../auth/AuthContext";
 import { dataSource } from "../lib/dataSource";
-import type { Solicitud, SolicitudTipo } from "../lib/types";
+import type { Pqr, Solicitud, SolicitudTipo } from "../lib/types";
 
 const CLAVE_DESCARTADAS = "azahar_notificaciones_descartadas";
 
@@ -34,28 +34,43 @@ function guardarDescartadas(set: Set<string>) {
 }
 
 /**
- * Deriva las notificaciones del portal a partir de las solicitudes existentes
- * (no hay una tabla de notificaciones aparte): para un admin, las solicitudes
- * de cualquier persona que estén pendientes de aprobar; para todos, sus
- * propias solicitudes ya resueltas que aún no haya revisado. "Eliminar" las
- * descarta de forma local (localStorage) — es una limitación conocida: el
- * descarte no sincroniza entre dispositivos.
+ * Deriva las notificaciones del portal a partir de solicitudes y PQR
+ * existentes (no hay una tabla de notificaciones aparte):
+ *  - Admin: solicitudes de cualquier persona pendientes de aprobar.
+ *  - Cuenta de desarrollador: PQR pendientes radicadas hacia su cuenta.
+ *  - Todos: sus propias solicitudes ya resueltas, y sus propias PQR ya
+ *    resueltas (con el comentario de respuesta del desarrollador), que aún
+ *    no hayan revisado.
+ * "Eliminar" las descarta de forma local (localStorage) — es una limitación
+ * conocida: el descarte no sincroniza entre dispositivos.
  */
 export function useNotificaciones() {
   const { empleado, role } = useAuth();
   const [solicitudes, setSolicitudes] = useState<Solicitud[]>([]);
+  const [pqrRecibidas, setPqrRecibidas] = useState<Pqr[]>([]);
+  const [pqrPropias, setPqrPropias] = useState<Pqr[]>([]);
   const [descartadas, setDescartadas] = useState<Set<string>>(() => leerDescartadas());
   const [cargando, setCargando] = useState(true);
 
   const cargar = useCallback(async () => {
     if (!empleado) {
       setSolicitudes([]);
+      setPqrRecibidas([]);
+      setPqrPropias([]);
       setCargando(false);
       return;
     }
     setCargando(true);
     try {
-      setSolicitudes(await dataSource.listSolicitudes());
+      const esDesarrollador = empleado.tipoCuenta === "desarrollador";
+      const [sols, recibidas, propias] = await Promise.all([
+        dataSource.listSolicitudes(),
+        esDesarrollador ? dataSource.listPqrRecibidas() : Promise.resolve([]),
+        esDesarrollador ? Promise.resolve([]) : dataSource.listPqrPropias(),
+      ]);
+      setSolicitudes(sols);
+      setPqrRecibidas(recibidas);
+      setPqrPropias(propias);
     } finally {
       setCargando(false);
     }
@@ -92,6 +107,34 @@ export function useNotificaciones() {
         fecha: s.resueltoEn ?? s.creadoEn,
         ruta: "/nomina/mis-solicitudes",
       });
+    }
+
+    if (empleado.tipoCuenta === "desarrollador") {
+      for (const p of pqrRecibidas) {
+        if (p.estado !== "pendiente") continue;
+        const id = `pqr-pendiente-${p.id}`;
+        if (descartadas.has(id)) continue;
+        notificaciones.push({
+          id,
+          titulo: "Nueva PQR radicada",
+          descripcion: `${p.nombre} radicó una PQR: "${p.problema.slice(0, 60)}${p.problema.length > 60 ? "…" : ""}"`,
+          fecha: p.creadoEn,
+          ruta: "/admin/pqr",
+        });
+      }
+    } else {
+      for (const p of pqrPropias) {
+        if (p.estado !== "resuelta") continue;
+        const id = `pqr-resuelta-${p.id}`;
+        if (descartadas.has(id)) continue;
+        notificaciones.push({
+          id,
+          titulo: "Tu PQR fue resuelta",
+          descripcion: p.comentario ? `El desarrollador respondió: "${p.comentario.slice(0, 80)}${p.comentario.length > 80 ? "…" : ""}"` : "Tu PQR ya fue marcada como resuelta.",
+          fecha: p.resueltoEn ?? p.creadoEn,
+          ruta: "/mi-perfil?pqr=1",
+        });
+      }
     }
   }
   notificaciones.sort((a, b) => (a.fecha < b.fecha ? 1 : -1));

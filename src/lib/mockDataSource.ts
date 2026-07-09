@@ -270,6 +270,8 @@ export const mockDataSource: DataSource = {
       adminDestinoId: input.adminDestinoId,
       problema: input.problema,
       estado: "pendiente",
+      comentario: null,
+      resueltoEn: null,
       creadoEn: new Date().toISOString(),
     };
     pqrs.push(nuevo);
@@ -282,10 +284,21 @@ export const mockDataSource: DataSource = {
     return delay(resultado);
   },
 
-  async actualizarEstadoPqr(id: string, estado: PqrEstado) {
+  async listPqrPropias() {
+    const id = typeof window !== "undefined" ? window.localStorage.getItem(DEMO_SESSION_KEY) : null;
+    const resultado = pqrs.filter((p) => p.empleadoId === id).sort((a, b) => (a.creadoEn < b.creadoEn ? 1 : -1));
+    return delay(resultado);
+  },
+
+  async actualizarEstadoPqr(id: string, estado: PqrEstado, comentario?: string) {
     const idx = pqrs.findIndex((p) => p.id === id);
     if (idx === -1) throw new Error("PQR no encontrada");
-    pqrs[idx] = { ...pqrs[idx], estado };
+    pqrs[idx] = {
+      ...pqrs[idx],
+      estado,
+      comentario: comentario !== undefined ? comentario || null : pqrs[idx].comentario,
+      resueltoEn: estado === "resuelta" ? new Date().toISOString() : null,
+    };
     return delay(pqrs[idx]);
   },
 };

@@ -247,10 +247,15 @@ export const httpDataSource: DataSource = {
     return data.pqr;
   },
 
-  async actualizarEstadoPqr(id: string, estado: PqrEstado) {
+  async listPqrPropias() {
+    const data = await fetchJson<{ ok: boolean; pqr: Pqr[] }>("/api/auth/me?pqr=mias");
+    return data.pqr;
+  },
+
+  async actualizarEstadoPqr(id: string, estado: PqrEstado, comentario?: string) {
     const data = await fetchJson<{ ok: boolean; pqr: Pqr }>(`/api/auth/me?pqr=${encodeURIComponent(id)}`, {
       method: "PATCH",
-      body: JSON.stringify({ estado }),
+      body: JSON.stringify({ estado, comentario }),
     });
     return data.pqr;
   },

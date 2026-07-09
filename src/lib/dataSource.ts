@@ -59,7 +59,8 @@ export interface DataSource {
   listDestinosPqr(): Promise<DestinoPqr[]>;
   createPqr(input: NuevaPqrInput): Promise<Pqr>;
   listPqrRecibidas(): Promise<Pqr[]>;
-  actualizarEstadoPqr(id: string, estado: PqrEstado): Promise<Pqr>;
+  listPqrPropias(): Promise<Pqr[]>;
+  actualizarEstadoPqr(id: string, estado: PqrEstado, comentario?: string): Promise<Pqr>;
 }
 
 export { IS_DEMO_MODE };

@@ -144,6 +144,8 @@ create table pqr (
   admin_destino_id uuid references empleados (id),
   problema text not null,
   estado text not null default 'pendiente' check (estado in ('pendiente', 'resuelta')),
+  comentario text,
+  resuelto_en timestamptz,
   creado_en timestamptz not null default now()
 );
 

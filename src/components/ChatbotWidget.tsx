@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
-import { Bot, Loader2, MessageCircle, Send, X } from "lucide-react";
+import { Bot, Loader2, MessageCircle, Send, Settings2, Volume2, X } from "lucide-react";
 
 interface Mensaje {
   rol: "user" | "assistant";
@@ -13,6 +13,8 @@ const SALUDO: Mensaje = {
 };
 
 const FRASE_BIENVENIDA = "Bienvenido al portal, mi nombre es JARVIS y estoy disponible para ayudarte en lo que necesites.";
+const FRASE_PRUEBA = "Hola, soy JARVIS. Así suena esta voz dentro del Portal Azahar.";
+const STORAGE_KEY_VOZ = "jarvis-voz-uri";
 
 /** Busca la mejor voz en español disponible en el navegador para la síntesis de voz. */
 function elegirVozEspanol(voces: SpeechSynthesisVoice[]): SpeechSynthesisVoice | undefined {
@@ -23,16 +25,23 @@ function elegirVozEspanol(voces: SpeechSynthesisVoice[]): SpeechSynthesisVoice |
   );
 }
 
-/** Respaldo gratuito: síntesis de voz nativa del navegador (calidad variable según el sistema). */
-function reproducirConVozDelNavegador() {
+/** Resuelve qué voz usar: la elegida y guardada por la persona, o la mejor en español por defecto. */
+function resolverVoz(voces: SpeechSynthesisVoice[]): SpeechSynthesisVoice | undefined {
+  const uriGuardado = typeof window !== "undefined" ? localStorage.getItem(STORAGE_KEY_VOZ) : null;
+  const guardada = uriGuardado ? voces.find((v) => v.voiceURI === uriGuardado) : undefined;
+  return guardada ?? elegirVozEspanol(voces);
+}
+
+/** Síntesis de voz nativa del navegador (gratuita, calidad y variedad dependen del sistema). */
+function hablarConVozDelNavegador(texto: string) {
   if (typeof window === "undefined" || !("speechSynthesis" in window)) return;
 
   function hablar() {
-    const utterance = new SpeechSynthesisUtterance(FRASE_BIENVENIDA);
-    utterance.lang = "es-ES";
+    const utterance = new SpeechSynthesisUtterance(texto);
+    const voz = resolverVoz(window.speechSynthesis.getVoices());
+    utterance.lang = voz?.lang || "es-ES";
     utterance.rate = 1;
     utterance.pitch = 1;
-    const voz = elegirVozEspanol(window.speechSynthesis.getVoices());
     if (voz) utterance.voice = voz;
     window.speechSynthesis.cancel();
     window.speechSynthesis.speak(utterance);
@@ -45,35 +54,14 @@ function reproducirConVozDelNavegador() {
   }
 }
 
-/**
- * Reproduce la frase de bienvenida. Intenta primero con la voz realista de
- * ElevenLabs (vía el backend, ver api/chat.ts); si no está configurada o
- * falla, cae automáticamente a la síntesis de voz gratuita del navegador.
- */
-async function reproducirBienvenida() {
-  try {
-    const resp = await fetch("/api/chat?voz=1", {
-      method: "POST",
-      credentials: "include",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ texto: FRASE_BIENVENIDA }),
-    });
-    if (!resp.ok) throw new Error("voz no disponible");
-    const blob = await resp.blob();
-    const url = URL.createObjectURL(blob);
-    const audio = new Audio(url);
-    audio.addEventListener("ended", () => URL.revokeObjectURL(url), { once: true });
-    await audio.play();
-  } catch {
-    reproducirConVozDelNavegador();
-  }
-}
-
 export function ChatbotWidget() {
   const [abierto, setAbierto] = useState(false);
   const [mensajes, setMensajes] = useState<Mensaje[]>([SALUDO]);
   const [entrada, setEntrada] = useState("");
   const [enviando, setEnviando] = useState(false);
+  const [mostrarVoces, setMostrarVoces] = useState(false);
+  const [voces, setVoces] = useState<SpeechSynthesisVoice[]>([]);
+  const [vozUri, setVozUri] = useState(() => (typeof window !== "undefined" ? localStorage.getItem(STORAGE_KEY_VOZ) ?? "" : ""));
   const finRef = useRef<HTMLDivElement>(null);
   const yaSaludoRef = useRef(false);
 
@@ -81,12 +69,39 @@ export function ChatbotWidget() {
     if (abierto) finRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [mensajes, abierto]);
 
+  useEffect(() => {
+    if (typeof window === "undefined" || !("speechSynthesis" in window)) return;
+    function actualizarVoces() {
+      setVoces(window.speechSynthesis.getVoices());
+    }
+    actualizarVoces();
+    window.speechSynthesis.addEventListener("voiceschanged", actualizarVoces);
+    return () => window.speechSynthesis.removeEventListener("voiceschanged", actualizarVoces);
+  }, []);
+
+  const vocesEspanol = voces.filter((v) => v.lang?.toLowerCase().startsWith("es"));
+  const listaVoces = vocesEspanol.length > 0 ? vocesEspanol : voces;
+
+  function elegirVoz(uri: string) {
+    setVozUri(uri);
+    if (typeof window !== "undefined") localStorage.setItem(STORAGE_KEY_VOZ, uri);
+  }
+
+  function probarVoz(uri: string) {
+    const voz = voces.find((v) => v.voiceURI === uri);
+    const utterance = new SpeechSynthesisUtterance(FRASE_PRUEBA);
+    utterance.lang = voz?.lang || "es-ES";
+    if (voz) utterance.voice = voz;
+    window.speechSynthesis.cancel();
+    window.speechSynthesis.speak(utterance);
+  }
+
   function alternarChat() {
     setAbierto((actual) => {
       const nuevo = !actual;
       if (nuevo && !yaSaludoRef.current) {
         yaSaludoRef.current = true;
-        void reproducirBienvenida();
+        hablarConVozDelNavegador(FRASE_BIENVENIDA);
       }
       return nuevo;
     });
@@ -140,14 +155,63 @@ export function ChatbotWidget() {
               <Bot className="h-4 w-4" strokeWidth={1.75} />
               <p className="font-heading text-sm font-semibold">JARVIS</p>
             </div>
-            <button
-              onClick={() => setAbierto(false)}
-              className="rounded-full p-1 text-cream-100/80 transition hover:bg-white/10 hover:text-cream-100"
-              aria-label="Cerrar chat"
-            >
-              <X className="h-4 w-4" strokeWidth={1.75} />
-            </button>
+            <div className="flex items-center gap-1">
+              <button
+                onClick={() => setMostrarVoces((v) => !v)}
+                className={`rounded-full p-1 text-cream-100/80 transition hover:bg-white/10 hover:text-cream-100 ${mostrarVoces ? "bg-white/10 text-cream-100" : ""}`}
+                aria-label="Elegir voz del asistente"
+                title="Elegir voz del asistente"
+              >
+                <Settings2 className="h-4 w-4" strokeWidth={1.75} />
+              </button>
+              <button
+                onClick={() => setAbierto(false)}
+                className="rounded-full p-1 text-cream-100/80 transition hover:bg-white/10 hover:text-cream-100"
+                aria-label="Cerrar chat"
+              >
+                <X className="h-4 w-4" strokeWidth={1.75} />
+              </button>
+            </div>
           </div>
+
+          {mostrarVoces && (
+            <div className="space-y-2 border-b border-[var(--border-subtle)] bg-[var(--surface-muted)] px-3 py-3">
+              <p className="text-xs font-semibold text-[var(--text-secondary)]">Voz del asistente (gratuita, del navegador)</p>
+              {listaVoces.length === 0 ? (
+                <p className="text-xs text-[var(--text-muted)]">
+                  Tu navegador no reportó voces todavía. Prueba abrir el chat de nuevo en unos segundos.
+                </p>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <select
+                    value={vozUri}
+                    onChange={(e) => elegirVoz(e.target.value)}
+                    className="flex-1 rounded-lg border border-[var(--border-subtle)] bg-[var(--surface-app)] px-2 py-1.5 text-xs text-[var(--text-primary)] outline-none focus:border-brand-800"
+                  >
+                    <option value="">Automática (mejor voz en español)</option>
+                    {listaVoces.map((v) => (
+                      <option key={v.voiceURI} value={v.voiceURI}>
+                        {v.name} ({v.lang})
+                      </option>
+                    ))}
+                  </select>
+                  <button
+                    type="button"
+                    onClick={() => probarVoz(vozUri || resolverVoz(voces)?.voiceURI || "")}
+                    className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-brand-800 text-cream-100 transition hover:bg-brand-900"
+                    aria-label="Probar voz"
+                    title="Probar voz"
+                  >
+                    <Volume2 className="h-4 w-4" strokeWidth={1.75} />
+                  </button>
+                </div>
+              )}
+              <p className="text-[11px] leading-snug text-[var(--text-muted)]">
+                Las voces disponibles dependen de tu sistema operativo y navegador (Windows y Chrome suelen traer varias en
+                español). Tu elección queda guardada en este dispositivo.
+              </p>
+            </div>
+          )}
 
           <div className="flex-1 space-y-3 overflow-y-auto px-3 py-3">
             {mensajes.map((m, i) => (

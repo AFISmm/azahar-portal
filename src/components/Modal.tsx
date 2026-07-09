@@ -12,14 +12,15 @@ interface ModalProps {
 export function Modal({ open, onClose, title, children, widthClassName = "max-w-lg" }: ModalProps) {
   if (!open) return null;
   return (
-    <div className="fixed inset-0 z-40 flex items-start justify-center overflow-y-auto bg-brand-900/40 px-4 py-10 backdrop-blur-[2px]">
+    <div className="fixed inset-0 z-40 flex items-center justify-center px-4 py-6" onClick={onClose}>
       <div
-        className={`azahar-fade-in w-full ${widthClassName} rounded-2xl bg-[var(--surface-card)] p-6 shadow-card`}
+        className={`azahar-fade-in flex max-h-[90vh] w-full ${widthClassName} flex-col rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface-card)] shadow-card`}
         role="dialog"
         aria-modal="true"
         aria-label={title}
+        onClick={(e) => e.stopPropagation()}
       >
-        <div className="mb-5 flex items-center justify-between">
+        <div className="flex shrink-0 items-center justify-between border-b border-[var(--border-subtle)] px-6 py-4">
           <h2 className="font-heading text-lg font-semibold text-[var(--text-primary)]">{title}</h2>
           <button
             onClick={onClose}
@@ -29,7 +30,7 @@ export function Modal({ open, onClose, title, children, widthClassName = "max-w-
             <X className="h-5 w-5" strokeWidth={1.75} />
           </button>
         </div>
-        {children}
+        <div className="overflow-y-auto px-6 py-5">{children}</div>
       </div>
     </div>
   );

@@ -123,3 +123,19 @@ h1, h2, h3, h4, h5, h6 {
 .azahar-ticker-track[data-pausado="true"] {
   animation-play-state: paused;
 }
+
+/*
+ * Mosaico de marca: el wordmark de Azahar repetido en mosaico, muy sutil,
+ * detrás del contenido principal (las tarjetas opacas lo tapan por
+ * completo). Usa una tinta clara en tema oscuro y una tinta oscura en tema
+ * claro para mantenerse siempre legible-sutil sin importar el tema.
+ */
+.azahar-mosaic-bg {
+  background-image: url(./assets/mosaic-light.png);
+  background-repeat: repeat;
+  background-size: 180px 97px;
+  opacity: 0.55;
+}
+:root[data-theme="dark"] .azahar-mosaic-bg {
+  background-image: url(./assets/mosaic-dark.png);
+}

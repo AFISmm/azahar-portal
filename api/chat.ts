@@ -105,10 +105,65 @@ interface GeminiRespuesta {
   candidates?: { content?: { parts?: GeminiParte[] } }[];
 }
 
+// ----------------------------------------------------------------------------
+// Voz (texto a voz) con ElevenLabs — capa gratuita, cuota mensual de
+// caracteres limitada. Vive en este mismo archivo (en vez de un endpoint
+// aparte) para no gastar otra función serverless del límite de 12 del plan
+// Hobby de Vercel. Se usa solo para la frase de bienvenida del chat, no para
+// cada respuesta, precisamente por esa cuota limitada.
+// ----------------------------------------------------------------------------
+const ELEVENLABS_VOICE_ID = process.env.ELEVENLABS_VOICE_ID || "21m00Tcm4TlvDq8ikWAM"; // "Rachel", voz multilingüe por defecto
+
+interface VozPayload {
+  texto: string;
+}
+
+async function generarVoz(req: VercelRequest, res: VercelResponse) {
+  const apiKey = process.env.ELEVENLABS_API_KEY;
+  if (!apiKey) {
+    return res.status(500).json({ ok: false, motivo: "config_faltante", mensaje: "Voz no configurada (falta ELEVENLABS_API_KEY)." });
+  }
+
+  await requireAuth(req);
+  const body = req.body as Partial<VozPayload>;
+  const texto = body.texto?.trim();
+  if (!texto) {
+    return res.status(400).json({ ok: false, mensaje: "Falta el texto a locutar." });
+  }
+
+  const respuestaVoz = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${ELEVENLABS_VOICE_ID}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Accept: "audio/mpeg", "xi-api-key": apiKey },
+    body: JSON.stringify({
+      text: texto,
+      model_id: "eleven_multilingual_v2",
+      voice_settings: { stability: 0.5, similarity_boost: 0.75 },
+    }),
+  });
+
+  if (!respuestaVoz.ok) {
+    const textoError = await respuestaVoz.text().catch(() => "");
+    throw new Error(`ElevenLabs respondió ${respuestaVoz.status}: ${textoError.slice(0, 200)}`);
+  }
+
+  const audio = Buffer.from(await respuestaVoz.arrayBuffer());
+  res.setHeader("Content-Type", "audio/mpeg");
+  res.setHeader("Cache-Control", "no-store");
+  return res.status(200).send(audio);
+}
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== "POST") {
     res.setHeader("Allow", "POST");
     return res.status(405).json({ ok: false, mensaje: "Método no permitido. Usa POST." });
+  }
+
+  if (req.query.voz === "1") {
+    try {
+      return await generarVoz(req, res);
+    } catch (err) {
+      return manejarError(res, err);
+    }
   }
 
   const apiKey = process.env.GEMINI_API_KEY;

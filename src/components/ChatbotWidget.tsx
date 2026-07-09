@@ -23,8 +23,8 @@ function elegirVozEspanol(voces: SpeechSynthesisVoice[]): SpeechSynthesisVoice |
   );
 }
 
-/** Reproduce la frase de bienvenida con la síntesis de voz nativa del navegador (sin costo, sin API externa). */
-function reproducirBienvenida() {
+/** Respaldo gratuito: síntesis de voz nativa del navegador (calidad variable según el sistema). */
+function reproducirConVozDelNavegador() {
   if (typeof window === "undefined" || !("speechSynthesis" in window)) return;
 
   function hablar() {
@@ -38,11 +38,34 @@ function reproducirBienvenida() {
     window.speechSynthesis.speak(utterance);
   }
 
-  // Las voces a veces cargan de forma asíncrona la primera vez.
   if (window.speechSynthesis.getVoices().length === 0) {
     window.speechSynthesis.addEventListener("voiceschanged", hablar, { once: true });
   } else {
     hablar();
+  }
+}
+
+/**
+ * Reproduce la frase de bienvenida. Intenta primero con la voz realista de
+ * ElevenLabs (vía el backend, ver api/chat.ts); si no está configurada o
+ * falla, cae automáticamente a la síntesis de voz gratuita del navegador.
+ */
+async function reproducirBienvenida() {
+  try {
+    const resp = await fetch("/api/chat?voz=1", {
+      method: "POST",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ texto: FRASE_BIENVENIDA }),
+    });
+    if (!resp.ok) throw new Error("voz no disponible");
+    const blob = await resp.blob();
+    const url = URL.createObjectURL(blob);
+    const audio = new Audio(url);
+    audio.addEventListener("ended", () => URL.revokeObjectURL(url), { once: true });
+    await audio.play();
+  } catch {
+    reproducirConVozDelNavegador();
   }
 }
 
@@ -63,7 +86,7 @@ export function ChatbotWidget() {
       const nuevo = !actual;
       if (nuevo && !yaSaludoRef.current) {
         yaSaludoRef.current = true;
-        reproducirBienvenida();
+        void reproducirBienvenida();
       }
       return nuevo;
     });

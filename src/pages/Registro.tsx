@@ -6,6 +6,7 @@ import { useToast } from "../context/ToastContext";
 import { Button, Field, Input, Select } from "../components/ui";
 import { DEPARTAMENTOS, TIPOS_CONTRATO } from "../components/admin/EmpleadoForm";
 import logo from "../assets/azahar-logo.png";
+import sidebarBg from "../assets/sidebar-bg.jpg";
 
 type TipoUsuario = "empleado" | "desarrollador";
 
@@ -72,7 +73,12 @@ export default function Registro() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-cream-100 px-4 py-10">
+    <div className="relative flex min-h-screen items-center justify-center overflow-hidden px-4 py-10">
+      <div className="absolute inset-0 -z-20 bg-cover bg-center" style={{ backgroundImage: `url(${sidebarBg})` }} aria-hidden="true" />
+      <div
+        className="absolute inset-0 -z-10 bg-gradient-to-b from-brand-900/80 via-brand-900/70 to-brand-900/85"
+        aria-hidden="true"
+      />
       <div className="w-full max-w-lg rounded-2xl border border-[var(--border-subtle)] bg-white p-8 shadow-card">
         <div className="mb-7 flex flex-col items-center text-center">
           <img src={logo} alt="Azahar Coffee Company" className="mb-4 h-14 w-auto object-contain" />

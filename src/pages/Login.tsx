@@ -5,6 +5,7 @@ import { useAuth } from "../auth/AuthContext";
 import { IS_DEMO_MODE } from "../lib/dataSource";
 import { Button, Field, Input } from "../components/ui";
 import logo from "../assets/azahar-logo.png";
+import sidebarBg from "../assets/sidebar-bg.jpg";
 
 export default function Login() {
   const { user, signIn, signInDemo } = useAuth();
@@ -34,7 +35,12 @@ export default function Login() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-cream-100 px-4">
+    <div className="relative flex min-h-screen items-center justify-center overflow-hidden px-4">
+      <div className="absolute inset-0 -z-20 bg-cover bg-center" style={{ backgroundImage: `url(${sidebarBg})` }} aria-hidden="true" />
+      <div
+        className="absolute inset-0 -z-10 bg-gradient-to-b from-brand-900/80 via-brand-900/70 to-brand-900/85"
+        aria-hidden="true"
+      />
       <div className="w-full max-w-md rounded-2xl border border-[var(--border-subtle)] bg-white p-8 shadow-card">
         <div className="mb-7 flex flex-col items-center text-center">
           <img src={logo} alt="Azahar Coffee Company" className="mb-4 h-14 w-auto object-contain" />

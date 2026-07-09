@@ -25,6 +25,7 @@ import AdminEmpleados from "./pages/admin/AdminEmpleados";
 import EmpleadoDetalle from "./pages/admin/EmpleadoDetalle";
 import AdminUsuarios from "./pages/admin/AdminUsuarios";
 import AdminNomina from "./pages/admin/AdminNomina";
+import GestionPqr from "./pages/admin/GestionPqr";
 import MiPerfil from "./pages/MiPerfil";
 
 import GestionEstrategica from "./pages/GestionEstrategica";
@@ -68,6 +69,7 @@ export default function App() {
                     <Route path="/admin/empleados/:id" element={<EmpleadoDetalle />} />
                     <Route path="/admin/usuarios" element={<AdminUsuarios />} />
                     <Route path="/admin/nomina" element={<AdminNomina />} />
+                    <Route path="/admin/pqr" element={<GestionPqr />} />
 
                     <Route path="/gestion-estrategica" element={<GestionEstrategica />} />
                     <Route path="/gestion-comercial" element={<GestionComercial />} />

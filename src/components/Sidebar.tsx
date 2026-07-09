@@ -23,6 +23,7 @@ import {
   ChevronLeft,
   X,
   IdCard,
+  MessageSquareWarning,
 } from "lucide-react";
 import { useAuth } from "../auth/AuthContext";
 import { IS_DEMO_MODE } from "../lib/dataSource";
@@ -76,8 +77,10 @@ export function Sidebar({ abierto = false, onCerrar }: SidebarProps) {
   const { empleado, signOut } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
-  const enGestionUsuarios = location.pathname.startsWith("/admin/usuarios");
-  const enNomina = !enGestionUsuarios && (location.pathname.startsWith("/nomina") || location.pathname.startsWith("/admin"));
+  // Rutas que, aunque empiecen con "/admin", son ítems sueltos del sidebar
+  // principal (no parte del sub-sidebar de Administración de NÓMINA).
+  const enPaginaIndependiente = location.pathname.startsWith("/admin/usuarios") || location.pathname.startsWith("/admin/pqr");
+  const enNomina = !enPaginaIndependiente && (location.pathname.startsWith("/nomina") || location.pathname.startsWith("/admin"));
 
   return (
     <aside
@@ -184,6 +187,15 @@ export function Sidebar({ abierto = false, onCerrar }: SidebarProps) {
                 <NavLink to="/admin/usuarios" className={({ isActive }) => itemClase(isActive)}>
                   <UserCog className="h-4 w-4 shrink-0" strokeWidth={1.75} />
                   Gestión de usuarios
+                </NavLink>
+              </div>
+            )}
+
+            {empleado?.tipoCuenta === "desarrollador" && (
+              <div className="space-y-1">
+                <NavLink to="/admin/pqr" className={({ isActive }) => itemClase(isActive)}>
+                  <MessageSquareWarning className="h-4 w-4 shrink-0" strokeWidth={1.75} />
+                  Gestión PQR
                 </NavLink>
               </div>
             )}

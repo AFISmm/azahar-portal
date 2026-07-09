@@ -14,6 +14,10 @@
 //                                    Solo cuentas de tipo 'desarrollador'.
 // POST /api/auth/me?pqr=1         -> radica una PQR. Cualquier cuenta que NO
 //                                    sea de tipo 'desarrollador'.
+// PATCH /api/auth/me?pqr=<id>     -> cambia el estado de una PQR propia
+//                                    (pendiente/resuelta). Solo el
+//                                    destinatario ('desarrollador') puede
+//                                    resolverla.
 // La funcionalidad de PQR vive aquí (en vez de su propio api/pqr/index.ts)
 // para no superar el límite de 12 funciones serverless del plan Hobby de
 // Vercel — mismo criterio que ya se usó para fusionar login+logout o
@@ -24,7 +28,7 @@ import type { VercelRequest, VercelResponse } from "@vercel/node";
 import bcrypt from "bcryptjs";
 import { sql } from "../_lib/db.js";
 import { HttpError, leerEmpleadoIdDeSesion, manejarError, requireAuth } from "../_lib/auth.js";
-import { mapEmpleadoRow, mapPqrRow, type EmpleadoRow, type PqrRow } from "../_lib/mappers.js";
+import { mapEmpleadoRow, mapPqrRow, type EmpleadoRow, type PqrEstado, type PqrRow } from "../_lib/mappers.js";
 
 const RONDAS_SAL = 10;
 
@@ -123,6 +127,24 @@ async function radicarPqr(req: VercelRequest, res: VercelResponse) {
   return res.status(201).json({ ok: true, pqr: mapPqrRow(rows[0]) });
 }
 
+async function actualizarEstadoPqr(req: VercelRequest, res: VercelResponse, pqrId: string) {
+  const { empleadoId } = await requireAuth(req);
+  const body = req.body as { estado?: PqrEstado };
+  if (body.estado !== "pendiente" && body.estado !== "resuelta") {
+    throw new HttpError(400, "Estado inválido.");
+  }
+
+  const { rows } = await sql<PqrRow>`select * from pqr where id = ${pqrId} limit 1`;
+  const actual = rows[0];
+  if (!actual) throw new HttpError(404, "PQR no encontrada.");
+  if (actual.admin_destino_id !== empleadoId) {
+    throw new HttpError(403, "No puedes modificar una PQR que no fue radicada hacia tu cuenta.");
+  }
+
+  const { rows: actualizadas } = await sql<PqrRow>`update pqr set estado = ${body.estado} where id = ${pqrId} returning *`;
+  return res.status(200).json({ ok: true, pqr: mapPqrRow(actualizadas[0]) });
+}
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
     if (req.method === "GET") {
@@ -144,6 +166,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     if (req.method === "PATCH") {
+      const pqrId = req.query.pqr;
+      if (typeof pqrId === "string" && pqrId) {
+        return await actualizarEstadoPqr(req, res, pqrId);
+      }
       return await actualizarPerfilPropio(req, res);
     }
 

@@ -13,6 +13,7 @@ import type {
   NuevaSolicitudInput,
   PerfilPropioInput,
   Pqr,
+  PqrEstado,
   Solicitud,
   SolicitudEstado,
 } from "./types";
@@ -273,5 +274,18 @@ export const mockDataSource: DataSource = {
     };
     pqrs.push(nuevo);
     return delay(nuevo);
+  },
+
+  async listPqrRecibidas() {
+    const id = typeof window !== "undefined" ? window.localStorage.getItem(DEMO_SESSION_KEY) : null;
+    const resultado = pqrs.filter((p) => p.adminDestinoId === id).sort((a, b) => (a.creadoEn < b.creadoEn ? 1 : -1));
+    return delay(resultado);
+  },
+
+  async actualizarEstadoPqr(id: string, estado: PqrEstado) {
+    const idx = pqrs.findIndex((p) => p.id === id);
+    if (idx === -1) throw new Error("PQR no encontrada");
+    pqrs[idx] = { ...pqrs[idx], estado };
+    return delay(pqrs[idx]);
   },
 };

@@ -15,6 +15,7 @@ import type {
   NuevaSolicitudInput,
   PerfilPropioInput,
   Pqr,
+  PqrEstado,
   Solicitud,
   SolicitudEstado,
 } from "./types";
@@ -237,6 +238,19 @@ export const httpDataSource: DataSource = {
     const data = await fetchJson<{ ok: boolean; pqr: Pqr }>("/api/auth/me?pqr=1", {
       method: "POST",
       body: JSON.stringify(input),
+    });
+    return data.pqr;
+  },
+
+  async listPqrRecibidas() {
+    const data = await fetchJson<{ ok: boolean; pqr: Pqr[] }>("/api/auth/me?pqr=recibidas");
+    return data.pqr;
+  },
+
+  async actualizarEstadoPqr(id: string, estado: PqrEstado) {
+    const data = await fetchJson<{ ok: boolean; pqr: Pqr }>(`/api/auth/me?pqr=${encodeURIComponent(id)}`, {
+      method: "PATCH",
+      body: JSON.stringify({ estado }),
     });
     return data.pqr;
   },

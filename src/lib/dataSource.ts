@@ -14,6 +14,7 @@ import type {
   NuevaSolicitudInput,
   PerfilPropioInput,
   Pqr,
+  PqrEstado,
   Solicitud,
   SolicitudEstado,
 } from "./types";
@@ -57,6 +58,8 @@ export interface DataSource {
   actualizarPerfilPropio(patch: PerfilPropioInput): Promise<Empleado>;
   listDestinosPqr(): Promise<DestinoPqr[]>;
   createPqr(input: NuevaPqrInput): Promise<Pqr>;
+  listPqrRecibidas(): Promise<Pqr[]>;
+  actualizarEstadoPqr(id: string, estado: PqrEstado): Promise<Pqr>;
 }
 
 export { IS_DEMO_MODE };

@@ -1,4 +1,5 @@
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
+import type { MouseEvent as ReactMouseEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowRight, ChartColumn, Coffee, Globe, Layers, Sparkles, TrendingUp } from "lucide-react";
 import { PageHeader } from "../components/PageHeader";
@@ -104,7 +105,7 @@ export default function InicioMercado() {
             {ultimaVariacion.valor.toFixed(1)}%
           </p>
           <p className="mb-3 text-xs text-[var(--text-muted)]">Variación acumulada, últimos 12 meses</p>
-          <MiniLineChart data={variacionAcumuladaMensual.map((d) => d.valor)} />
+          <MiniLineChart data={variacionAcumuladaMensual.map((d) => d.valor)} labels={variacionAcumuladaMensual.map((d) => d.mes)} />
           <div className="mt-1.5 flex justify-between text-[10px] text-[var(--text-muted)]">
             <span>{variacionAcumuladaMensual[0].mes}</span>
             <span>{ultimaVariacion.mes}</span>
@@ -116,7 +117,10 @@ export default function InicioMercado() {
         <Card title="Producción agrícola anual" icon={<ChartColumn className="h-4 w-4" strokeWidth={1.75} />}>
           <p className="font-mono text-3xl font-bold text-[var(--text-primary)]">{ultimaProduccion.valor.toLocaleString("es-CO")}</p>
           <p className="mb-4 text-xs text-[var(--text-muted)]">miles de toneladas · {ultimaProduccion.anio}</p>
-          <MiniBarChart data={produccionAgricolaAnual.map((d) => ({ label: d.anio, value: d.valor }))} />
+          <MiniBarChart
+            data={produccionAgricolaAnual.map((d) => ({ label: d.anio, value: d.valor }))}
+            formatValue={(v) => `${v.toLocaleString("es-CO")} mil t`}
+          />
           <FuenteFooter fuente={FUENTE_PRODUCCION_AGRICOLA} />
         </Card>
 
@@ -154,6 +158,7 @@ export default function InicioMercado() {
             labelActual={serieBolsa.labelActual}
             labelAnterior={serieBolsa.labelAnterior}
             xLabels={serieBolsa.xLabels}
+            formatValue={formatCOP}
           />
 
           <p className="mt-2 text-[11px] text-[var(--text-muted)]">Precio interno de referencia por carga de 125 kg de café pergamino seco.</p>
@@ -179,31 +184,66 @@ function FuenteFooter({ fuente }: { fuente: string }) {
   );
 }
 
-function MiniLineChart({ data }: { data: number[] }) {
+function MiniLineChart({ data, labels }: { data: number[]; labels: string[] }) {
+  const svgRef = useRef<SVGSVGElement>(null);
+  const [hoverIndex, setHoverIndex] = useState<number | null>(null);
+
   const ancho = 100;
   const alto = 32;
   const minimo = Math.min(...data);
   const maximo = Math.max(...data);
   const rango = maximo - minimo || 1;
-  const puntos = data
-    .map((v, i) => {
-      const x = data.length > 1 ? (i / (data.length - 1)) * ancho : ancho / 2;
-      const y = alto - ((v - minimo) / rango) * alto;
-      return `${x},${y}`;
-    })
-    .join(" ");
+  const coords = data.map((v, i) => ({
+    x: data.length > 1 ? (i / (data.length - 1)) * ancho : ancho / 2,
+    y: alto - ((v - minimo) / rango) * alto,
+  }));
+  const puntos = coords.map((c) => `${c.x},${c.y}`).join(" ");
+
+  function manejarMovimiento(e: ReactMouseEvent<SVGSVGElement>) {
+    const rect = svgRef.current?.getBoundingClientRect();
+    if (!rect || rect.width === 0) return;
+    const proporcion = Math.min(1, Math.max(0, (e.clientX - rect.left) / rect.width));
+    const indice = Math.round(proporcion * (data.length - 1));
+    setHoverIndex(indice);
+  }
+
+  const activo = hoverIndex !== null ? coords[hoverIndex] : null;
 
   return (
-    <svg viewBox={`0 0 ${ancho} ${alto}`} preserveAspectRatio="none" className="h-20 w-full">
-      <polyline
-        points={puntos}
-        fill="none"
-        stroke="var(--color-accent-500)"
-        strokeWidth={2}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        vectorEffect="non-scaling-stroke"
-      />
-    </svg>
+    <div className="relative">
+      <svg
+        ref={svgRef}
+        viewBox={`0 0 ${ancho} ${alto}`}
+        preserveAspectRatio="none"
+        className="h-20 w-full cursor-crosshair"
+        onMouseMove={manejarMovimiento}
+        onMouseLeave={() => setHoverIndex(null)}
+      >
+        <polyline
+          points={puntos}
+          fill="none"
+          stroke="var(--color-accent-500)"
+          strokeWidth={2}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          vectorEffect="non-scaling-stroke"
+        />
+        {activo && (
+          <>
+            <line x1={activo.x} y1={0} x2={activo.x} y2={alto} stroke="var(--border-subtle)" strokeWidth={1} vectorEffect="non-scaling-stroke" />
+            <circle cx={activo.x} cy={activo.y} r={2.2} fill="var(--color-accent-500)" vectorEffect="non-scaling-stroke" />
+          </>
+        )}
+      </svg>
+      {hoverIndex !== null && (
+        <div
+          className="pointer-events-none absolute -top-1 -translate-y-full rounded-lg border border-[var(--border-subtle)] bg-[var(--surface-card)] px-2 py-1 text-[11px] font-semibold whitespace-nowrap text-[var(--text-primary)] shadow-card"
+          style={{ left: `${(hoverIndex / Math.max(1, data.length - 1)) * 100}%`, transform: "translate(-50%, -100%)" }}
+        >
+          {labels[hoverIndex]}: {data[hoverIndex] >= 0 ? "+" : ""}
+          {data[hoverIndex].toFixed(1)}%
+        </div>
+      )}
+    </div>
   );
 }

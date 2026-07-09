@@ -86,11 +86,52 @@ create table nomina_pagos (
 );
 
 -- ----------------------------------------------------------------------------
+-- Tabla: fincas
+-- Registro de fincas cafeteras (módulo Gestión Operativa). `codigo` es un
+-- identificador corto legible ("FIN-0001"), distinto del `id` interno.
+-- ----------------------------------------------------------------------------
+create table fincas (
+  id uuid primary key default gen_random_uuid(),
+  codigo text unique not null,
+  nombre text not null,
+  vereda text,
+  municipio text not null,
+  departamento text not null,
+  propietario text not null,
+  cedula_propietario text not null,
+  area_total numeric not null,
+  area_cafe numeric not null,
+  numero_arboles integer not null,
+  variedad text not null,
+  latitud numeric,
+  longitud numeric,
+  creado_en timestamptz not null default now()
+);
+
+-- ----------------------------------------------------------------------------
+-- Tabla: certificados_finca
+-- Certificaciones asociadas a cada finca (organica, Rainforest Alliance,
+-- Fair Trade, etc.).
+-- ----------------------------------------------------------------------------
+create table certificados_finca (
+  id uuid primary key default gen_random_uuid(),
+  finca_id uuid not null references fincas (id) on delete cascade,
+  nombre text not null,
+  entidad_certificadora text not null,
+  numero_certificado text,
+  fecha_emision date not null,
+  fecha_vencimiento date,
+  creado_en timestamptz not null default now(),
+  creado_por uuid references empleados (id)
+);
+
+-- ----------------------------------------------------------------------------
 -- Índices recomendados
 -- ----------------------------------------------------------------------------
 create index idx_solicitudes_empleado on solicitudes (empleado_id);
 create index idx_documentos_empleado on documentos (empleado_id);
 create index idx_nomina_pagos_empleado on nomina_pagos (empleado_id);
+create index idx_certificados_finca on certificados_finca (finca_id);
 
 -- ----------------------------------------------------------------------------
 -- Bootstrap: primer administrador

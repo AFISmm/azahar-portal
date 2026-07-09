@@ -138,15 +138,27 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     ];
 
     const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${apiKey}`;
-    const respuestaGemini = await fetch(url, {
+    const cuerpoGemini = JSON.stringify({
+      contents,
+      systemInstruction: { parts: [{ text: BASE_CONOCIMIENTO }] },
+      generationConfig: { temperature: 0.4, maxOutputTokens: 500 },
+    });
+
+    // El modelo (preview) a veces responde 503 por sobrecarga temporal de Google;
+    // un único reintento corto evita que ese hipo se le muestre a la persona.
+    let respuestaGemini = await fetch(url, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        contents,
-        systemInstruction: { parts: [{ text: BASE_CONOCIMIENTO }] },
-        generationConfig: { temperature: 0.4, maxOutputTokens: 500 },
-      }),
+      body: cuerpoGemini,
     });
+    if (respuestaGemini.status === 503) {
+      await new Promise((resolve) => setTimeout(resolve, 1200));
+      respuestaGemini = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: cuerpoGemini,
+      });
+    }
 
     if (!respuestaGemini.ok) {
       const textoError = await respuestaGemini.text().catch(() => "");

@@ -3,6 +3,7 @@ import { AuthProvider } from "./auth/AuthContext";
 import { ProtectedRoute, AdminRoute } from "./auth/ProtectedRoute";
 import { ThemeProvider } from "./context/ThemeContext";
 import { ToastProvider } from "./context/ToastContext";
+import { LanguageProvider } from "./context/LanguageContext";
 import { AppShell } from "./components/AppShell";
 
 import Login from "./pages/Login";
@@ -35,9 +36,10 @@ import InformacionGeneral from "./pages/InformacionGeneral";
 
 export default function App() {
   return (
-    <ThemeProvider>
-      <ToastProvider>
-        <BrowserRouter>
+    <LanguageProvider>
+      <ThemeProvider>
+        <ToastProvider>
+          <BrowserRouter>
           <AuthProvider>
             <Routes>
               <Route path="/login" element={<Login />} />
@@ -83,7 +85,8 @@ export default function App() {
             </Routes>
           </AuthProvider>
         </BrowserRouter>
-      </ToastProvider>
-    </ThemeProvider>
+        </ToastProvider>
+      </ThemeProvider>
+    </LanguageProvider>
   );
 }

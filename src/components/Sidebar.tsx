@@ -26,35 +26,37 @@ import {
   MessageSquareWarning,
 } from "lucide-react";
 import { useAuth } from "../auth/AuthContext";
+import { useLanguage } from "../context/LanguageContext";
 import { IS_DEMO_MODE } from "../lib/dataSource";
 import { iniciales } from "../lib/format";
+import type { ClaveTraduccion } from "../i18n/translations";
 import logo from "../assets/azahar-logo.png";
 import sidebarBg from "../assets/sidebar-bg.jpg";
 
-const NOMINA_ITEMS = [
-  { to: "/nomina/inicio", label: "Inicio", Icon: Home },
-  { to: "/nomina/mi-contrato", label: "Mi contrato", Icon: FileText },
-  { to: "/nomina/vacaciones", label: "Vacaciones", Icon: CalendarDays },
-  { to: "/nomina/pagos", label: "Nómina", Icon: Banknote },
-  { to: "/nomina/mis-solicitudes", label: "Mis solicitudes", Icon: ClipboardList },
-  { to: "/nomina/incapacidades", label: "Incapacidades", Icon: HeartPulse },
-  { to: "/nomina/documentos", label: "Documentos", Icon: Folder },
-  { to: "/nomina/certificados", label: "Certificados", Icon: BadgeCheck },
+const NOMINA_ITEMS: { to: string; claveLabel: ClaveTraduccion; Icon: typeof Home }[] = [
+  { to: "/nomina/inicio", claveLabel: "sidebar.inicio", Icon: Home },
+  { to: "/nomina/mi-contrato", claveLabel: "sidebar.miContrato", Icon: FileText },
+  { to: "/nomina/vacaciones", claveLabel: "sidebar.vacaciones", Icon: CalendarDays },
+  { to: "/nomina/pagos", claveLabel: "sidebar.nomina", Icon: Banknote },
+  { to: "/nomina/mis-solicitudes", claveLabel: "sidebar.misSolicitudes", Icon: ClipboardList },
+  { to: "/nomina/incapacidades", claveLabel: "sidebar.incapacidades", Icon: HeartPulse },
+  { to: "/nomina/documentos", claveLabel: "sidebar.documentos", Icon: Folder },
+  { to: "/nomina/certificados", claveLabel: "sidebar.certificados", Icon: BadgeCheck },
 ];
 
-const ADMINISTRACION = [
-  { to: "/admin/solicitudes", label: "Solicitudes", Icon: ClipboardCheck },
-  { to: "/admin/incapacidades", label: "Incapacidades", Icon: Stethoscope },
-  { to: "/admin/documentos", label: "Documentos", Icon: FolderCog },
-  { to: "/admin/empleados", label: "Empleados", Icon: Users },
-  { to: "/admin/nomina", label: "Nómina", Icon: Receipt },
+const ADMINISTRACION: { to: string; claveLabel: ClaveTraduccion; Icon: typeof Home }[] = [
+  { to: "/admin/solicitudes", claveLabel: "sidebar.adminSolicitudes", Icon: ClipboardCheck },
+  { to: "/admin/incapacidades", claveLabel: "sidebar.adminIncapacidades", Icon: Stethoscope },
+  { to: "/admin/documentos", claveLabel: "sidebar.adminDocumentos", Icon: FolderCog },
+  { to: "/admin/empleados", claveLabel: "sidebar.adminEmpleados", Icon: Users },
+  { to: "/admin/nomina", claveLabel: "sidebar.adminNomina", Icon: Receipt },
 ];
 
-const GESTION_NEGOCIO = [
-  { to: "/gestion-estrategica", label: "Gestión Estratégica", Icon: Compass },
-  { to: "/gestion-comercial", label: "Gestión Comercial", Icon: Store },
-  { to: "/gestion-operativa", label: "Gestión Operativa", Icon: Sprout },
-  { to: "/informacion-general", label: "Información General", Icon: Info },
+const GESTION_NEGOCIO: { to: string; claveLabel: ClaveTraduccion; Icon: typeof Home }[] = [
+  { to: "/gestion-estrategica", claveLabel: "sidebar.gestionEstrategica", Icon: Compass },
+  { to: "/gestion-comercial", claveLabel: "sidebar.gestionComercial", Icon: Store },
+  { to: "/gestion-operativa", claveLabel: "sidebar.gestionOperativa", Icon: Sprout },
+  { to: "/informacion-general", claveLabel: "sidebar.informacionGeneral", Icon: Info },
 ];
 
 // El sidebar ahora lleva una foto de fondo fija (finca cafetera) con un velo
@@ -75,6 +77,7 @@ interface SidebarProps {
 
 export function Sidebar({ abierto = false, onCerrar }: SidebarProps) {
   const { empleado, signOut } = useAuth();
+  const { t } = useLanguage();
   const location = useLocation();
   const navigate = useNavigate();
   // Rutas que, aunque empiecen con "/admin", son ítems sueltos del sidebar
@@ -106,7 +109,7 @@ export function Sidebar({ abierto = false, onCerrar }: SidebarProps) {
         <div className="flex items-center justify-center rounded-xl bg-white px-3 py-2 ring-1 ring-white/20">
           <img src={logo} alt="Azahar Coffee Company" className="h-9 w-auto object-contain" />
         </div>
-        <p className="text-[11px] font-bold uppercase tracking-wider text-cream-200/80">Azahar Coffee Company</p>
+        <p className="text-[11px] font-bold uppercase tracking-wider text-cream-200/80">{t("sidebar.azaharCoffeeCompany")}</p>
       </div>
 
       <nav onClick={() => onCerrar?.()} className="flex-1 space-y-6 overflow-y-auto px-3 pb-4">
@@ -117,15 +120,15 @@ export function Sidebar({ abierto = false, onCerrar }: SidebarProps) {
               className="mb-3 flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold text-cream-200/80 transition hover:bg-white/10 hover:text-cream-100"
             >
               <ChevronLeft className="h-4 w-4 shrink-0" strokeWidth={1.75} />
-              Nómina
+              {t("sidebar.nomina")}
             </button>
             <div>
-              <p className="mb-2 px-3 text-[11px] font-bold uppercase tracking-wider text-cream-200/60">Mi portal</p>
+              <p className="mb-2 px-3 text-[11px] font-bold uppercase tracking-wider text-cream-200/60">{t("sidebar.miPortal")}</p>
               <div className="space-y-1">
-                {NOMINA_ITEMS.map(({ to, label, Icon }) => (
+                {NOMINA_ITEMS.map(({ to, claveLabel, Icon }) => (
                   <NavLink key={to} to={to} className={({ isActive }) => itemClase(isActive)}>
                     <Icon className="h-4 w-4 shrink-0" strokeWidth={1.75} />
-                    {label}
+                    {t(claveLabel)}
                   </NavLink>
                 ))}
               </div>
@@ -133,12 +136,12 @@ export function Sidebar({ abierto = false, onCerrar }: SidebarProps) {
 
             {empleado?.rol === "admin" && (
               <div className="mt-6">
-                <p className="mb-2 px-3 text-[11px] font-bold uppercase tracking-wider text-cream-200/60">Administración</p>
+                <p className="mb-2 px-3 text-[11px] font-bold uppercase tracking-wider text-cream-200/60">{t("sidebar.administracion")}</p>
                 <div className="space-y-1">
-                  {ADMINISTRACION.map(({ to, label, Icon }) => (
+                  {ADMINISTRACION.map(({ to, claveLabel, Icon }) => (
                     <NavLink key={to} to={to} className={({ isActive }) => itemClase(isActive)}>
                       <Icon className="h-4 w-4 shrink-0" strokeWidth={1.75} />
-                      {label}
+                      {t(claveLabel)}
                     </NavLink>
                   ))}
                 </div>
@@ -150,18 +153,18 @@ export function Sidebar({ abierto = false, onCerrar }: SidebarProps) {
             <div className="space-y-1">
               <NavLink to="/inicio" className={({ isActive }) => itemClase(isActive)}>
                 <Home className="h-4 w-4 shrink-0" strokeWidth={1.75} />
-                Inicio
+                {t("sidebar.inicio")}
               </NavLink>
             </div>
 
             {empleado?.rol === "admin" && (
               <div>
-                <p className="mb-2 px-3 text-[11px] font-bold uppercase tracking-wider text-cream-200/60">Gestión del negocio</p>
+                <p className="mb-2 px-3 text-[11px] font-bold uppercase tracking-wider text-cream-200/60">{t("sidebar.gestionNegocio")}</p>
                 <div className="space-y-1">
-                  {GESTION_NEGOCIO.map(({ to, label, Icon }) => (
+                  {GESTION_NEGOCIO.map(({ to, claveLabel, Icon }) => (
                     <NavLink key={to} to={to} className={({ isActive }) => itemClase(isActive)}>
                       <Icon className="h-4 w-4 shrink-0" strokeWidth={1.75} />
-                      {label}
+                      {t(claveLabel)}
                     </NavLink>
                   ))}
                 </div>
@@ -171,14 +174,14 @@ export function Sidebar({ abierto = false, onCerrar }: SidebarProps) {
             <div className="space-y-1">
               <NavLink to="/nomina/inicio" className={({ isActive }) => itemClase(isActive)}>
                 <Banknote className="h-4 w-4 shrink-0" strokeWidth={1.75} />
-                Nómina
+                {t("sidebar.nomina")}
               </NavLink>
             </div>
 
             <div className="space-y-1">
               <NavLink to="/mi-perfil" className={({ isActive }) => itemClase(isActive)}>
                 <IdCard className="h-4 w-4 shrink-0" strokeWidth={1.75} />
-                Mi Perfil
+                {t("sidebar.miPerfil")}
               </NavLink>
             </div>
 
@@ -186,7 +189,7 @@ export function Sidebar({ abierto = false, onCerrar }: SidebarProps) {
               <div className="space-y-1">
                 <NavLink to="/admin/usuarios" className={({ isActive }) => itemClase(isActive)}>
                   <UserCog className="h-4 w-4 shrink-0" strokeWidth={1.75} />
-                  Gestión de usuarios
+                  {t("sidebar.gestionUsuarios")}
                 </NavLink>
               </div>
             )}
@@ -195,7 +198,7 @@ export function Sidebar({ abierto = false, onCerrar }: SidebarProps) {
               <div className="space-y-1">
                 <NavLink to="/admin/pqr" className={({ isActive }) => itemClase(isActive)}>
                   <MessageSquareWarning className="h-4 w-4 shrink-0" strokeWidth={1.75} />
-                  Gestión PQR
+                  {t("sidebar.gestionPqr")}
                 </NavLink>
               </div>
             )}
@@ -207,7 +210,7 @@ export function Sidebar({ abierto = false, onCerrar }: SidebarProps) {
         {IS_DEMO_MODE && (
           <div className="mb-3 flex items-center gap-1.5 rounded-lg bg-accent-300/30 px-3 py-1.5 text-[11px] font-semibold text-accent-300">
             <Sparkles className="h-3.5 w-3.5" strokeWidth={1.75} />
-            Modo demo — datos en memoria
+            {t("sidebar.modoDemo")}
           </div>
         )}
         {empleado && (
@@ -222,8 +225,8 @@ export function Sidebar({ abierto = false, onCerrar }: SidebarProps) {
             <button
               onClick={() => void signOut()}
               className="shrink-0 rounded-lg p-2 text-cream-200/70 transition hover:bg-status-rechazada-bg hover:text-status-rechazada"
-              title="Cerrar sesión"
-              aria-label="Cerrar sesión"
+              title={t("sidebar.cerrarSesion")}
+              aria-label={t("sidebar.cerrarSesion")}
             >
               <LogOut className="h-4 w-4" strokeWidth={1.75} />
             </button>

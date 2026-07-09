@@ -150,7 +150,7 @@ export function ChatbotWidget() {
   return (
     <>
       {abierto && (
-        <div className="fixed inset-x-4 bottom-20 z-40 flex h-[70vh] max-h-[28rem] flex-col overflow-hidden rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface-card)] shadow-card sm:inset-x-auto sm:bottom-24 sm:right-6 sm:h-[28rem] sm:w-[22rem]">
+        <div className="fixed inset-x-4 bottom-20 top-16 z-40 flex flex-col overflow-hidden rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface-card)] shadow-card sm:inset-x-auto sm:top-14 sm:bottom-6 sm:right-6 sm:w-[50vw] sm:max-w-2xl">
           <div className="flex items-center justify-between bg-brand-800 px-4 py-3">
             <div className="flex items-center gap-2 text-cream-100">
               <Bot className="h-4 w-4" strokeWidth={1.75} />

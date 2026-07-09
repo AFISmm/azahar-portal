@@ -2,8 +2,10 @@ import { type FormEvent, useState } from "react";
 import { Link, Navigate, useNavigate } from "react-router-dom";
 import { Loader2, UserPlus } from "lucide-react";
 import { useAuth } from "../auth/AuthContext";
+import { useLanguage } from "../context/LanguageContext";
 import { useToast } from "../context/ToastContext";
 import { Button, Field, Input, Select } from "../components/ui";
+import { LanguageSwitcher } from "../components/LanguageSwitcher";
 import { DEPARTAMENTOS, TIPOS_CONTRATO } from "../components/admin/EmpleadoForm";
 import logo from "../assets/azahar-logo.png";
 import sidebarBg from "../assets/sidebar-bg.jpg";
@@ -21,6 +23,7 @@ export default function Registro() {
   const { user, registrar } = useAuth();
   const navigate = useNavigate();
   const { showToast } = useToast();
+  const { t } = useLanguage();
 
   const [tipoUsuario, setTipoUsuario] = useState<TipoUsuario>("empleado");
   const [nombre, setNombre] = useState("");
@@ -96,35 +99,38 @@ export default function Registro() {
         className="absolute inset-0 -z-10 bg-gradient-to-b from-brand-900/80 via-brand-900/70 to-brand-900/85"
         aria-hidden="true"
       />
+      <div className="absolute right-4 top-4 z-10">
+        <LanguageSwitcher />
+      </div>
       <div className="w-full max-w-lg rounded-2xl border border-[var(--border-subtle)] bg-white p-8 shadow-card">
         <div className="mb-7 flex flex-col items-center text-center">
           <img src={logo} alt="Azahar Coffee Company" className="mb-4 h-14 w-auto object-contain" />
-          <h1 className="font-heading text-xl font-bold text-brand-900">Crear cuenta</h1>
-          <p className="mt-1 text-sm text-brand-600">Regístrate en el Portal Azahar para el equipo Azahar Coffee Company</p>
+          <h1 className="font-heading text-xl font-bold text-brand-900">{t("registro.titulo")}</h1>
+          <p className="mt-1 text-sm text-brand-600">{t("registro.subtitulo")}</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          <Field label="Tipo de usuario">
+          <Field label={t("registro.tipoUsuario")}>
             <div className="inline-flex w-full rounded-xl border border-[var(--border-subtle)] bg-[var(--surface-muted)] p-1">
-              {(["empleado", "desarrollador"] as const).map((t) => (
+              {(["empleado", "desarrollador"] as const).map((tipo) => (
                 <button
-                  key={t}
+                  key={tipo}
                   type="button"
-                  onClick={() => setTipoUsuario(t)}
+                  onClick={() => setTipoUsuario(tipo)}
                   className={`flex-1 rounded-lg px-4 py-2 text-sm font-semibold transition ${
-                    tipoUsuario === t ? "bg-brand-800 text-cream-100 shadow-card" : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+                    tipoUsuario === tipo ? "bg-brand-800 text-cream-100 shadow-card" : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
                   }`}
                 >
-                  {t === "empleado" ? "Empleado de la empresa" : "Desarrollador de la página"}
+                  {tipo === "empleado" ? t("registro.empleadoEmpresa") : t("registro.desarrolladorPagina")}
                 </button>
               ))}
             </div>
           </Field>
 
-          <Field label="Nombre completo">
+          <Field label={t("registro.nombreCompleto")}>
             <Input required placeholder="Ej. Camila Torres" value={nombre} onChange={(e) => setNombre(e.target.value)} autoComplete="name" />
           </Field>
-          <Field label="Correo corporativo">
+          <Field label={t("registro.correoCorporativo")}>
             <Input
               type="email"
               required
@@ -134,7 +140,7 @@ export default function Registro() {
               autoComplete="username"
             />
           </Field>
-          <Field label="Contraseña">
+          <Field label={t("registro.contrasena")}>
             <Input
               type="password"
               required
@@ -147,10 +153,10 @@ export default function Registro() {
           </Field>
 
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <Field label="Fecha de nacimiento">
+            <Field label={t("registro.fechaNacimiento")}>
               <Input required type="date" value={fechaNacimiento} onChange={(e) => setFechaNacimiento(e.target.value)} />
             </Field>
-            <Field label="Número de identificación">
+            <Field label={t("registro.numeroIdentificacion")}>
               <Input
                 required
                 placeholder="Ej. 1020304050"
@@ -161,7 +167,7 @@ export default function Registro() {
           </div>
 
           <div className={esDesarrollador ? "" : "grid grid-cols-1 gap-4 sm:grid-cols-2"}>
-            <Field label="Cargo">
+            <Field label={t("registro.cargo")}>
               <Input
                 required
                 placeholder={esDesarrollador ? "Ej. Desarrollador Full Stack" : "Ej. Barista"}
@@ -171,7 +177,7 @@ export default function Registro() {
             </Field>
             {!esDesarrollador && (
               <>
-                <Field label="Departamento">
+                <Field label={t("registro.departamento")}>
                   <Select value={departamento} onChange={(e) => setDepartamento(e.target.value)}>
                     {DEPARTAMENTOS.map((d) => (
                       <option key={d} value={d}>
@@ -180,16 +186,16 @@ export default function Registro() {
                     ))}
                   </Select>
                 </Field>
-                <Field label="Tipo de contrato">
+                <Field label={t("registro.tipoContrato")}>
                   <Select value={tipoContrato} onChange={(e) => setTipoContrato(e.target.value)}>
-                    {TIPOS_CONTRATO.map((t) => (
-                      <option key={t} value={t}>
-                        {t}
+                    {TIPOS_CONTRATO.map((tc) => (
+                      <option key={tc} value={tc}>
+                        {tc}
                       </option>
                     ))}
                   </Select>
                 </Field>
-                <Field label="Fecha de ingreso">
+                <Field label={t("registro.fechaIngreso")}>
                   <Input required type="date" value={fechaIngreso} onChange={(e) => setFechaIngreso(e.target.value)} />
                 </Field>
               </>
@@ -197,23 +203,21 @@ export default function Registro() {
           </div>
 
           {esDesarrollador && (
-            <p className="rounded-lg bg-accent-300/20 px-3 py-2 text-xs text-brand-800">
-              Tu cuenta se creará con acceso de administrador para que puedas revisar y probar todos los módulos del portal.
-            </p>
+            <p className="rounded-lg bg-accent-300/20 px-3 py-2 text-xs text-brand-800">{t("registro.avisoDesarrollador")}</p>
           )}
 
           {error && <p className="rounded-lg bg-status-rechazada-bg px-3 py-2 text-sm text-status-rechazada">{error}</p>}
 
           <Button type="submit" disabled={cargando} className="w-full">
             {cargando ? <Loader2 className="h-4 w-4 animate-spin" strokeWidth={1.75} /> : <UserPlus className="h-4 w-4" strokeWidth={1.75} />}
-            Crear cuenta
+            {t("registro.crearCuenta")}
           </Button>
         </form>
 
         <p className="mt-5 text-center text-sm text-brand-600">
-          ¿Ya tienes cuenta?{" "}
+          {t("registro.yaTienesCuenta")}{" "}
           <Link to="/login" className="font-semibold text-brand-800 hover:underline">
-            Inicia sesión
+            {t("registro.iniciaSesion")}
           </Link>
         </p>
       </div>

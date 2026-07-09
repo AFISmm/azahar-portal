@@ -4,10 +4,13 @@ import { Menu } from "lucide-react";
 import { Sidebar } from "./Sidebar";
 import { IndicadoresTicker } from "./IndicadoresTicker";
 import { ChatbotWidget } from "./ChatbotWidget";
+import { HeaderControles } from "./HeaderControles";
+import { useLanguage } from "../context/LanguageContext";
 import logo from "../assets/azahar-logo.png";
 
 export function AppShell() {
   const [sidebarAbierto, setSidebarAbierto] = useState(false);
+  const { t } = useLanguage();
 
   return (
     <div className="min-h-screen bg-[var(--surface-app)] pt-9">
@@ -19,6 +22,12 @@ export function AppShell() {
         aria-hidden="true"
       />
 
+      {/* Notificaciones + tema + idioma: fijos en la esquina superior derecha,
+          siempre visibles sin importar el scroll o el ancho del contenido. */}
+      <div className="fixed right-4 top-12 z-30 hidden items-center gap-2 md:flex">
+        <HeaderControles />
+      </div>
+
       <header className="fixed inset-x-0 top-9 z-30 flex h-14 items-center gap-3 border-b border-[var(--border-subtle)] bg-[var(--surface-card)] px-4 md:hidden">
         <button
           onClick={() => setSidebarAbierto(true)}
@@ -28,7 +37,10 @@ export function AppShell() {
           <Menu className="h-5 w-5" strokeWidth={1.75} />
         </button>
         <img src={logo} alt="Azahar Coffee Company" className="h-7 w-auto object-contain" />
-        <p className="truncate text-xs font-bold uppercase tracking-wider text-[var(--text-secondary)]">Azahar Coffee Company</p>
+        <p className="flex-1 truncate text-xs font-bold uppercase tracking-wider text-[var(--text-secondary)]">{t("sidebar.azaharCoffeeCompany")}</p>
+        <div className="flex shrink-0 items-center gap-2">
+          <HeaderControles />
+        </div>
       </header>
 
       {sidebarAbierto && (

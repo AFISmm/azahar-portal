@@ -206,7 +206,17 @@ export function ChatbotWidget() {
       const texto = evento.results[0]?.[0]?.transcript ?? "";
       if (texto.trim()) void enviarTexto(texto.trim());
     };
-    reconocimiento.onerror = () => setEscuchando(false);
+    reconocimiento.onerror = (evento) => {
+      setEscuchando(false);
+      if (evento.error === "no-speech" || evento.error === "aborted") return;
+      const mensaje =
+        evento.error === "not-allowed" || evento.error === "audio-capture"
+          ? "No pude acceder al micrófono. Revisa que le hayas dado permiso a este sitio en tu navegador."
+          : evento.error === "network"
+            ? "No pude conectarme al servicio de reconocimiento de voz. Revisa tu conexión a internet e intenta de nuevo."
+            : "No entendí lo que dijiste por el micrófono. Intenta de nuevo o escribe tu pregunta.";
+      setMensajes((actuales) => [...actuales, { rol: "assistant", contenido: mensaje }]);
+    };
     reconocimiento.onend = () => setEscuchando(false);
 
     reconocimientoRef.current = reconocimiento;

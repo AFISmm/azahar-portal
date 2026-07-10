@@ -114,6 +114,7 @@ export function ChatbotWidget() {
   const finRef = useRef<HTMLDivElement>(null);
   const yaSaludoRef = useRef(false);
   const reconocimientoRef = useRef<SpeechRecognitionInstance | null>(null);
+  const timeoutEscuchaRef = useRef<number | null>(null);
 
   const soportaReconocimiento =
     typeof window !== "undefined" && !!(window.SpeechRecognition || window.webkitSpeechRecognition);
@@ -123,7 +124,10 @@ export function ChatbotWidget() {
   }, [mensajes, abierto]);
 
   useEffect(() => {
-    return () => reconocimientoRef.current?.stop();
+    return () => {
+      if (timeoutEscuchaRef.current !== null) window.clearTimeout(timeoutEscuchaRef.current);
+      reconocimientoRef.current?.stop();
+    };
   }, []);
 
   function elegirGenero(g: GeneroVoz) {
@@ -193,6 +197,13 @@ export function ChatbotWidget() {
     void enviarTexto(entrada);
   }
 
+  function limpiarTimeoutEscucha() {
+    if (timeoutEscuchaRef.current !== null) {
+      window.clearTimeout(timeoutEscuchaRef.current);
+      timeoutEscuchaRef.current = null;
+    }
+  }
+
   function alternarEscucha() {
     if (!soportaReconocimiento) return;
 
@@ -207,10 +218,12 @@ export function ChatbotWidget() {
     reconocimiento.continuous = false;
     reconocimiento.interimResults = false;
     reconocimiento.onresult = (evento) => {
+      limpiarTimeoutEscucha();
       const texto = evento.results[0]?.[0]?.transcript ?? "";
       if (texto.trim()) void enviarTexto(texto.trim());
     };
     reconocimiento.onerror = (evento) => {
+      limpiarTimeoutEscucha();
       setEscuchando(false);
       if (evento.error === "no-speech" || evento.error === "aborted") return;
       const mensaje =
@@ -221,11 +234,25 @@ export function ChatbotWidget() {
             : "No entendí lo que dijiste por el micrófono. Intenta de nuevo o escribe tu pregunta.";
       setMensajes((actuales) => [...actuales, { rol: "assistant", contenido: mensaje }]);
     };
-    reconocimiento.onend = () => setEscuchando(false);
+    reconocimiento.onend = () => {
+      limpiarTimeoutEscucha();
+      setEscuchando(false);
+    };
 
     reconocimientoRef.current = reconocimiento;
     setEscuchando(true);
     reconocimiento.start();
+
+    // Salvaguarda: si el navegador nunca dispara onresult/onerror/onend (se ha visto
+    // colgado en "escuchando" en algunos navegadores de escritorio), forzamos el corte.
+    timeoutEscuchaRef.current = window.setTimeout(() => {
+      reconocimiento.stop();
+      setEscuchando(false);
+      setMensajes((actuales) => [
+        ...actuales,
+        { rol: "assistant", contenido: "No detecté audio del micrófono. Revisa que esté permitido y activo en tu navegador, e intenta de nuevo." },
+      ]);
+    }, 9000);
   }
 
   return (

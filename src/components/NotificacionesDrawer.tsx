@@ -19,7 +19,7 @@ export function NotificacionesDrawer({ open, onClose, notificaciones, cargando, 
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex justify-end" onClick={onClose}>
+    <div className="fixed inset-x-0 top-9 bottom-0 z-50 flex justify-end" onClick={onClose}>
       <div
         className="azahar-fade-in flex h-full w-64 flex-col border-l border-[var(--border-subtle)] bg-[var(--surface-card)] shadow-card"
         role="dialog"

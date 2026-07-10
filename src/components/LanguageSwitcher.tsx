@@ -16,7 +16,7 @@ export function LanguageSwitcher() {
         onChange={(e) => setIdioma(e.target.value as typeof idioma)}
         aria-label={t("header.idioma")}
         title={t("header.idioma")}
-        className="appearance-none rounded-full border border-[var(--border-subtle)] bg-[var(--surface-card)] py-2 pl-8 pr-3 text-xs font-semibold text-[var(--text-secondary)] outline-none transition hover:bg-[var(--surface-muted)] hover:text-[var(--text-primary)]"
+        className="appearance-none rounded-full border border-[var(--border-subtle)] bg-[var(--surface-card)] py-2.5 pl-8 pr-3 text-xs font-semibold text-[var(--text-secondary)] outline-none transition hover:bg-[var(--surface-muted)] hover:text-[var(--text-primary)]"
       >
         {IDIOMAS.map((op) => (
           <option key={op.value} value={op.value}>

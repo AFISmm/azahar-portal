@@ -168,7 +168,7 @@ export default function GestionPqr() {
                     <div className="flex justify-end">
                       <Button
                         variant="outline"
-                        className="px-3 py-1.5 text-xs"
+                        className="px-3 py-2 text-xs"
                         disabled={procesando === p.id}
                         onClick={() => void marcarComoResuelta(p)}
                       >

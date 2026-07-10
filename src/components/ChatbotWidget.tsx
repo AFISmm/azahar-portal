@@ -217,7 +217,7 @@ export function ChatbotWidget() {
   return (
     <>
       {abierto && (
-        <div className="fixed inset-x-4 bottom-20 top-16 z-40 flex flex-col overflow-hidden rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface-card)] shadow-card sm:inset-x-auto sm:top-14 sm:bottom-6 sm:right-6 sm:w-[50vw] sm:max-w-2xl">
+        <div className="fixed inset-x-4 bottom-20 top-28 z-40 flex flex-col overflow-hidden rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface-card)] shadow-card sm:inset-x-auto sm:bottom-6 sm:right-6 sm:w-[50vw] sm:max-w-2xl">
           <div className="flex items-center justify-between bg-brand-800 px-4 py-3">
             <div className="flex items-center gap-2 text-cream-100">
               <Bot className="h-4 w-4" strokeWidth={1.75} />
@@ -226,7 +226,7 @@ export function ChatbotWidget() {
             <div className="flex items-center gap-1">
               <button
                 onClick={alternarVoz}
-                className="rounded-full p-1 text-cream-100/80 transition hover:bg-white/10 hover:text-cream-100"
+                className="rounded-full p-2.5 text-cream-100/80 transition hover:bg-white/10 hover:text-cream-100"
                 aria-label={vozActivada ? "Silenciar respuestas habladas" : "Activar respuestas habladas"}
                 title={vozActivada ? "Silenciar respuestas habladas" : "Activar respuestas habladas"}
               >
@@ -234,7 +234,7 @@ export function ChatbotWidget() {
               </button>
               <button
                 onClick={() => setMostrarAjustes((v) => !v)}
-                className={`rounded-full p-1 text-cream-100/80 transition hover:bg-white/10 hover:text-cream-100 ${mostrarAjustes ? "bg-white/10 text-cream-100" : ""}`}
+                className={`rounded-full p-2.5 text-cream-100/80 transition hover:bg-white/10 hover:text-cream-100 ${mostrarAjustes ? "bg-white/10 text-cream-100" : ""}`}
                 aria-label="Elegir voz del asistente"
                 title="Elegir voz del asistente"
               >
@@ -242,7 +242,7 @@ export function ChatbotWidget() {
               </button>
               <button
                 onClick={() => setAbierto(false)}
-                className="rounded-full p-1 text-cream-100/80 transition hover:bg-white/10 hover:text-cream-100"
+                className="rounded-full p-2.5 text-cream-100/80 transition hover:bg-white/10 hover:text-cream-100"
                 aria-label="Cerrar chat"
               >
                 <X className="h-4 w-4" strokeWidth={1.75} />

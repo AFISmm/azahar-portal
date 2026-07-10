@@ -52,18 +52,18 @@ export default function Vacaciones() {
         </Card>
         <Card className="sm:col-span-2">
           <h3 className="mb-4 font-heading text-sm font-semibold uppercase tracking-wide text-[var(--text-secondary)]">{t("vacaciones.resumenPeriodo")}</h3>
-          <div className="grid grid-cols-3 gap-4 text-center">
+          <div className="grid grid-cols-3 gap-2 text-center sm:gap-4">
             <div>
-              <p className="font-mono text-2xl font-bold text-[var(--text-primary)]">{VACACIONES_ANUALES}</p>
-              <p className="text-xs text-[var(--text-muted)]">{t("vacaciones.diasAnuales")}</p>
+              <p className="font-mono text-xl font-bold text-[var(--text-primary)] sm:text-2xl">{VACACIONES_ANUALES}</p>
+              <p className="text-[11px] text-[var(--text-muted)] sm:text-xs">{t("vacaciones.diasAnuales")}</p>
             </div>
             <div>
-              <p className="font-mono text-2xl font-bold text-status-aprobada">{usados}</p>
-              <p className="text-xs text-[var(--text-muted)]">{t("vacaciones.disfrutados")}</p>
+              <p className="font-mono text-xl font-bold text-status-aprobada sm:text-2xl">{usados}</p>
+              <p className="text-[11px] text-[var(--text-muted)] sm:text-xs">{t("vacaciones.disfrutados")}</p>
             </div>
             <div>
-              <p className="font-mono text-2xl font-bold text-accent-500">{empleado.diasVacacionesDisponibles}</p>
-              <p className="text-xs text-[var(--text-muted)]">{t("vacaciones.disponibles")}</p>
+              <p className="font-mono text-xl font-bold text-accent-500 sm:text-2xl">{empleado.diasVacacionesDisponibles}</p>
+              <p className="text-[11px] text-[var(--text-muted)] sm:text-xs">{t("vacaciones.disponibles")}</p>
             </div>
           </div>
         </Card>

@@ -46,7 +46,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   return (
     <ToastContext.Provider value={{ showToast }}>
       {children}
-      <div className="fixed bottom-5 right-5 z-50 flex w-full max-w-sm flex-col gap-2">
+      <div className="fixed inset-x-4 bottom-24 z-50 flex flex-col gap-2 sm:inset-x-auto sm:right-5 sm:w-full sm:max-w-sm">
         {toasts.map((toast) => {
           const Icono = ICONOS[toast.tipo];
           return (

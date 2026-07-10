@@ -46,7 +46,7 @@ export function AppShell() {
       {sidebarAbierto && (
         <div
           onClick={() => setSidebarAbierto(false)}
-          className="fixed inset-0 top-9 z-20 bg-black/50 md:hidden"
+          className="fixed inset-0 z-40 bg-black/50 md:hidden"
           aria-hidden="true"
         />
       )}

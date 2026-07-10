@@ -8,7 +8,7 @@ export function ThemeToggle() {
   return (
     <button
       onClick={toggleTheme}
-      className="rounded-full border border-[var(--border-subtle)] bg-[var(--surface-card)] p-2 text-[var(--text-secondary)] transition hover:bg-[var(--surface-muted)] hover:text-[var(--text-primary)]"
+      className="rounded-full border border-[var(--border-subtle)] bg-[var(--surface-card)] p-2.5 text-[var(--text-secondary)] transition hover:bg-[var(--surface-muted)] hover:text-[var(--text-primary)]"
       aria-label={theme === "light" ? t("header.temaOscuro") : t("header.temaClaro")}
       title={theme === "light" ? t("header.temaOscuro") : t("header.temaClaro")}
     >

@@ -34,7 +34,7 @@ export function NotificacionesDrawer({ open, onClose, notificaciones, cargando, 
           </div>
           <button
             onClick={onClose}
-            className="rounded-full p-1.5 text-[var(--text-muted)] transition hover:bg-[var(--surface-muted)] hover:text-[var(--text-primary)]"
+            className="rounded-full p-2.5 text-[var(--text-muted)] transition hover:bg-[var(--surface-muted)] hover:text-[var(--text-primary)]"
             aria-label="Cerrar"
           >
             <X className="h-4 w-4" strokeWidth={1.75} />

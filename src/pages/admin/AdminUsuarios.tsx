@@ -150,7 +150,7 @@ export default function AdminUsuarios() {
                         <div className="flex flex-wrap items-center gap-2">
                           <Button
                             variant="outline"
-                            className="px-2.5 py-1.5 text-xs"
+                            className="px-2.5 py-2 text-xs"
                             disabled={esMiCuenta || procesando}
                             title={esMiCuenta ? tituloBloqueo : undefined}
                             onClick={() => void handleCambiarEstado(emp)}
@@ -160,7 +160,7 @@ export default function AdminUsuarios() {
                           </Button>
                           <Button
                             variant="danger"
-                            className="px-2.5 py-1.5 text-xs"
+                            className="px-2.5 py-2 text-xs"
                             disabled={esMiCuenta || procesando}
                             title={esMiCuenta ? tituloBloqueo : undefined}
                             onClick={() => setPorEliminar(emp)}

@@ -111,7 +111,7 @@ export default function Incapacidades() {
 
       <Modal open={modalOpen} onClose={() => setModalOpen(false)} title={t("incapacidades.reportar")}>
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <Field label={t("incapacidades.campoFechaInicio")}>
               <Input type="date" required value={fechaInicio} onChange={(e) => setFechaInicio(e.target.value)} />
             </Field>

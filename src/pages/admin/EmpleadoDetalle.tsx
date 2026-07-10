@@ -136,12 +136,12 @@ export default function EmpleadoDetalle() {
         </div>
       </div>
 
-      <div className="mb-5 flex gap-1 border-b border-[var(--border-subtle)]">
+      <div className="mb-5 flex gap-1 overflow-x-auto border-b border-[var(--border-subtle)]">
         {TABS.map((tabItem) => (
           <button
             key={tabItem}
             onClick={() => setTab(tabItem)}
-            className={`border-b-2 px-4 py-2.5 text-sm font-semibold transition ${
+            className={`shrink-0 whitespace-nowrap border-b-2 px-4 py-2.5 text-sm font-semibold transition ${
               tab === tabItem ? "border-brand-800 text-brand-800" : "border-transparent text-[var(--text-muted)] hover:text-[var(--text-primary)]"
             }`}
           >

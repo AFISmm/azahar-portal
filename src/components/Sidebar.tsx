@@ -87,7 +87,7 @@ export function Sidebar({ abierto = false, onCerrar }: SidebarProps) {
 
   return (
     <aside
-      className={`fixed left-0 top-9 bottom-0 z-30 flex w-64 flex-col overflow-hidden border-r border-white/10 transition-transform duration-300 ease-in-out md:translate-x-0 ${
+      className={`fixed left-0 top-0 bottom-0 z-40 flex w-64 flex-col overflow-hidden border-r border-white/10 transition-transform duration-300 ease-in-out md:top-9 md:z-30 md:translate-x-0 ${
         abierto ? "translate-x-0" : "-translate-x-full"
       }`}
     >
@@ -101,7 +101,7 @@ export function Sidebar({ abierto = false, onCerrar }: SidebarProps) {
       <div className="relative flex flex-col items-center gap-2.5 px-5 py-6">
         <button
           onClick={onCerrar}
-          className="absolute right-3 top-3 rounded-lg p-1.5 text-cream-200/70 transition hover:bg-white/10 hover:text-cream-100 md:hidden"
+          className="absolute right-3 top-3 rounded-lg p-2.5 text-cream-200/70 transition hover:bg-white/10 hover:text-cream-100 md:hidden"
           aria-label="Cerrar menú"
         >
           <X className="h-4 w-4" strokeWidth={1.75} />
@@ -224,7 +224,7 @@ export function Sidebar({ abierto = false, onCerrar }: SidebarProps) {
             </div>
             <button
               onClick={() => void signOut()}
-              className="shrink-0 rounded-lg p-2 text-cream-200/70 transition hover:bg-status-rechazada-bg hover:text-status-rechazada"
+              className="shrink-0 rounded-lg p-2.5 text-cream-200/70 transition hover:bg-status-rechazada-bg hover:text-status-rechazada"
               title={t("sidebar.cerrarSesion")}
               aria-label={t("sidebar.cerrarSesion")}
             >

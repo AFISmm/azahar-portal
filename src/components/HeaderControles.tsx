@@ -22,7 +22,7 @@ export function HeaderControles() {
       <LanguageSwitcher />
       <button
         onClick={() => setAbierto(true)}
-        className="relative rounded-full border border-[var(--border-subtle)] bg-[var(--surface-card)] p-2 text-[var(--text-secondary)] transition hover:bg-[var(--surface-muted)] hover:text-[var(--text-primary)]"
+        className="relative rounded-full border border-[var(--border-subtle)] bg-[var(--surface-card)] p-2.5 text-[var(--text-secondary)] transition hover:bg-[var(--surface-muted)] hover:text-[var(--text-primary)]"
         aria-label={t("header.notificaciones")}
         title={t("header.notificaciones")}
       >

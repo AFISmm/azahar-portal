@@ -3,6 +3,7 @@ import { PageHeader } from "../components/PageHeader";
 import { Card } from "../components/Card";
 import { formatCOP } from "../lib/format";
 import { kpisComerciales, productosTop, tiendasComerciales, type EstadoTienda } from "../lib/mockGestion";
+import { useLanguage } from "../context/LanguageContext";
 
 const ESTADO_ESTILO: Record<EstadoTienda, string> = {
   activa: "bg-status-aprobada-bg text-status-aprobada",
@@ -10,15 +11,16 @@ const ESTADO_ESTILO: Record<EstadoTienda, string> = {
 };
 
 export default function GestionComercial() {
-  const totalVentas = tiendasComerciales.reduce((acc, t) => acc + t.ventasMes, 0);
+  const { t } = useLanguage();
+  const totalVentas = tiendasComerciales.reduce((acc, tienda) => acc + tienda.ventasMes, 0);
   const maxUnidades = Math.max(...productosTop.map((p) => p.unidades));
 
   return (
     <div className="azahar-fade-in">
       <PageHeader
-        breadcrumb="Gestión del negocio"
-        title="Gestión Comercial"
-        description="Desempeño de ventas, tiendas y productos de Azahar Coffee Company."
+        breadcrumb={t("gestionComercial.breadcrumb")}
+        title={t("gestionComercial.titulo")}
+        description={t("gestionComercial.descripcion")}
       />
 
       <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -32,15 +34,15 @@ export default function GestionComercial() {
       </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[2fr_1fr]">
-        <Card title="Tiendas de Azahar Coffee Company" icon={<Store className="h-4 w-4" strokeWidth={1.75} />}>
+        <Card title={t("gestionComercial.tiendasTitulo")} icon={<Store className="h-4 w-4" strokeWidth={1.75} />}>
           <div className="overflow-x-auto">
             <table className="w-full min-w-[560px] text-left text-sm">
               <thead>
                 <tr className="border-b border-[var(--border-subtle)] text-xs uppercase tracking-wide text-[var(--text-muted)]">
-                  <th className="py-2 pr-4 font-semibold">Tienda</th>
-                  <th className="py-2 pr-4 font-semibold">Ciudad</th>
-                  <th className="py-2 pr-4 font-semibold">Ventas del mes</th>
-                  <th className="py-2 pr-4 font-semibold">Estado</th>
+                  <th className="py-2 pr-4 font-semibold">{t("gestionComercial.colTienda")}</th>
+                  <th className="py-2 pr-4 font-semibold">{t("gestionComercial.colCiudad")}</th>
+                  <th className="py-2 pr-4 font-semibold">{t("gestionComercial.colVentasMes")}</th>
+                  <th className="py-2 pr-4 font-semibold">{t("gestionComercial.colEstado")}</th>
                 </tr>
               </thead>
               <tbody>
@@ -51,7 +53,7 @@ export default function GestionComercial() {
                     <td className="py-3 pr-4 font-mono text-[var(--text-secondary)]">{formatCOP(tienda.ventasMes)}</td>
                     <td className="py-3 pr-4">
                       <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${ESTADO_ESTILO[tienda.estado]}`}>
-                        {tienda.estado === "activa" ? "Activa" : "En remodelación"}
+                        {tienda.estado === "activa" ? t("gestionComercial.estadoActiva") : t("gestionComercial.estadoRemodelacion")}
                       </span>
                     </td>
                   </tr>
@@ -60,7 +62,7 @@ export default function GestionComercial() {
               <tfoot>
                 <tr>
                   <td className="pt-3 pr-4 text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]" colSpan={2}>
-                    Total del mes
+                    {t("gestionComercial.totalMes")}
                   </td>
                   <td className="pt-3 pr-4 font-mono text-sm font-bold text-[var(--text-primary)]" colSpan={2}>
                     {formatCOP(totalVentas)}
@@ -71,7 +73,7 @@ export default function GestionComercial() {
           </div>
         </Card>
 
-        <Card title="Producto más vendido" icon={<Trophy className="h-4 w-4" strokeWidth={1.75} />}>
+        <Card title={t("gestionComercial.productoTopTitulo")} icon={<Trophy className="h-4 w-4" strokeWidth={1.75} />}>
           <ul className="space-y-3">
             {productosTop.map((producto, idx) => (
               <li key={producto.nombre} className="flex items-center gap-3">
@@ -88,7 +90,7 @@ export default function GestionComercial() {
                   </div>
                 </div>
                 <span className="shrink-0 font-mono text-xs font-semibold text-[var(--text-secondary)]">
-                  {producto.unidades.toLocaleString("es-CO")} u.
+                  {producto.unidades.toLocaleString("es-CO")} {t("gestionComercial.unidadSufijo")}
                 </span>
               </li>
             ))}

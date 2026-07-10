@@ -7,6 +7,7 @@ import { Card } from "../components/Card";
 import { MiniBarChart } from "../components/MiniBarChart";
 import { LineChartComparativo } from "../components/LineChartComparativo";
 import { formatCOP, formatDateTime } from "../lib/format";
+import { useLanguage } from "../context/LanguageContext";
 import {
   ULTIMA_ACTUALIZACION,
   FUENTE_BASE_MUNDIAL,
@@ -22,14 +23,15 @@ import {
   type PeriodoBolsa,
 } from "../lib/mockMercadoCafe";
 
-const PERIODOS: { id: PeriodoBolsa; label: string }[] = [
-  { id: "dia", label: "Día" },
-  { id: "semana", label: "Semana" },
-  { id: "mes", label: "Mes" },
+const PERIODOS: { id: PeriodoBolsa; claveLabel: string }[] = [
+  { id: "dia", claveLabel: "inicioMercado.periodoDia" },
+  { id: "semana", claveLabel: "inicioMercado.periodoSemana" },
+  { id: "mes", claveLabel: "inicioMercado.periodoMes" },
 ];
 
 export default function InicioMercado() {
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const [periodo, setPeriodo] = useState<PeriodoBolsa>("mes");
 
   const ultimaVariacion = variacionAcumuladaMensual.at(-1)!;
@@ -46,14 +48,14 @@ export default function InicioMercado() {
   return (
     <div className="azahar-fade-in">
       <PageHeader
-        breadcrumb="Portal Azahar"
-        title="Inicio"
-        description="Panorama de mercado y producción de café para Azahar Coffee Company: cifras globales, cadena de valor y precios de referencia."
+        breadcrumb={t("inicioMercado.breadcrumb")}
+        title={t("inicioMercado.titulo")}
+        description={t("inicioMercado.descripcion")}
       />
 
       <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
         {/* Card A — Base de datos mundial del café */}
-        <Card title="Base de datos mundial del café" icon={<Globe className="h-4 w-4" strokeWidth={1.75} />} className="lg:col-span-3">
+        <Card title={t("inicioMercado.cardBaseMundial")} icon={<Globe className="h-4 w-4" strokeWidth={1.75} />} className="lg:col-span-3">
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
             {statsMundiales.map((s) => (
               <div key={s.label} className="rounded-xl bg-[var(--surface-muted)] p-4">
@@ -64,7 +66,7 @@ export default function InicioMercado() {
                 <p className="text-xs text-[var(--text-muted)]">{s.unidad}</p>
                 <p className={`mt-1 text-xs font-semibold ${s.deltaPct >= 0 ? "text-status-aprobada" : "text-status-rechazada"}`}>
                   {s.deltaPct >= 0 ? "+" : ""}
-                  {s.deltaPct}% interanual
+                  {s.deltaPct}% {t("inicioMercado.interanual")}
                 </p>
               </div>
             ))}
@@ -73,7 +75,7 @@ export default function InicioMercado() {
         </Card>
 
         {/* Card E — Valor del café en bolsa (ahora en la posición ancha) */}
-        <Card title="Valor del café en bolsa" icon={<Coffee className="h-4 w-4" strokeWidth={1.75} />} className="lg:col-span-3">
+        <Card title={t("inicioMercado.cardValorBolsa")} icon={<Coffee className="h-4 w-4" strokeWidth={1.75} />} className="lg:col-span-3">
           <div className="mb-4 inline-flex w-fit rounded-xl border border-[var(--border-subtle)] bg-[var(--surface-muted)] p-1">
             {PERIODOS.map((p) => (
               <button
@@ -83,7 +85,7 @@ export default function InicioMercado() {
                   periodo === p.id ? "bg-brand-800 text-cream-100 shadow-card" : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
                 }`}
               >
-                {p.label}
+                {t(p.claveLabel as Parameters<typeof t>[0])}
               </button>
             ))}
           </div>
@@ -109,17 +111,17 @@ export default function InicioMercado() {
             formatValue={formatCOP}
           />
 
-          <p className="mt-2 text-[11px] text-[var(--text-muted)]">Precio interno de referencia por carga de 125 kg de café pergamino seco.</p>
+          <p className="mt-2 text-[11px] text-[var(--text-muted)]">{t("inicioMercado.notaPrecioReferencia")}</p>
           <FuenteFooter fuente={FUENTE_BOLSA} />
         </Card>
 
         {/* Card C — Variación % acumulada, producción industrial */}
-        <Card title="Variación % acumulada — producción industrial" icon={<TrendingUp className="h-4 w-4" strokeWidth={1.75} />}>
+        <Card title={t("inicioMercado.cardVariacionIndustrial")} icon={<TrendingUp className="h-4 w-4" strokeWidth={1.75} />}>
           <p className={`font-mono text-3xl font-bold ${ultimaVariacion.valor >= 0 ? "text-status-aprobada" : "text-status-rechazada"}`}>
             {ultimaVariacion.valor >= 0 ? "+" : ""}
             {ultimaVariacion.valor.toFixed(1)}%
           </p>
-          <p className="mb-3 text-xs text-[var(--text-muted)]">Variación acumulada, últimos 12 meses</p>
+          <p className="mb-3 text-xs text-[var(--text-muted)]">{t("inicioMercado.variacionAcumulada12Meses")}</p>
           <MiniLineChart data={variacionAcumuladaMensual.map((d) => d.valor)} labels={variacionAcumuladaMensual.map((d) => d.mes)} />
           <div className="mt-1.5 flex justify-between text-[10px] text-[var(--text-muted)]">
             <span>{variacionAcumuladaMensual[0].mes}</span>
@@ -129,19 +131,21 @@ export default function InicioMercado() {
         </Card>
 
         {/* Card D — Producción agrícola anual */}
-        <Card title="Producción agrícola anual" icon={<ChartColumn className="h-4 w-4" strokeWidth={1.75} />}>
+        <Card title={t("inicioMercado.cardProduccionAgricola")} icon={<ChartColumn className="h-4 w-4" strokeWidth={1.75} />}>
           <p className="font-mono text-3xl font-bold text-[var(--text-primary)]">{ultimaProduccion.valor.toLocaleString("es-CO")}</p>
-          <p className="mb-4 text-xs text-[var(--text-muted)]">miles de toneladas · {ultimaProduccion.anio}</p>
+          <p className="mb-4 text-xs text-[var(--text-muted)]">
+            {t("inicioMercado.milesToneladas")} · {ultimaProduccion.anio}
+          </p>
           <MiniBarChart
             data={produccionAgricolaAnual.map((d) => ({ label: d.anio, value: d.valor }))}
-            formatValue={(v) => `${v.toLocaleString("es-CO")} mil t`}
+            formatValue={(v) => `${v.toLocaleString("es-CO")} ${t("inicioMercado.milT")}`}
           />
           <FuenteFooter fuente={FUENTE_PRODUCCION_AGRICOLA} />
         </Card>
 
         {/* Card B — Cadena de producción del café (ahora en la posición angosta, tarjeta completa clicable) */}
         <Card
-          title="Cadena de producción del café"
+          title={t("inicioMercado.cardCadenaProduccion")}
           icon={<Layers className="h-4 w-4" strokeWidth={1.75} />}
           onClick={() => navigate("/cadena-produccion")}
         >
@@ -159,7 +163,7 @@ export default function InicioMercado() {
             })}
           </div>
           <p className="mt-4 flex items-center justify-end gap-1.5 text-sm font-semibold text-accent-500">
-            Ver proceso completo
+            {t("inicioMercado.verProcesoCompleto")}
             <ArrowRight className="h-4 w-4" strokeWidth={1.75} />
           </p>
         </Card>
@@ -169,15 +173,20 @@ export default function InicioMercado() {
 }
 
 function FuenteFooter({ fuente }: { fuente: string }) {
+  const { t } = useLanguage();
   return (
     <div className="mt-4 flex flex-wrap items-center justify-between gap-2 border-t border-[var(--border-subtle)] pt-3">
       <div className="text-[11px] text-[var(--text-muted)]">
-        <p>Fuente: {fuente}</p>
-        <p>Última actualización: {formatDateTime(ULTIMA_ACTUALIZACION)}</p>
+        <p>
+          {t("inicioMercado.fuentePrefix")} {fuente}
+        </p>
+        <p>
+          {t("inicioMercado.ultimaActualizacionPrefix")} {formatDateTime(ULTIMA_ACTUALIZACION)}
+        </p>
       </div>
       <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-accent-300/30 px-2 py-0.5 text-[10px] font-semibold text-accent-500">
         <Sparkles className="h-3 w-3" strokeWidth={1.75} />
-        Datos de demostración
+        {t("inicioMercado.datosDemostracion")}
       </span>
     </div>
   );

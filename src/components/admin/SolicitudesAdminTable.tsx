@@ -5,6 +5,7 @@ import type { Empleado, Solicitud, SolicitudEstado, SolicitudTipo } from "../../
 import { formatDate, formatDateTime, iniciales } from "../../lib/format";
 import { useAuth } from "../../auth/AuthContext";
 import { useToast } from "../../context/ToastContext";
+import { useLanguage } from "../../context/LanguageContext";
 import { Card } from "../Card";
 import { Button, Select } from "../ui";
 import { StatusBadge, TipoBadge } from "../StatusBadge";
@@ -21,12 +22,25 @@ interface Props {
 export function SolicitudesAdminTable({ tipoFijo, titulo, descripcion }: Props) {
   const { empleado: adminActual } = useAuth();
   const { showToast } = useToast();
+  const { t } = useLanguage();
   const [solicitudes, setSolicitudes] = useState<Solicitud[]>([]);
   const [empleados, setEmpleados] = useState<Empleado[]>([]);
   const [cargando, setCargando] = useState(true);
   const [filtroEstado, setFiltroEstado] = useState<(typeof ESTADOS)[number]>("todos");
   const [filtroTipo, setFiltroTipo] = useState<(typeof TIPOS)[number]>("todos");
   const [procesando, setProcesando] = useState<string | null>(null);
+
+  const TIPO_LABEL: Record<SolicitudTipo, string> = {
+    vacaciones: t("solicitudesAdminTable.vacaciones"),
+    incapacidad: t("solicitudesAdminTable.incapacidad"),
+    documento: t("solicitudesAdminTable.documento"),
+    certificado: t("solicitudesAdminTable.certificado"),
+  };
+  const ESTADO_LABEL: Record<SolicitudEstado, string> = {
+    pendiente: t("solicitudesAdminTable.pendiente"),
+    aprobada: t("solicitudesAdminTable.aprobada"),
+    rechazada: t("solicitudesAdminTable.rechazada"),
+  };
 
   const cargar = useCallback(async () => {
     setCargando(true);
@@ -54,7 +68,10 @@ export function SolicitudesAdminTable({ tipoFijo, titulo, descripcion }: Props) 
     setProcesando(id);
     try {
       await dataSource.resolverSolicitud(id, estado, adminActual?.id ?? null);
-      showToast(estado === "aprobada" ? "Solicitud aprobada." : "Solicitud rechazada.", estado === "aprobada" ? "success" : "info");
+      showToast(
+        estado === "aprobada" ? t("solicitudesAdminTable.solicitudAprobada") : t("solicitudesAdminTable.solicitudRechazada"),
+        estado === "aprobada" ? "success" : "info",
+      );
       await cargar();
     } finally {
       setProcesando(null);
@@ -71,9 +88,9 @@ export function SolicitudesAdminTable({ tipoFijo, titulo, descripcion }: Props) 
         <div className="flex flex-wrap gap-2">
           {!tipoFijo && (
             <Select value={filtroTipo} onChange={(e) => setFiltroTipo(e.target.value as (typeof TIPOS)[number])} className="w-auto">
-              {TIPOS.map((t) => (
-                <option key={t} value={t}>
-                  {t === "todos" ? "Todos los tipos" : t.charAt(0).toUpperCase() + t.slice(1)}
+              {TIPOS.map((tp) => (
+                <option key={tp} value={tp}>
+                  {tp === "todos" ? t("solicitudesAdminTable.todosLosTipos") : TIPO_LABEL[tp]}
                 </option>
               ))}
             </Select>
@@ -81,7 +98,7 @@ export function SolicitudesAdminTable({ tipoFijo, titulo, descripcion }: Props) 
           <Select value={filtroEstado} onChange={(e) => setFiltroEstado(e.target.value as (typeof ESTADOS)[number])} className="w-auto">
             {ESTADOS.map((e) => (
               <option key={e} value={e}>
-                {e === "todos" ? "Todos los estados" : e.charAt(0).toUpperCase() + e.slice(1)}
+                {e === "todos" ? t("solicitudesAdminTable.todosLosEstados") : ESTADO_LABEL[e]}
               </option>
             ))}
           </Select>
@@ -89,20 +106,20 @@ export function SolicitudesAdminTable({ tipoFijo, titulo, descripcion }: Props) 
       </div>
 
       {cargando ? (
-        <p className="py-6 text-center text-sm text-[var(--text-muted)]">Cargando…</p>
+        <p className="py-6 text-center text-sm text-[var(--text-muted)]">{t("solicitudesAdminTable.cargando")}</p>
       ) : filtradas.length === 0 ? (
-        <p className="py-6 text-center text-sm text-[var(--text-muted)]">No hay solicitudes con estos filtros.</p>
+        <p className="py-6 text-center text-sm text-[var(--text-muted)]">{t("solicitudesAdminTable.sinSolicitudes")}</p>
       ) : (
         <div className="overflow-x-auto">
           <table className="w-full min-w-[760px] text-left text-sm">
             <thead>
               <tr className="border-b border-[var(--border-subtle)] text-xs uppercase tracking-wide text-[var(--text-muted)]">
-                <th className="py-2 pr-4 font-semibold">Empleado</th>
-                {!tipoFijo && <th className="py-2 pr-4 font-semibold">Tipo</th>}
-                <th className="py-2 pr-4 font-semibold">Fechas</th>
-                <th className="py-2 pr-4 font-semibold">Motivo</th>
-                <th className="py-2 pr-4 font-semibold">Estado</th>
-                <th className="py-2 pr-4 font-semibold text-right">Acciones</th>
+                <th className="py-2 pr-4 font-semibold">{t("solicitudesAdminTable.colEmpleado")}</th>
+                {!tipoFijo && <th className="py-2 pr-4 font-semibold">{t("solicitudesAdminTable.colTipo")}</th>}
+                <th className="py-2 pr-4 font-semibold">{t("solicitudesAdminTable.colFechas")}</th>
+                <th className="py-2 pr-4 font-semibold">{t("solicitudesAdminTable.colMotivo")}</th>
+                <th className="py-2 pr-4 font-semibold">{t("solicitudesAdminTable.colEstado")}</th>
+                <th className="py-2 pr-4 font-semibold text-right">{t("solicitudesAdminTable.colAcciones")}</th>
               </tr>
             </thead>
             <tbody>
@@ -116,7 +133,7 @@ export function SolicitudesAdminTable({ tipoFijo, titulo, descripcion }: Props) 
                           {emp ? iniciales(emp.nombre) : "?"}
                         </div>
                         <div>
-                          <p className="font-medium text-[var(--text-primary)]">{emp?.nombre ?? "Empleado eliminado"}</p>
+                          <p className="font-medium text-[var(--text-primary)]">{emp?.nombre ?? t("solicitudesAdminTable.empleadoEliminado")}</p>
                           <p className="text-xs text-[var(--text-muted)]">{formatDateTime(s.creadoEn)}</p>
                         </div>
                       </div>
@@ -141,7 +158,7 @@ export function SolicitudesAdminTable({ tipoFijo, titulo, descripcion }: Props) 
                             className="border-status-aprobada! text-status-aprobada! px-2.5 py-1.5"
                             disabled={procesando === s.id}
                             onClick={() => void resolver(s.id, "aprobada")}
-                            title="Aprobar"
+                            title={t("solicitudesAdminTable.aprobar")}
                           >
                             <Check className="h-4 w-4" strokeWidth={1.75} />
                           </Button>
@@ -150,13 +167,13 @@ export function SolicitudesAdminTable({ tipoFijo, titulo, descripcion }: Props) 
                             className="border-status-rechazada! text-status-rechazada! px-2.5 py-1.5"
                             disabled={procesando === s.id}
                             onClick={() => void resolver(s.id, "rechazada")}
-                            title="Rechazar"
+                            title={t("solicitudesAdminTable.rechazar")}
                           >
                             <X className="h-4 w-4" strokeWidth={1.75} />
                           </Button>
                         </div>
                       ) : (
-                        <p className="text-right text-xs text-[var(--text-muted)]">Resuelta {formatDateTime(s.resueltoEn)}</p>
+                        <p className="text-right text-xs text-[var(--text-muted)]">{t("solicitudesAdminTable.resuelta")} {formatDateTime(s.resueltoEn)}</p>
                       )}
                     </td>
                   </tr>

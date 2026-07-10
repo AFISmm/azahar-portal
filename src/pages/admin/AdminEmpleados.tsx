@@ -10,6 +10,7 @@ import { Card } from "../../components/Card";
 import { Modal } from "../../components/Modal";
 import { Button, Input, Select } from "../../components/ui";
 import { EmpleadoForm, type EmpleadoFormValues } from "../../components/admin/EmpleadoForm";
+import { useLanguage } from "../../context/LanguageContext";
 
 const ESTADO_ESTILO: Record<Empleado["estado"], string> = {
   activo: "bg-status-aprobada-bg text-status-aprobada",
@@ -17,6 +18,7 @@ const ESTADO_ESTILO: Record<Empleado["estado"], string> = {
 };
 
 export default function AdminEmpleados() {
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const { showToast } = useToast();
   const [empleados, setEmpleados] = useState<Empleado[]>([]);
@@ -57,11 +59,11 @@ export default function AdminEmpleados() {
     setEnviando(true);
     try {
       await dataSource.createEmpleado(valores);
-      showToast(`Empleado ${valores.nombre} creado correctamente.`, "success");
+      showToast(`${t("adminEmpleados.toastCreadoPrefijo")}${valores.nombre}${t("adminEmpleados.toastCreadoSufijo")}`, "success");
       setModalOpen(false);
       await cargar();
     } catch {
-      showToast("No se pudo crear el empleado. Intenta de nuevo.", "error");
+      showToast(t("adminEmpleados.toastError"), "error");
     } finally {
       setEnviando(false);
     }
@@ -69,20 +71,20 @@ export default function AdminEmpleados() {
 
   return (
     <div className="azahar-fade-in">
-      <PageHeader breadcrumb="Administración" title="Empleados" description="Administra el equipo de Azahar Coffee Company: crea, edita y consulta perfiles.">
+      <PageHeader breadcrumb={t("adminEmpleados.breadcrumb")} title={t("adminEmpleados.titulo")} description={t("adminEmpleados.descripcion")}>
         <Button onClick={() => setModalOpen(true)}>
           <UserPlus className="h-4 w-4" strokeWidth={1.75} />
-          Nuevo empleado
+          {t("adminEmpleados.botonNuevo")}
         </Button>
       </PageHeader>
 
       <div className="mb-5 flex flex-wrap gap-3">
         <div className="relative flex-1 min-w-[220px]">
           <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--text-muted)]" strokeWidth={1.75} />
-          <Input placeholder="Buscar por nombre, correo o cargo…" value={busqueda} onChange={(e) => setBusqueda(e.target.value)} className="pl-9" />
+          <Input placeholder={t("adminEmpleados.buscarPlaceholder")} value={busqueda} onChange={(e) => setBusqueda(e.target.value)} className="pl-9" />
         </div>
         <Select value={filtroDepartamento} onChange={(e) => setFiltroDepartamento(e.target.value)} className="w-auto">
-          <option value="todos">Todos los departamentos</option>
+          <option value="todos">{t("adminEmpleados.todosDepartamentos")}</option>
           {departamentos.map((d) => (
             <option key={d} value={d}>
               {d}
@@ -90,28 +92,28 @@ export default function AdminEmpleados() {
           ))}
         </Select>
         <Select value={filtroRol} onChange={(e) => setFiltroRol(e.target.value)} className="w-auto">
-          <option value="todos">Todos los roles</option>
-          <option value="empleado">Empleado</option>
-          <option value="admin">Administrador</option>
+          <option value="todos">{t("adminEmpleados.todosRoles")}</option>
+          <option value="empleado">{t("adminEmpleados.rolEmpleado")}</option>
+          <option value="admin">{t("adminEmpleados.rolAdmin")}</option>
         </Select>
       </div>
 
       <Card>
         {cargando ? (
-          <p className="py-6 text-center text-sm text-[var(--text-muted)]">Cargando…</p>
+          <p className="py-6 text-center text-sm text-[var(--text-muted)]">{t("adminEmpleados.cargando")}</p>
         ) : filtrados.length === 0 ? (
-          <p className="py-6 text-center text-sm text-[var(--text-muted)]">No hay empleados con estos filtros.</p>
+          <p className="py-6 text-center text-sm text-[var(--text-muted)]">{t("adminEmpleados.sinResultados")}</p>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full min-w-[820px] text-left text-sm">
               <thead>
                 <tr className="border-b border-[var(--border-subtle)] text-xs uppercase tracking-wide text-[var(--text-muted)]">
-                  <th className="py-2 pr-4 font-semibold">Empleado</th>
-                  <th className="py-2 pr-4 font-semibold">Cargo</th>
-                  <th className="py-2 pr-4 font-semibold">Departamento</th>
-                  <th className="py-2 pr-4 font-semibold">Contrato</th>
-                  <th className="py-2 pr-4 font-semibold">Rol</th>
-                  <th className="py-2 pr-4 font-semibold">Estado</th>
+                  <th className="py-2 pr-4 font-semibold">{t("adminEmpleados.colEmpleado")}</th>
+                  <th className="py-2 pr-4 font-semibold">{t("adminEmpleados.colCargo")}</th>
+                  <th className="py-2 pr-4 font-semibold">{t("adminEmpleados.colDepartamento")}</th>
+                  <th className="py-2 pr-4 font-semibold">{t("adminEmpleados.colContrato")}</th>
+                  <th className="py-2 pr-4 font-semibold">{t("adminEmpleados.colRol")}</th>
+                  <th className="py-2 pr-4 font-semibold">{t("adminEmpleados.colEstado")}</th>
                 </tr>
               </thead>
               <tbody>
@@ -137,12 +139,12 @@ export default function AdminEmpleados() {
                     <td className="py-3 pr-4 text-[var(--text-secondary)]">{emp.tipoContrato}</td>
                     <td className="py-3 pr-4">
                       <span className="inline-flex rounded-full bg-cream-200 px-2.5 py-1 text-xs font-semibold text-brand-800">
-                        {emp.rol === "admin" ? "Administrador" : "Empleado"}
+                        {emp.rol === "admin" ? t("adminEmpleados.rolAdmin") : t("adminEmpleados.rolEmpleado")}
                       </span>
                     </td>
                     <td className="py-3 pr-4">
                       <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${ESTADO_ESTILO[emp.estado]}`}>
-                        {emp.estado === "activo" ? "Activo" : "Inactivo"}
+                        {emp.estado === "activo" ? t("adminEmpleados.estadoActivo") : t("adminEmpleados.estadoInactivo")}
                       </span>
                     </td>
                   </tr>
@@ -153,7 +155,7 @@ export default function AdminEmpleados() {
         )}
       </Card>
 
-      <Modal open={modalOpen} onClose={() => setModalOpen(false)} title="Nuevo empleado" widthClassName="max-w-2xl">
+      <Modal open={modalOpen} onClose={() => setModalOpen(false)} title={t("adminEmpleados.botonNuevo")} widthClassName="max-w-2xl">
         <EmpleadoForm modo="crear" enviando={enviando} onSubmit={(v) => void handleCrear(v)} onCancel={() => setModalOpen(false)} />
       </Modal>
     </div>

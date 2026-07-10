@@ -6,6 +6,7 @@ import { dataSource } from "../lib/dataSource";
 import type { DestinoPqr, Pqr } from "../lib/types";
 import { formatDate, formatDateTime } from "../lib/format";
 import { useToast } from "../context/ToastContext";
+import { useLanguage } from "../context/LanguageContext";
 import { PageHeader } from "../components/PageHeader";
 import { Card } from "../components/Card";
 import { Button, Field, Input, Select, Textarea } from "../components/ui";
@@ -18,6 +19,7 @@ const ESTADO_ESTILO: Record<Pqr["estado"], string> = {
 export default function MiPerfil() {
   const { empleado, refreshEmpleado } = useAuth();
   const { showToast } = useToast();
+  const { t } = useLanguage();
   const [searchParams] = useSearchParams();
 
   const [correo, setCorreo] = useState("");
@@ -58,10 +60,10 @@ export default function MiPerfil() {
   const esDesarrollador = empleado.tipoCuenta === "desarrollador";
 
   const datosBloqueados = [
-    { label: "Nombres y apellidos completos", valor: empleado.nombre },
-    { label: "Fecha de nacimiento", valor: formatDate(empleado.fechaNacimiento) },
-    { label: "Número de identificación", valor: empleado.numeroIdentificacion ?? "—" },
-    { label: "Fecha de inicio en la empresa", valor: formatDate(empleado.fechaIngreso) },
+    { label: t("miPerfil.labelNombres"), valor: empleado.nombre },
+    { label: t("miPerfil.labelFechaNacimiento"), valor: formatDate(empleado.fechaNacimiento) },
+    { label: t("miPerfil.labelNumeroIdentificacion"), valor: empleado.numeroIdentificacion ?? "—" },
+    { label: t("miPerfil.labelFechaIngreso"), valor: formatDate(empleado.fechaIngreso) },
   ];
 
   async function guardarCuenta(e: FormEvent) {
@@ -75,9 +77,9 @@ export default function MiPerfil() {
       });
       await refreshEmpleado();
       setPassword("");
-      showToast("Perfil actualizado correctamente.", "success");
+      showToast(t("miPerfil.toastPerfilActualizado"), "success");
     } catch (err) {
-      showToast(err instanceof Error ? err.message : "No se pudo actualizar el perfil.", "error");
+      showToast(err instanceof Error ? err.message : t("miPerfil.errorActualizarPerfil"), "error");
     } finally {
       setGuardando(false);
     }
@@ -104,12 +106,12 @@ export default function MiPerfil() {
         adjuntoUrl,
         adjuntoNombre,
       });
-      showToast("Tu PQR fue radicada correctamente.", "success");
+      showToast(t("miPerfil.toastPqrRadicada"), "success");
       setProblema("");
       setArchivoPqr(null);
       setMisPqr(await dataSource.listPqrPropias());
     } catch (err) {
-      showToast(err instanceof Error ? err.message : "No se pudo radicar la PQR.", "error");
+      showToast(err instanceof Error ? err.message : t("miPerfil.errorRadicarPqr"), "error");
     } finally {
       setEnviandoPqr(false);
     }
@@ -117,11 +119,11 @@ export default function MiPerfil() {
 
   return (
     <div className="azahar-fade-in">
-      <PageHeader breadcrumb="Portal Azahar" title="Mi perfil" description="Tus datos personales y las credenciales de acceso al Portal Azahar.">
+      <PageHeader breadcrumb={t("miPerfil.breadcrumb")} title={t("miPerfil.titulo")} description={t("miPerfil.descripcion")}>
         {!esDesarrollador && (
           <Button variant="outline" onClick={() => setMostrarPqr((v) => !v)}>
             {mostrarPqr ? <ArrowLeft className="h-4 w-4" strokeWidth={1.75} /> : <MessageSquareWarning className="h-4 w-4" strokeWidth={1.75} />}
-            {mostrarPqr ? "Volver" : "Radicar PQR"}
+            {mostrarPqr ? t("miPerfil.volver") : t("miPerfil.radicarPqr")}
           </Button>
         )}
       </PageHeader>
@@ -129,14 +131,14 @@ export default function MiPerfil() {
       <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
         {mostrarPqr ? (
           <Card
-            title="PQR"
+            title={t("miPerfil.cardPqrTitulo")}
             actions={
               <button
                 type="button"
                 onClick={() => setMostrarPqr(false)}
                 className="rounded-full p-1.5 text-[var(--text-muted)] transition hover:bg-[var(--surface-muted)] hover:text-[var(--text-primary)]"
-                aria-label="Volver a Datos personales"
-                title="Volver a Datos personales"
+                aria-label={t("miPerfil.volverDatosPersonales")}
+                title={t("miPerfil.volverDatosPersonales")}
               >
                 <ArrowLeft className="h-4 w-4" strokeWidth={1.75} />
               </button>
@@ -144,17 +146,19 @@ export default function MiPerfil() {
           >
             {misPqr.length > 0 && (
               <div className="mb-5 space-y-3">
-                <p className="text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]">Tus PQR radicadas</p>
+                <p className="text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]">{t("miPerfil.tusPqrRadicadas")}</p>
                 <ul className="max-h-64 space-y-3 overflow-y-auto">
                   {misPqr.map((p) => (
                     <li key={p.id} className="rounded-xl border border-[var(--border-subtle)] p-3">
                       <div className="flex items-start justify-between gap-3">
                         <p className="text-sm text-[var(--text-secondary)]">{p.problema}</p>
                         <span className={`inline-flex shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold ${ESTADO_ESTILO[p.estado]}`}>
-                          {p.estado === "resuelta" ? "Resuelta" : "Pendiente"}
+                          {p.estado === "resuelta" ? t("miPerfil.estadoResuelta") : t("miPerfil.estadoPendiente")}
                         </span>
                       </div>
-                      <p className="mt-1 text-[11px] text-[var(--text-muted)]">Radicada el {formatDateTime(p.creadoEn)}</p>
+                      <p className="mt-1 text-[11px] text-[var(--text-muted)]">
+                        {t("miPerfil.radicadaElPrefix")} {formatDateTime(p.creadoEn)}
+                      </p>
                       {p.adjuntoUrl && (
                         <a
                           href={p.adjuntoUrl}
@@ -163,12 +167,12 @@ export default function MiPerfil() {
                           className="mt-1.5 inline-flex items-center gap-1 text-xs font-semibold text-brand-800 hover:underline"
                         >
                           <Paperclip className="h-3.5 w-3.5" strokeWidth={1.75} />
-                          {p.adjuntoNombre ?? "Ver adjunto"}
+                          {p.adjuntoNombre ?? t("miPerfil.verAdjunto")}
                         </a>
                       )}
                       {p.estado === "resuelta" && p.comentario && (
                         <div className="mt-2 rounded-lg bg-status-aprobada-bg/40 p-2.5">
-                          <p className="text-xs font-semibold uppercase tracking-wide text-status-aprobada">Respuesta del desarrollador</p>
+                          <p className="text-xs font-semibold uppercase tracking-wide text-status-aprobada">{t("miPerfil.respuestaDesarrollador")}</p>
                           <p className="mt-1 text-sm text-[var(--text-secondary)]">{p.comentario}</p>
                           {p.respuestaAdjuntoUrl && (
                             <a
@@ -178,7 +182,7 @@ export default function MiPerfil() {
                               className="mt-1.5 inline-flex items-center gap-1 text-xs font-semibold text-status-aprobada hover:underline"
                             >
                               <Paperclip className="h-3.5 w-3.5" strokeWidth={1.75} />
-                              {p.respuestaAdjuntoNombre ?? "Ver adjunto"}
+                              {p.respuestaAdjuntoNombre ?? t("miPerfil.verAdjunto")}
                             </a>
                           )}
                         </div>
@@ -189,20 +193,20 @@ export default function MiPerfil() {
               </div>
             )}
 
-            <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]">Radicar una nueva PQR</p>
+            <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]">{t("miPerfil.radicarNuevaPqr")}</p>
             <form onSubmit={radicarPqr} className="space-y-4">
-              <Field label="Nombre y apellido">
+              <Field label={t("miPerfil.campoNombreApellido")}>
                 <Input value={empleado.nombre} disabled />
               </Field>
-              <Field label="Número de cédula">
+              <Field label={t("miPerfil.campoNumeroCedula")}>
                 <Input required value={cedulaPqr} onChange={(e) => setCedulaPqr(e.target.value)} />
               </Field>
-              <Field label="Correo electrónico">
+              <Field label={t("miPerfil.campoCorreoElectronico")}>
                 <Input type="email" required value={correoPqr} onChange={(e) => setCorreoPqr(e.target.value)} />
               </Field>
-              <Field label="Administrador destino">
+              <Field label={t("miPerfil.campoAdminDestino")}>
                 <Select value={adminDestinoId} onChange={(e) => setAdminDestinoId(e.target.value)}>
-                  {destinos.length === 0 && <option value="">No hay cuentas de desarrollador disponibles</option>}
+                  {destinos.length === 0 && <option value="">{t("miPerfil.sinCuentasDesarrollador")}</option>}
                   {destinos.map((d) => (
                     <option key={d.id} value={d.id}>
                       {d.nombre}
@@ -210,26 +214,30 @@ export default function MiPerfil() {
                   ))}
                 </Select>
               </Field>
-              <Field label="Describe tu problema">
+              <Field label={t("miPerfil.campoDescribeProblema")}>
                 <Textarea
                   required
                   rows={4}
-                  placeholder="Cuéntanos qué está pasando…"
+                  placeholder={t("miPerfil.placeholderProblema")}
                   value={problema}
                   onChange={(e) => setProblema(e.target.value)}
                 />
               </Field>
-              <Field label="Adjuntar archivo o imagen (opcional)">
+              <Field label={t("miPerfil.campoAdjuntarArchivo")}>
                 <Input type="file" onChange={(e) => setArchivoPqr(e.target.files?.[0] ?? null)} />
-                {archivoPqr && <p className="mt-1.5 text-xs text-[var(--text-secondary)]">Seleccionado: {archivoPqr.name}</p>}
+                {archivoPqr && (
+                  <p className="mt-1.5 text-xs text-[var(--text-secondary)]">
+                    {t("miPerfil.seleccionadoPrefix")} {archivoPqr.name}
+                  </p>
+                )}
               </Field>
               <Button type="submit" disabled={enviandoPqr || !adminDestinoId} className="w-full">
-                Enviar PQR
+                {t("miPerfil.enviarPqr")}
               </Button>
             </form>
           </Card>
         ) : (
-          <Card title="Datos personales">
+          <Card title={t("miPerfil.cardDatosPersonales")}>
             <ul className="divide-y divide-[var(--border-subtle)]">
               {datosBloqueados.map(({ label, valor }) => (
                 <li key={label} className="flex items-center justify-between gap-4 py-3">
@@ -241,31 +249,29 @@ export default function MiPerfil() {
                 </li>
               ))}
             </ul>
-            <p className="mt-3 text-xs text-[var(--text-muted)]">
-              Estos datos son de solo lectura. Si necesitas corregir alguno, radica una PQR o contacta a Talento Humano.
-            </p>
+            <p className="mt-3 text-xs text-[var(--text-muted)]">{t("miPerfil.notaSoloLectura")}</p>
           </Card>
         )}
 
-        <Card title="Cuenta">
+        <Card title={t("miPerfil.cardCuenta")}>
           <form onSubmit={guardarCuenta} className="space-y-4">
-            <Field label="Correo electrónico">
+            <Field label={t("miPerfil.campoCorreoElectronico")}>
               <Input type="email" required value={correo} onChange={(e) => setCorreo(e.target.value)} />
             </Field>
-            <Field label="Nickname / usuario">
-              <Input placeholder="Ej. jbarista" value={username} onChange={(e) => setUsername(e.target.value)} />
+            <Field label={t("miPerfil.campoNickname")}>
+              <Input placeholder={t("miPerfil.placeholderNickname")} value={username} onChange={(e) => setUsername(e.target.value)} />
             </Field>
-            <Field label="Nueva contraseña (opcional)">
+            <Field label={t("miPerfil.campoNuevaContrasena")}>
               <Input
                 type="password"
-                placeholder="Déjalo en blanco para no cambiarla"
+                placeholder={t("miPerfil.placeholderContrasena")}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 autoComplete="new-password"
               />
             </Field>
             <Button type="submit" disabled={guardando} className="w-full">
-              Guardar cambios
+              {t("miPerfil.guardarCambios")}
             </Button>
           </form>
         </Card>

@@ -8,13 +8,21 @@ import { useToast } from "../context/ToastContext";
 import { dataSource } from "../lib/dataSource";
 import { formatDate } from "../lib/format";
 import type { CertificadoFinca, Finca, NuevaFincaInput, NuevoCertificadoInput } from "../lib/types";
+import { useLanguage } from "../context/LanguageContext";
+import type { ClaveTraduccion } from "../i18n/translations";
 
 const TABS = ["Fincas", "Certificados"] as const;
 type Tab = (typeof TABS)[number];
 
+const TAB_LABEL_KEYS: Record<Tab, ClaveTraduccion> = {
+  Fincas: "gestionOperativa.tabFincas",
+  Certificados: "gestionOperativa.tabCertificados",
+};
+
 const VARIEDADES = ["Castillo", "Caturra", "Bourbon", "Colombia", "Typica", "Tabi", "Geisha"];
 
 export default function GestionOperativa() {
+  const { t } = useLanguage();
   const { showToast } = useToast();
   const [tab, setTab] = useState<Tab>("Fincas");
 
@@ -34,7 +42,7 @@ export default function GestionOperativa() {
     try {
       setFincas(await dataSource.listFincas());
     } catch {
-      showToast("No se pudieron cargar las fincas. Intenta de nuevo.", "error");
+      showToast(t("gestionOperativa.errorCargarFincas"), "error");
     } finally {
       setCargandoFincas(false);
     }
@@ -45,7 +53,7 @@ export default function GestionOperativa() {
     try {
       setCertificados(await dataSource.listCertificados());
     } catch {
-      showToast("No se pudieron cargar los certificados. Intenta de nuevo.", "error");
+      showToast(t("gestionOperativa.errorCargarCertificados"), "error");
     } finally {
       setCargandoCertificados(false);
     }
@@ -68,10 +76,10 @@ export default function GestionOperativa() {
     try {
       const nueva = await dataSource.createFinca(input);
       setFincas((actuales) => [nueva, ...actuales]);
-      showToast(`Finca ${nueva.nombre} registrada correctamente.`, "success");
+      showToast(`${t("gestionOperativa.fincaRegistradaPrefijo")}${nueva.nombre}${t("gestionOperativa.fincaRegistradaSufijo")}`, "success");
       setModalFincaOpen(false);
     } catch {
-      showToast("No se pudo registrar la finca. Intenta de nuevo.", "error");
+      showToast(t("gestionOperativa.errorRegistrarFinca"), "error");
     } finally {
       setEnviandoFinca(false);
     }
@@ -84,10 +92,10 @@ export default function GestionOperativa() {
       // Se agrega de inmediato al estado local: la pestaña de Certificados
       // debe reflejar el nuevo registro sin recargar ni renavegar.
       setCertificados((actuales) => [nuevo, ...actuales]);
-      showToast("Certificado registrado correctamente.", "success");
+      showToast(t("gestionOperativa.certificadoRegistrado"), "success");
       setModalCertOpen(false);
     } catch {
-      showToast("No se pudo registrar el certificado. Intenta de nuevo.", "error");
+      showToast(t("gestionOperativa.errorRegistrarCertificado"), "error");
     } finally {
       setEnviandoCert(false);
     }
@@ -96,21 +104,21 @@ export default function GestionOperativa() {
   return (
     <div className="azahar-fade-in">
       <PageHeader
-        breadcrumb="Gestión del negocio"
-        title="Gestión Operativa"
-        description="Administra las fincas cafeteras registradas de Azahar Coffee Company y sus certificaciones."
+        breadcrumb={t("gestionOperativa.breadcrumb")}
+        title={t("gestionOperativa.titulo")}
+        description={t("gestionOperativa.descripcion")}
       />
 
       <div className="mb-5 flex gap-1 border-b border-[var(--border-subtle)]">
-        {TABS.map((t) => (
+        {TABS.map((tabValue) => (
           <button
-            key={t}
-            onClick={() => setTab(t)}
+            key={tabValue}
+            onClick={() => setTab(tabValue)}
             className={`border-b-2 px-4 py-2.5 text-sm font-semibold transition ${
-              tab === t ? "border-brand-800 text-brand-800" : "border-transparent text-[var(--text-muted)] hover:text-[var(--text-primary)]"
+              tab === tabValue ? "border-brand-800 text-brand-800" : "border-transparent text-[var(--text-muted)] hover:text-[var(--text-primary)]"
             }`}
           >
-            {t}
+            {t(TAB_LABEL_KEYS[tabValue])}
           </button>
         ))}
       </div>
@@ -120,7 +128,7 @@ export default function GestionOperativa() {
           <div className="mb-4 flex justify-end">
             <Button onClick={() => setModalFincaOpen(true)}>
               <Plus className="h-4 w-4" strokeWidth={1.75} />
-              Agregar finca
+              {t("gestionOperativa.agregarFinca")}
             </Button>
           </div>
           <TabFincas fincas={fincas} cargando={cargandoFincas} />
@@ -131,7 +139,7 @@ export default function GestionOperativa() {
         <>
           <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
             <Select value={filtroFincaId} onChange={(e) => setFiltroFincaId(e.target.value)} className="w-auto">
-              <option value="todas">Todas las fincas</option>
+              <option value="todas">{t("gestionOperativa.todasLasFincas")}</option>
               {fincas.map((f) => (
                 <option key={f.id} value={f.id}>
                   {f.nombre}
@@ -140,18 +148,18 @@ export default function GestionOperativa() {
             </Select>
             <Button onClick={() => setModalCertOpen(true)}>
               <Plus className="h-4 w-4" strokeWidth={1.75} />
-              Agregar certificado
+              {t("gestionOperativa.agregarCertificado")}
             </Button>
           </div>
           <TabCertificados certificados={certificadosFiltrados} cargando={cargandoCertificados} fincasPorId={fincasPorId} />
         </>
       )}
 
-      <Modal open={modalFincaOpen} onClose={() => setModalFincaOpen(false)} title="Agregar finca" widthClassName="max-w-2xl">
+      <Modal open={modalFincaOpen} onClose={() => setModalFincaOpen(false)} title={t("gestionOperativa.agregarFinca")} widthClassName="max-w-2xl">
         <FincaForm enviando={enviandoFinca} onSubmit={(v) => void handleCrearFinca(v)} onCancel={() => setModalFincaOpen(false)} />
       </Modal>
 
-      <Modal open={modalCertOpen} onClose={() => setModalCertOpen(false)} title="Agregar certificado">
+      <Modal open={modalCertOpen} onClose={() => setModalCertOpen(false)} title={t("gestionOperativa.agregarCertificado")}>
         <CertificadoForm
           fincas={fincas}
           enviando={enviandoCert}
@@ -163,8 +171,8 @@ export default function GestionOperativa() {
   );
 }
 
-function formatUbicacion(f: Finca): string {
-  const partes = [f.vereda ? `Vereda ${f.vereda}` : null, f.municipio, f.departamento].filter(Boolean);
+function formatUbicacion(f: Finca, t: (clave: ClaveTraduccion) => string): string {
+  const partes = [f.vereda ? `${t("gestionOperativa.veredaPrefijo")}${f.vereda}` : null, f.municipio, f.departamento].filter(Boolean);
   return partes.join(", ");
 }
 
@@ -174,27 +182,28 @@ function formatCoordenadas(f: Finca): string {
 }
 
 function TabFincas({ fincas, cargando }: { fincas: Finca[]; cargando: boolean }) {
+  const { t } = useLanguage();
   return (
     <Card>
       {cargando ? (
-        <p className="py-6 text-center text-sm text-[var(--text-muted)]">Cargando…</p>
+        <p className="py-6 text-center text-sm text-[var(--text-muted)]">{t("gestionOperativa.cargando")}</p>
       ) : fincas.length === 0 ? (
-        <p className="py-6 text-center text-sm text-[var(--text-muted)]">No hay fincas registradas.</p>
+        <p className="py-6 text-center text-sm text-[var(--text-muted)]">{t("gestionOperativa.sinFincas")}</p>
       ) : (
         <div className="overflow-x-auto">
           <table className="w-full min-w-[1080px] text-left text-sm">
             <thead>
               <tr className="border-b border-[var(--border-subtle)] text-xs uppercase tracking-wide text-[var(--text-muted)]">
-                <th className="py-2 pr-4 font-semibold">Código</th>
-                <th className="py-2 pr-4 font-semibold">Nombre</th>
-                <th className="py-2 pr-4 font-semibold">Ubicación</th>
-                <th className="py-2 pr-4 font-semibold">Propietario</th>
-                <th className="py-2 pr-4 font-semibold">Cédula</th>
-                <th className="py-2 pr-4 font-semibold">Área total</th>
-                <th className="py-2 pr-4 font-semibold">Área café</th>
-                <th className="py-2 pr-4 font-semibold">Árboles</th>
-                <th className="py-2 pr-4 font-semibold">Variedad</th>
-                <th className="py-2 pr-4 font-semibold">Coordenadas</th>
+                <th className="py-2 pr-4 font-semibold">{t("gestionOperativa.colCodigo")}</th>
+                <th className="py-2 pr-4 font-semibold">{t("gestionOperativa.colNombre")}</th>
+                <th className="py-2 pr-4 font-semibold">{t("gestionOperativa.colUbicacion")}</th>
+                <th className="py-2 pr-4 font-semibold">{t("gestionOperativa.colPropietario")}</th>
+                <th className="py-2 pr-4 font-semibold">{t("gestionOperativa.colCedula")}</th>
+                <th className="py-2 pr-4 font-semibold">{t("gestionOperativa.colAreaTotal")}</th>
+                <th className="py-2 pr-4 font-semibold">{t("gestionOperativa.colAreaCafe")}</th>
+                <th className="py-2 pr-4 font-semibold">{t("gestionOperativa.colArboles")}</th>
+                <th className="py-2 pr-4 font-semibold">{t("gestionOperativa.colVariedad")}</th>
+                <th className="py-2 pr-4 font-semibold">{t("gestionOperativa.colCoordenadas")}</th>
               </tr>
             </thead>
             <tbody>
@@ -202,7 +211,7 @@ function TabFincas({ fincas, cargando }: { fincas: Finca[]; cargando: boolean })
                 <tr key={f.id} className="border-b border-[var(--border-subtle)] last:border-0">
                   <td className="py-3 pr-4 font-mono text-xs font-semibold text-brand-800">{f.codigo}</td>
                   <td className="py-3 pr-4 font-medium text-[var(--text-primary)]">{f.nombre}</td>
-                  <td className="py-3 pr-4 text-[var(--text-secondary)]">{formatUbicacion(f)}</td>
+                  <td className="py-3 pr-4 text-[var(--text-secondary)]">{formatUbicacion(f, t)}</td>
                   <td className="py-3 pr-4 text-[var(--text-secondary)]">{f.propietario}</td>
                   <td className="py-3 pr-4 text-[var(--text-secondary)]">{f.cedulaPropietario}</td>
                   <td className="py-3 pr-4 text-[var(--text-secondary)]">{f.areaTotal} ha</td>
@@ -230,24 +239,25 @@ function TabCertificados({
   fincasPorId: Map<string, Finca>;
 }) {
   const hoy = new Date();
+  const { t } = useLanguage();
 
   return (
     <Card>
       {cargando ? (
-        <p className="py-6 text-center text-sm text-[var(--text-muted)]">Cargando…</p>
+        <p className="py-6 text-center text-sm text-[var(--text-muted)]">{t("gestionOperativa.cargando")}</p>
       ) : certificados.length === 0 ? (
-        <p className="py-6 text-center text-sm text-[var(--text-muted)]">No hay certificados registrados.</p>
+        <p className="py-6 text-center text-sm text-[var(--text-muted)]">{t("gestionOperativa.sinCertificados")}</p>
       ) : (
         <div className="overflow-x-auto">
           <table className="w-full min-w-[880px] text-left text-sm">
             <thead>
               <tr className="border-b border-[var(--border-subtle)] text-xs uppercase tracking-wide text-[var(--text-muted)]">
-                <th className="py-2 pr-4 font-semibold">Finca</th>
-                <th className="py-2 pr-4 font-semibold">Certificado</th>
-                <th className="py-2 pr-4 font-semibold">Entidad certificadora</th>
-                <th className="py-2 pr-4 font-semibold">Número</th>
-                <th className="py-2 pr-4 font-semibold">Fecha de emisión</th>
-                <th className="py-2 pr-4 font-semibold">Fecha de vencimiento</th>
+                <th className="py-2 pr-4 font-semibold">{t("gestionOperativa.colFinca")}</th>
+                <th className="py-2 pr-4 font-semibold">{t("gestionOperativa.colCertificado")}</th>
+                <th className="py-2 pr-4 font-semibold">{t("gestionOperativa.colEntidadCertificadora")}</th>
+                <th className="py-2 pr-4 font-semibold">{t("gestionOperativa.colNumero")}</th>
+                <th className="py-2 pr-4 font-semibold">{t("gestionOperativa.colFechaEmision")}</th>
+                <th className="py-2 pr-4 font-semibold">{t("gestionOperativa.colFechaVencimiento")}</th>
               </tr>
             </thead>
             <tbody>
@@ -295,6 +305,7 @@ function FincaForm({
   const [variedad, setVariedad] = useState(VARIEDADES[0]);
   const [latitud, setLatitud] = useState("");
   const [longitud, setLongitud] = useState("");
+  const { t } = useLanguage();
 
   function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -317,34 +328,34 @@ function FincaForm({
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-        <Field label="Nombre de la finca">
-          <Input required value={nombre} onChange={(e) => setNombre(e.target.value)} placeholder="Ej. Finca El Paraíso" />
+        <Field label={t("gestionOperativa.campoNombreFinca")}>
+          <Input required value={nombre} onChange={(e) => setNombre(e.target.value)} placeholder={t("gestionOperativa.placeholderNombreFinca")} />
         </Field>
-        <Field label="Vereda (opcional)">
-          <Input value={vereda} onChange={(e) => setVereda(e.target.value)} placeholder="Ej. El Roble" />
+        <Field label={t("gestionOperativa.campoVereda")}>
+          <Input value={vereda} onChange={(e) => setVereda(e.target.value)} placeholder={t("gestionOperativa.placeholderVereda")} />
         </Field>
-        <Field label="Municipio">
-          <Input required value={municipio} onChange={(e) => setMunicipio(e.target.value)} placeholder="Ej. Pitalito" />
+        <Field label={t("gestionOperativa.campoMunicipio")}>
+          <Input required value={municipio} onChange={(e) => setMunicipio(e.target.value)} placeholder={t("gestionOperativa.placeholderMunicipio")} />
         </Field>
-        <Field label="Departamento">
-          <Input required value={departamento} onChange={(e) => setDepartamento(e.target.value)} placeholder="Ej. Huila" />
+        <Field label={t("gestionOperativa.campoDepartamento")}>
+          <Input required value={departamento} onChange={(e) => setDepartamento(e.target.value)} placeholder={t("gestionOperativa.placeholderDepartamento")} />
         </Field>
-        <Field label="Propietario">
-          <Input required value={propietario} onChange={(e) => setPropietario(e.target.value)} placeholder="Nombre completo" />
+        <Field label={t("gestionOperativa.colPropietario")}>
+          <Input required value={propietario} onChange={(e) => setPropietario(e.target.value)} placeholder={t("gestionOperativa.placeholderNombreCompleto")} />
         </Field>
-        <Field label="Cédula de ciudadanía del propietario">
-          <Input required value={cedulaPropietario} onChange={(e) => setCedulaPropietario(e.target.value)} placeholder="Ej. 12345678" />
+        <Field label={t("gestionOperativa.campoCedulaPropietario")}>
+          <Input required value={cedulaPropietario} onChange={(e) => setCedulaPropietario(e.target.value)} placeholder={t("gestionOperativa.placeholderCedula")} />
         </Field>
-        <Field label="Área total (hectáreas)">
+        <Field label={t("gestionOperativa.campoAreaTotal")}>
           <Input required type="number" min={0} step="0.1" value={areaTotal} onChange={(e) => setAreaTotal(Number(e.target.value))} />
         </Field>
-        <Field label="Área en café (hectáreas)">
+        <Field label={t("gestionOperativa.campoAreaCafe")}>
           <Input required type="number" min={0} step="0.1" value={areaCafe} onChange={(e) => setAreaCafe(Number(e.target.value))} />
         </Field>
-        <Field label="Número de árboles sembrados">
+        <Field label={t("gestionOperativa.campoNumeroArboles")}>
           <Input required type="number" min={0} value={numeroArboles} onChange={(e) => setNumeroArboles(Number(e.target.value))} />
         </Field>
-        <Field label="Variedad">
+        <Field label={t("gestionOperativa.colVariedad")}>
           <Select value={variedad} onChange={(e) => setVariedad(e.target.value)}>
             {VARIEDADES.map((v) => (
               <option key={v} value={v}>
@@ -353,21 +364,21 @@ function FincaForm({
             ))}
           </Select>
         </Field>
-        <Field label="Latitud (opcional)">
-          <Input type="number" step="0.0001" value={latitud} onChange={(e) => setLatitud(e.target.value)} placeholder="Ej. 1.8534" />
+        <Field label={t("gestionOperativa.campoLatitud")}>
+          <Input type="number" step="0.0001" value={latitud} onChange={(e) => setLatitud(e.target.value)} placeholder={t("gestionOperativa.placeholderLatitud")} />
         </Field>
-        <Field label="Longitud (opcional)">
-          <Input type="number" step="0.0001" value={longitud} onChange={(e) => setLongitud(e.target.value)} placeholder="Ej. -76.0511" />
+        <Field label={t("gestionOperativa.campoLongitud")}>
+          <Input type="number" step="0.0001" value={longitud} onChange={(e) => setLongitud(e.target.value)} placeholder={t("gestionOperativa.placeholderLongitud")} />
         </Field>
       </div>
 
       <div className="flex justify-end gap-3 pt-2">
         <Button type="button" variant="ghost" onClick={onCancel}>
-          Cancelar
+          {t("gestionOperativa.cancelar")}
         </Button>
         <Button type="submit" disabled={enviando}>
           <Plus className="h-4 w-4" strokeWidth={1.75} />
-          Agregar finca
+          {t("gestionOperativa.agregarFinca")}
         </Button>
       </div>
     </form>
@@ -391,6 +402,7 @@ function CertificadoForm({
   const [numeroCertificado, setNumeroCertificado] = useState("");
   const [fechaEmision, setFechaEmision] = useState("");
   const [fechaVencimiento, setFechaVencimiento] = useState("");
+  const { t } = useLanguage();
 
   function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -407,9 +419,9 @@ function CertificadoForm({
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="grid grid-cols-1 gap-3">
-        <Field label="Finca">
+        <Field label={t("gestionOperativa.colFinca")}>
           <Select required value={fincaId} onChange={(e) => setFincaId(e.target.value)}>
-            {fincas.length === 0 && <option value="">No hay fincas registradas</option>}
+            {fincas.length === 0 && <option value="">{t("gestionOperativa.selectSinFincas")}</option>}
             {fincas.map((f) => (
               <option key={f.id} value={f.id}>
                 {f.nombre}
@@ -417,20 +429,20 @@ function CertificadoForm({
             ))}
           </Select>
         </Field>
-        <Field label="Nombre del certificado">
-          <Input required value={nombre} onChange={(e) => setNombre(e.target.value)} placeholder="Ej. Certificación Orgánica" />
+        <Field label={t("gestionOperativa.campoNombreCertificado")}>
+          <Input required value={nombre} onChange={(e) => setNombre(e.target.value)} placeholder={t("gestionOperativa.placeholderNombreCertificado")} />
         </Field>
-        <Field label="Entidad certificadora">
-          <Input required value={entidadCertificadora} onChange={(e) => setEntidadCertificadora(e.target.value)} placeholder="Ej. Rainforest Alliance" />
+        <Field label={t("gestionOperativa.colEntidadCertificadora")}>
+          <Input required value={entidadCertificadora} onChange={(e) => setEntidadCertificadora(e.target.value)} placeholder={t("gestionOperativa.placeholderEntidadCertificadora")} />
         </Field>
-        <Field label="Número de certificado (opcional)">
-          <Input value={numeroCertificado} onChange={(e) => setNumeroCertificado(e.target.value)} placeholder="Ej. RA-COL-88213" />
+        <Field label={t("gestionOperativa.campoNumeroCertificado")}>
+          <Input value={numeroCertificado} onChange={(e) => setNumeroCertificado(e.target.value)} placeholder={t("gestionOperativa.placeholderNumeroCertificado")} />
         </Field>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-          <Field label="Fecha de emisión">
+          <Field label={t("gestionOperativa.colFechaEmision")}>
             <Input required type="date" value={fechaEmision} onChange={(e) => setFechaEmision(e.target.value)} />
           </Field>
-          <Field label="Fecha de vencimiento (opcional)">
+          <Field label={t("gestionOperativa.campoFechaVencimientoOpcional")}>
             <Input type="date" value={fechaVencimiento} onChange={(e) => setFechaVencimiento(e.target.value)} />
           </Field>
         </div>
@@ -438,11 +450,11 @@ function CertificadoForm({
 
       <div className="flex justify-end gap-3 pt-2">
         <Button type="button" variant="ghost" onClick={onCancel}>
-          Cancelar
+          {t("gestionOperativa.cancelar")}
         </Button>
         <Button type="submit" disabled={enviando || fincas.length === 0}>
           <Plus className="h-4 w-4" strokeWidth={1.75} />
-          Agregar certificado
+          {t("gestionOperativa.agregarCertificado")}
         </Button>
       </div>
     </form>

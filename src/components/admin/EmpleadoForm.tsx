@@ -2,6 +2,7 @@ import { type FormEvent, useState } from "react";
 import { UserPlus, Save } from "lucide-react";
 import type { Empleado, NuevoEmpleadoInput } from "../../lib/types";
 import { Button, Field, Input, Select } from "../ui";
+import { useLanguage } from "../../context/LanguageContext";
 
 export const DEPARTAMENTOS = ["Talento Humano", "Operaciones de Tienda", "Logística y Abastecimiento", "Finanzas", "Mercadeo", "Producción y Calidad", "Tecnología y Desarrollo"];
 export const TIPOS_CONTRATO = ["Término indefinido", "Término fijo", "Aprendizaje SENA", "Prestación de servicios"];
@@ -19,6 +20,7 @@ interface Props {
 }
 
 export function EmpleadoForm({ valoresIniciales, modo, enviando, onSubmit, onCancel }: Props) {
+  const { t } = useLanguage();
   const [nombre, setNombre] = useState(valoresIniciales?.nombre ?? "");
   const [correo, setCorreo] = useState(valoresIniciales?.correo ?? "");
   const [cargo, setCargo] = useState(valoresIniciales?.cargo ?? "");
@@ -51,16 +53,16 @@ export function EmpleadoForm({ valoresIniciales, modo, enviando, onSubmit, onCan
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-        <Field label="Nombre completo">
-          <Input required value={nombre} onChange={(e) => setNombre(e.target.value)} placeholder="Ej. Camila Torres" />
+        <Field label={t("empleadoForm.nombreCompleto")}>
+          <Input required value={nombre} onChange={(e) => setNombre(e.target.value)} placeholder={t("empleadoForm.nombrePlaceholder")} />
         </Field>
-        <Field label="Correo corporativo">
-          <Input required type="email" value={correo} onChange={(e) => setCorreo(e.target.value)} placeholder="nombre.apellido@azaharcoffee.co" />
+        <Field label={t("empleadoForm.correoCorporativo")}>
+          <Input required type="email" value={correo} onChange={(e) => setCorreo(e.target.value)} placeholder={t("empleadoForm.correoPlaceholder")} />
         </Field>
-        <Field label="Cargo">
-          <Input required value={cargo} onChange={(e) => setCargo(e.target.value)} placeholder="Ej. Barista" />
+        <Field label={t("empleadoForm.cargo")}>
+          <Input required value={cargo} onChange={(e) => setCargo(e.target.value)} placeholder={t("empleadoForm.cargoPlaceholder")} />
         </Field>
-        <Field label="Departamento">
+        <Field label={t("empleadoForm.departamento")}>
           <Select value={departamento} onChange={(e) => setDepartamento(e.target.value)}>
             {DEPARTAMENTOS.map((d) => (
               <option key={d} value={d}>
@@ -69,38 +71,38 @@ export function EmpleadoForm({ valoresIniciales, modo, enviando, onSubmit, onCan
             ))}
           </Select>
         </Field>
-        <Field label="Tipo de contrato">
+        <Field label={t("empleadoForm.tipoContrato")}>
           <Select value={tipoContrato} onChange={(e) => setTipoContrato(e.target.value)}>
-            {TIPOS_CONTRATO.map((t) => (
-              <option key={t} value={t}>
-                {t}
+            {TIPOS_CONTRATO.map((tc) => (
+              <option key={tc} value={tc}>
+                {tc}
               </option>
             ))}
           </Select>
         </Field>
-        <Field label="Fecha de ingreso">
+        <Field label={t("empleadoForm.fechaIngreso")}>
           <Input required type="date" value={fechaIngreso} onChange={(e) => setFechaIngreso(e.target.value)} />
         </Field>
-        <Field label="Días de vacaciones disponibles">
+        <Field label={t("empleadoForm.diasVacaciones")}>
           <Input required type="number" min={0} value={diasVacaciones} onChange={(e) => setDiasVacaciones(Number(e.target.value))} />
         </Field>
-        <Field label="Salario (COP, opcional)">
+        <Field label={t("empleadoForm.salario")}>
           <Input type="number" min={0} value={salario ?? ""} onChange={(e) => setSalario(e.target.value ? Number(e.target.value) : undefined)} />
         </Field>
-        <Field label="Teléfono (opcional)">
+        <Field label={t("empleadoForm.telefono")}>
           <Input value={telefono ?? ""} onChange={(e) => setTelefono(e.target.value)} placeholder="300 000 0000" />
         </Field>
-        <Field label="Rol en el portal">
+        <Field label={t("empleadoForm.rolPortal")}>
           <Select value={rol} onChange={(e) => setRol(e.target.value as "empleado" | "admin")}>
-            <option value="empleado">Empleado</option>
-            <option value="admin">Administrador</option>
+            <option value="empleado">{t("empleadoForm.rolEmpleado")}</option>
+            <option value="admin">{t("empleadoForm.rolAdmin")}</option>
           </Select>
         </Field>
         {modo === "editar" && (
-          <Field label="Estado">
+          <Field label={t("empleadoForm.estado")}>
             <Select value={estado} onChange={(e) => setEstado(e.target.value as "activo" | "inactivo")}>
-              <option value="activo">Activo</option>
-              <option value="inactivo">Inactivo</option>
+              <option value="activo">{t("empleadoForm.estadoActivo")}</option>
+              <option value="inactivo">{t("empleadoForm.estadoInactivo")}</option>
             </Select>
           </Field>
         )}
@@ -108,19 +110,19 @@ export function EmpleadoForm({ valoresIniciales, modo, enviando, onSubmit, onCan
 
       {modo === "crear" && (
         <p className="rounded-lg bg-cream-200 px-3 py-2 text-xs text-brand-800">
-          Modo demo: este empleado se agrega solo a los datos en memoria de esta sesión. En producción, este formulario llama a la
-          función serverless <code className="font-mono">/api/empleados-crear</code>, que crea la fila en{" "}
-          <code className="font-mono">empleados</code> (con una contraseña temporal) directamente en la base de datos de Postgres.
+          {t("empleadoForm.demoParte1")}{" "}
+          <code className="font-mono">/api/empleados-crear</code>{t("empleadoForm.demoParte2")}{" "}
+          <code className="font-mono">empleados</code> {t("empleadoForm.demoParte3")}
         </p>
       )}
 
       <div className="flex justify-end gap-3 pt-2">
         <Button type="button" variant="ghost" onClick={onCancel}>
-          Cancelar
+          {t("empleadoForm.cancelar")}
         </Button>
         <Button type="submit" disabled={enviando}>
           {modo === "crear" ? <UserPlus className="h-4 w-4" strokeWidth={1.75} /> : <Save className="h-4 w-4" strokeWidth={1.75} />}
-          {modo === "crear" ? "Crear empleado" : "Guardar cambios"}
+          {modo === "crear" ? t("empleadoForm.crearEmpleado") : t("empleadoForm.guardarCambios")}
         </Button>
       </div>
     </form>

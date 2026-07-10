@@ -3,6 +3,7 @@ import { Modal } from "./Modal";
 import { Button, Field, Input, Textarea } from "./ui";
 import { dataSource } from "../lib/dataSource";
 import { useToast } from "../context/ToastContext";
+import { useLanguage } from "../context/LanguageContext";
 import { CalendarPlus } from "lucide-react";
 
 interface Props {
@@ -14,6 +15,7 @@ interface Props {
 
 export function SolicitarVacacionesModal({ open, onClose, empleadoId, onCreated }: Props) {
   const { showToast } = useToast();
+  const { t } = useLanguage();
   const [fechaInicio, setFechaInicio] = useState("");
   const [fechaFin, setFechaFin] = useState("");
   const [motivo, setMotivo] = useState("");
@@ -36,7 +38,7 @@ export function SolicitarVacacionesModal({ open, onClose, empleadoId, onCreated 
         fechaFin,
         motivo: motivo || null,
       });
-      showToast("Solicitud de vacaciones enviada. Quedó pendiente de aprobación.", "success");
+      showToast(t("solicitarVacaciones.exito"), "success");
       limpiar();
       onCreated();
       onClose();
@@ -46,26 +48,26 @@ export function SolicitarVacacionesModal({ open, onClose, empleadoId, onCreated 
   }
 
   return (
-    <Modal open={open} onClose={onClose} title="Solicitar vacaciones">
+    <Modal open={open} onClose={onClose} title={t("solicitarVacaciones.titulo")}>
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="grid grid-cols-2 gap-3">
-          <Field label="Fecha de inicio">
+          <Field label={t("solicitarVacaciones.fechaInicio")}>
             <Input type="date" required value={fechaInicio} onChange={(e) => setFechaInicio(e.target.value)} />
           </Field>
-          <Field label="Fecha de fin">
+          <Field label={t("solicitarVacaciones.fechaFin")}>
             <Input type="date" required value={fechaFin} min={fechaInicio || undefined} onChange={(e) => setFechaFin(e.target.value)} />
           </Field>
         </div>
-        <Field label="Motivo (opcional)">
-          <Textarea rows={3} placeholder="Cuéntanos brevemente el motivo de tu solicitud…" value={motivo} onChange={(e) => setMotivo(e.target.value)} />
+        <Field label={t("solicitarVacaciones.motivo")}>
+          <Textarea rows={3} placeholder={t("solicitarVacaciones.motivoPlaceholder")} value={motivo} onChange={(e) => setMotivo(e.target.value)} />
         </Field>
         <div className="flex justify-end gap-3 pt-2">
           <Button type="button" variant="ghost" onClick={onClose}>
-            Cancelar
+            {t("solicitarVacaciones.cancelar")}
           </Button>
           <Button type="submit" disabled={enviando}>
             <CalendarPlus className="h-4 w-4" strokeWidth={1.75} />
-            Enviar solicitud
+            {t("solicitarVacaciones.enviar")}
           </Button>
         </div>
       </form>

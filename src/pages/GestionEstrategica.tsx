@@ -4,14 +4,16 @@ import { Card } from "../components/Card";
 import { ProgressBar } from "../components/ProgressBar";
 import { iniciales } from "../lib/format";
 import { iniciativasEstrategicas, kpisEstrategicos } from "../lib/mockGestion";
+import { useLanguage } from "../context/LanguageContext";
 
 export default function GestionEstrategica() {
+  const { t } = useLanguage();
   return (
     <div className="azahar-fade-in">
       <PageHeader
-        breadcrumb="Gestión del negocio"
-        title="Gestión Estratégica"
-        description="Visión de largo plazo, indicadores clave e iniciativas activas de Azahar Coffee Company."
+        breadcrumb={t("gestionEstrategica.breadcrumb")}
+        title={t("gestionEstrategica.titulo")}
+        description={t("gestionEstrategica.descripcion")}
       />
 
       <Card className="mb-6 bg-gradient-to-br from-brand-800 to-brand-900 text-cream-100">
@@ -20,14 +22,12 @@ export default function GestionEstrategica() {
             <Compass className="h-5 w-5" strokeWidth={1.75} />
           </div>
           <div>
-            <p className="text-xs font-semibold uppercase tracking-wide text-accent-300">Misión y visión</p>
+            <p className="text-xs font-semibold uppercase tracking-wide text-accent-300">{t("gestionEstrategica.misionVisionLabel")}</p>
             <p className="mt-2 text-sm text-cream-100/90">
-              <span className="font-semibold">Misión:</span> Ofrecer experiencias de café de origen colombiano de excelencia, conectando a
-              nuestros clientes con el trabajo de los caficultores que respaldan cada taza.
+              <span className="font-semibold">{t("gestionEstrategica.misionLabel")}</span> {t("gestionEstrategica.misionTexto")}
             </p>
             <p className="mt-2 text-sm text-cream-100/90">
-              <span className="font-semibold">Visión:</span> Ser la marca de café de especialidad más querida de Colombia para 2030, con
-              presencia en las principales ciudades y una cadena de abastecimiento 100% sostenible.
+              <span className="font-semibold">{t("gestionEstrategica.visionLabel")}</span> {t("gestionEstrategica.visionTexto")}
             </p>
           </div>
         </div>
@@ -43,7 +43,7 @@ export default function GestionEstrategica() {
         ))}
       </div>
 
-      <Card title="Iniciativas estratégicas (OKRs)" icon={<Target className="h-4 w-4" strokeWidth={1.75} />}>
+      <Card title={t("gestionEstrategica.iniciativasTitulo")} icon={<Target className="h-4 w-4" strokeWidth={1.75} />}>
         <div className="space-y-4">
           {iniciativasEstrategicas.map((iniciativa) => (
             <div key={iniciativa.id} className="rounded-xl border border-[var(--border-subtle)] bg-[var(--surface-muted)] p-4">
@@ -72,7 +72,7 @@ export default function GestionEstrategica() {
 
       <p className="mt-4 flex items-center gap-1.5 text-xs text-[var(--text-muted)]">
         <Sparkles className="h-3.5 w-3.5" strokeWidth={1.75} />
-        Datos de ejemplo con fines ilustrativos del módulo de gestión estratégica.
+        {t("gestionEstrategica.notaEjemplo")}
       </p>
     </div>
   );

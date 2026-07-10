@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react
 import { differenceInCalendarDays, parseISO } from "date-fns";
 import { CalendarPlus, UploadCloud, Wallet, Briefcase, ClipboardList, CalendarClock } from "lucide-react";
 import { useAuth } from "../auth/AuthContext";
+import { useLanguage } from "../context/LanguageContext";
 import { dataSource } from "../lib/dataSource";
 import type { NominaPago, Solicitud } from "../lib/types";
 import { calcularAntiguedad, formatCOP, formatDate } from "../lib/format";
@@ -21,6 +22,7 @@ const DIAS_TRABAJADOS_MES = [19, 20, 21, 18, 22, 12];
 
 export default function Inicio() {
   const { empleado } = useAuth();
+  const { t } = useLanguage();
   const [solicitudes, setSolicitudes] = useState<Solicitud[]>([]);
   const [pagos, setPagos] = useState<NominaPago[]>([]);
   const [cargando, setCargando] = useState(true);
@@ -65,7 +67,7 @@ export default function Inicio() {
 
   return (
     <div className="azahar-fade-in">
-      <PageHeader breadcrumb="Mi portal" title="Inicio" />
+      <PageHeader breadcrumb={t("inicio.breadcrumb")} title={t("inicio.titulo")} />
 
       {/* Hero de bienvenida */}
       <div className="mb-6 rounded-2xl bg-gradient-to-br from-brand-800 to-brand-900 p-7 text-cream-100 shadow-card">
@@ -74,13 +76,13 @@ export default function Inicio() {
             <p className="text-sm font-medium text-accent-300">
               {new Date().toLocaleDateString("es-CO", { weekday: "long", day: "numeric", month: "long", year: "numeric" })}
             </p>
-            <h2 className="mt-1 font-heading text-2xl font-bold sm:text-3xl">Hola, {primerNombre} 👋</h2>
+            <h2 className="mt-1 font-heading text-2xl font-bold sm:text-3xl">{t("inicio.saludo")}, {primerNombre} 👋</h2>
             <p className="mt-1 text-sm text-cream-200/80">{empleado.cargo} · {empleado.departamento}</p>
           </div>
           <div className="flex flex-wrap gap-3">
             <Button variant="secondary" onClick={() => setModalVacaciones(true)}>
               <CalendarPlus className="h-4 w-4" strokeWidth={1.75} />
-              Solicitar vacaciones
+              {t("inicio.solicitarVacaciones")}
             </Button>
             <Button
               variant="outline"
@@ -88,62 +90,62 @@ export default function Inicio() {
               onClick={() => setModalDocumento(true)}
             >
               <UploadCloud className="h-4 w-4" strokeWidth={1.75} />
-              Subir documento
+              {t("inicio.subirDocumento")}
             </Button>
           </div>
         </div>
 
         <div className="mt-7 grid grid-cols-2 gap-4 border-t border-cream-100/15 pt-6 sm:grid-cols-4">
-          <Metrica icono={<CalendarClock className="h-4 w-4" strokeWidth={1.75} />} label="Vacaciones disponibles" valor={`${empleado.diasVacacionesDisponibles}`} unidad="días" />
-          <Metrica icono={<Briefcase className="h-4 w-4" strokeWidth={1.75} />} label="Días trabajados" valor={`${antiguedad.totalDias}`} unidad="desde ingreso" />
+          <Metrica icono={<CalendarClock className="h-4 w-4" strokeWidth={1.75} />} label={t("inicio.metricaVacacionesDisponibles")} valor={`${empleado.diasVacacionesDisponibles}`} unidad={t("inicio.diasUnidad")} />
+          <Metrica icono={<Briefcase className="h-4 w-4" strokeWidth={1.75} />} label={t("inicio.metricaDiasTrabajados")} valor={`${antiguedad.totalDias}`} unidad={t("inicio.desdeIngreso")} />
           <Metrica
             icono={<Wallet className="h-4 w-4" strokeWidth={1.75} />}
-            label="Próxima nómina"
+            label={t("inicio.metricaProximaNomina")}
             valor={proximoPago ? formatDate(proximoPago.fechaPago, "d MMM") : "—"}
             unidad={proximoPago ? formatCOP(proximoPago.monto) : ""}
           />
-          <Metrica icono={<ClipboardList className="h-4 w-4" strokeWidth={1.75} />} label="Solicitudes pendientes" valor={`${solicitudesPendientes.length}`} unidad="por resolver" />
+          <Metrica icono={<ClipboardList className="h-4 w-4" strokeWidth={1.75} />} label={t("inicio.metricaSolicitudesPendientes")} valor={`${solicitudesPendientes.length}`} unidad={t("inicio.porResolver")} />
         </div>
       </div>
 
       {/* Grid de tarjetas */}
       <div className="grid grid-cols-1 gap-5 md:grid-cols-3">
-        <Card title="Vacaciones" className="md:row-span-2 flex flex-col items-center justify-center text-center">
-          <ProgressRing value={empleado.diasVacacionesDisponibles} max={VACACIONES_ANUALES} label="días disponibles" sublabel={`de ${VACACIONES_ANUALES} al año`} />
+        <Card title={t("inicio.cardVacacionesTitulo")} className="md:row-span-2 flex flex-col items-center justify-center text-center">
+          <ProgressRing value={empleado.diasVacacionesDisponibles} max={VACACIONES_ANUALES} label={t("inicio.diasDisponiblesLabel")} sublabel={`${t("inicio.deLabel")} ${VACACIONES_ANUALES} ${t("inicio.alAnio")}`} />
           <p className="mt-5 text-sm text-[var(--text-secondary)]">
-            Has disfrutado <span className="font-semibold text-[var(--text-primary)]">{Math.max(0, VACACIONES_ANUALES - empleado.diasVacacionesDisponibles)}</span> días este periodo.
+            {t("inicio.disfrutadoPrefix")} <span className="font-semibold text-[var(--text-primary)]">{Math.max(0, VACACIONES_ANUALES - empleado.diasVacacionesDisponibles)}</span> {t("inicio.disfrutadoSufijo")}
           </p>
           <Button variant="outline" className="mt-4" onClick={() => setModalVacaciones(true)}>
             <CalendarPlus className="h-4 w-4" strokeWidth={1.75} />
-            Solicitar
+            {t("inicio.solicitarBoton")}
           </Button>
         </Card>
 
         <Card className="bg-gradient-to-br from-accent-500 to-accent-300 text-brand-900 shadow-card">
-          <p className="text-xs font-semibold uppercase tracking-wide text-brand-900/70">Próxima nómina</p>
+          <p className="text-xs font-semibold uppercase tracking-wide text-brand-900/70">{t("inicio.metricaProximaNomina")}</p>
           {proximoPago ? (
             <>
               <p className="mt-1 font-mono text-2xl font-bold">{formatDate(proximoPago.fechaPago, "d 'de' MMMM")}</p>
               <p className="text-sm font-medium text-brand-900/80">{formatCOP(proximoPago.monto)} · {proximoPago.periodo}</p>
               <div className="mt-4">
                 <ProgressBar value={progresoPago * 100} max={100} trackClassName="bg-brand-900/15" fillClassName="bg-brand-900" />
-                <p className="mt-1.5 text-xs font-medium text-brand-900/70">{Math.round(progresoPago * 100)}% del periodo transcurrido</p>
+                <p className="mt-1.5 text-xs font-medium text-brand-900/70">{Math.round(progresoPago * 100)}% {t("inicio.delPeriodoTranscurrido")}</p>
               </div>
             </>
           ) : (
-            <p className="mt-2 text-sm">No hay pagos programados.</p>
+            <p className="mt-2 text-sm">{t("inicio.noPagosProgramados")}</p>
           )}
         </Card>
 
-        <Card title="Días trabajados">
+        <Card title={t("inicio.metricaDiasTrabajados")}>
           <p className="font-mono text-3xl font-bold text-[var(--text-primary)]">{antiguedad.totalDias}</p>
-          <p className="mb-4 text-xs text-[var(--text-muted)]">días desde el {formatDate(empleado.fechaIngreso)}</p>
+          <p className="mb-4 text-xs text-[var(--text-muted)]">{t("inicio.diasDesdeEl")} {formatDate(empleado.fechaIngreso)}</p>
           <MiniBarChart data={barChartData} />
         </Card>
 
-        <Card title="Solicitudes pendientes" actions={<span className="font-mono text-lg font-bold text-accent-500">{solicitudesPendientes.length}</span>}>
+        <Card title={t("inicio.metricaSolicitudesPendientes")} actions={<span className="font-mono text-lg font-bold text-accent-500">{solicitudesPendientes.length}</span>}>
           {solicitudesPendientes.length === 0 ? (
-            <p className="text-sm text-[var(--text-muted)]">No tienes solicitudes pendientes. ¡Todo al día!</p>
+            <p className="text-sm text-[var(--text-muted)]">{t("inicio.sinSolicitudesPendientes")}</p>
           ) : (
             <ul className="space-y-2.5">
               {solicitudesPendientes.slice(0, 4).map((s) => (
@@ -159,26 +161,26 @@ export default function Inicio() {
           )}
         </Card>
 
-        <Card title="Tipo de contrato">
+        <Card title={t("inicio.cardTipoContratoTitulo")}>
           <p className="font-heading text-lg font-bold text-[var(--text-primary)]">{empleado.tipoContrato}</p>
           <dl className="mt-3 space-y-2 text-sm">
             <div className="flex justify-between">
-              <dt className="text-[var(--text-muted)]">Fecha de ingreso</dt>
+              <dt className="text-[var(--text-muted)]">{t("inicio.fechaIngreso")}</dt>
               <dd className="font-mono text-[var(--text-primary)]">{formatDate(empleado.fechaIngreso)}</dd>
             </div>
             <div className="flex justify-between">
-              <dt className="text-[var(--text-muted)]">Antigüedad</dt>
+              <dt className="text-[var(--text-muted)]">{t("inicio.antiguedad")}</dt>
               <dd className="text-[var(--text-primary)]">{antiguedad.texto}</dd>
             </div>
             <div className="flex justify-between">
-              <dt className="text-[var(--text-muted)]">Departamento</dt>
+              <dt className="text-[var(--text-muted)]">{t("inicio.departamento")}</dt>
               <dd className="text-[var(--text-primary)]">{empleado.departamento}</dd>
             </div>
           </dl>
         </Card>
       </div>
 
-      {cargando && <p className="mt-4 text-center text-xs text-[var(--text-muted)]">Actualizando datos…</p>}
+      {cargando && <p className="mt-4 text-center text-xs text-[var(--text-muted)]">{t("inicio.actualizandoDatos")}</p>}
 
       <SolicitarVacacionesModal open={modalVacaciones} onClose={() => setModalVacaciones(false)} empleadoId={empleado.id} onCreated={cargar} />
       <SubirDocumentoModal open={modalDocumento} onClose={() => setModalDocumento(false)} empleadoId={empleado.id} onCreated={cargar} />

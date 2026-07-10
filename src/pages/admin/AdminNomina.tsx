@@ -4,6 +4,7 @@ import { dataSource } from "../../lib/dataSource";
 import type { Empleado, NominaPago } from "../../lib/types";
 import { formatCOP, formatDate, iniciales } from "../../lib/format";
 import { useToast } from "../../context/ToastContext";
+import { useLanguage } from "../../context/LanguageContext";
 import { PageHeader } from "../../components/PageHeader";
 import { Card } from "../../components/Card";
 import { Button } from "../../components/ui";
@@ -15,6 +16,7 @@ const ESTADO_ESTILO: Record<NominaPago["estado"], string> = {
 
 export default function AdminNomina() {
   const { showToast } = useToast();
+  const { t } = useLanguage();
   const [empleados, setEmpleados] = useState<Empleado[]>([]);
   const [pagos, setPagos] = useState<NominaPago[]>([]);
   const [cargando, setCargando] = useState(true);
@@ -27,7 +29,7 @@ export default function AdminNomina() {
       setEmpleados(emps);
       setPagos(nom);
     } catch {
-      showToast("No se pudo cargar la nómina. Intenta de nuevo.", "error");
+      showToast(t("adminNomina.errorCargar"), "error");
     } finally {
       setCargando(false);
     }
@@ -63,10 +65,10 @@ export default function AdminNomina() {
     setProcesando(pago.id);
     try {
       await dataSource.actualizarEstadoNominaPago(pago.id, "pagado");
-      showToast("Pago de nómina marcado como pagado.", "success");
+      showToast(t("adminNomina.toastMarcadoPagado"), "success");
       await cargar();
     } catch {
-      showToast("No se pudo actualizar el pago.", "error");
+      showToast(t("adminNomina.errorActualizarPago"), "error");
     } finally {
       setProcesando(null);
     }
@@ -75,9 +77,9 @@ export default function AdminNomina() {
   return (
     <div className="azahar-fade-in">
       <PageHeader
-        breadcrumb="Nómina / Administración"
-        title="Nómina"
-        description="Nómina administrativa completa de Azahar Coffee Company para el periodo actual."
+        breadcrumb={t("adminNomina.breadcrumb")}
+        title={t("adminNomina.titulo")}
+        description={t("adminNomina.descripcion")}
       />
 
       <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
@@ -86,7 +88,7 @@ export default function AdminNomina() {
             <Wallet className="h-5 w-5" strokeWidth={1.75} />
           </div>
           <div>
-            <p className="text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]">Total nómina del periodo</p>
+            <p className="text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]">{t("adminNomina.totalPeriodo")}</p>
             <p className="font-mono text-xl font-bold text-[var(--text-primary)]">{formatCOP(totalPeriodo)}</p>
           </div>
         </Card>
@@ -95,7 +97,7 @@ export default function AdminNomina() {
             <Users className="h-5 w-5" strokeWidth={1.75} />
           </div>
           <div>
-            <p className="text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]">Empleados en nómina</p>
+            <p className="text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]">{t("adminNomina.empleadosEnNomina")}</p>
             <p className="font-mono text-xl font-bold text-[var(--text-primary)]">{pagosActuales.length}</p>
           </div>
         </Card>
@@ -104,25 +106,25 @@ export default function AdminNomina() {
             <CheckCircle2 className="h-5 w-5" strokeWidth={1.75} />
           </div>
           <div>
-            <p className="text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]">Pagos pendientes</p>
+            <p className="text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]">{t("adminNomina.pagosPendientes")}</p>
             <p className="font-mono text-xl font-bold text-[var(--text-primary)]">{numPendientes}</p>
           </div>
         </Card>
       </div>
 
-      <Card title="Nómina del periodo actual">
+      <Card title={t("adminNomina.periodoActualTitulo")}>
         {cargando ? (
-          <p className="py-6 text-center text-sm text-[var(--text-muted)]">Cargando…</p>
+          <p className="py-6 text-center text-sm text-[var(--text-muted)]">{t("adminNomina.cargando")}</p>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full min-w-[720px] text-left text-sm">
               <thead>
                 <tr className="border-b border-[var(--border-subtle)] text-xs uppercase tracking-wide text-[var(--text-muted)]">
-                  <th className="py-2 pr-4 font-semibold">Empleado</th>
-                  <th className="py-2 pr-4 font-semibold">Periodo</th>
-                  <th className="py-2 pr-4 font-semibold">Monto</th>
-                  <th className="py-2 pr-4 font-semibold">Estado</th>
-                  <th className="py-2 pr-4 font-semibold text-right">Acción</th>
+                  <th className="py-2 pr-4 font-semibold">{t("adminNomina.colEmpleado")}</th>
+                  <th className="py-2 pr-4 font-semibold">{t("adminNomina.colPeriodo")}</th>
+                  <th className="py-2 pr-4 font-semibold">{t("adminNomina.colMonto")}</th>
+                  <th className="py-2 pr-4 font-semibold">{t("adminNomina.colEstado")}</th>
+                  <th className="py-2 pr-4 font-semibold text-right">{t("adminNomina.colAccion")}</th>
                 </tr>
               </thead>
               <tbody>
@@ -136,7 +138,7 @@ export default function AdminNomina() {
                             {emp ? iniciales(emp.nombre) : "?"}
                           </div>
                           <div>
-                            <p className="font-medium text-[var(--text-primary)]">{emp?.nombre ?? "Empleado eliminado"}</p>
+                            <p className="font-medium text-[var(--text-primary)]">{emp?.nombre ?? t("adminNomina.empleadoEliminado")}</p>
                             <p className="text-xs text-[var(--text-muted)]">{emp?.cargo}</p>
                           </div>
                         </div>
@@ -145,7 +147,7 @@ export default function AdminNomina() {
                       <td className="py-3 pr-4 font-mono font-semibold text-[var(--text-primary)]">{formatCOP(pago.monto)}</td>
                       <td className="py-3 pr-4">
                         <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${ESTADO_ESTILO[pago.estado]}`}>
-                          {pago.estado === "pagado" ? "Pagado" : "Pendiente"}
+                          {pago.estado === "pagado" ? t("adminNomina.estadoPagado") : t("adminNomina.estadoPendiente")}
                         </span>
                       </td>
                       <td className="py-3 pr-4 text-right">
@@ -157,10 +159,10 @@ export default function AdminNomina() {
                             onClick={() => void marcarComoPagado(pago)}
                           >
                             <CheckCircle2 className="h-3.5 w-3.5" strokeWidth={1.75} />
-                            Marcar como pagado
+                            {t("adminNomina.marcarPagado")}
                           </Button>
                         ) : (
-                          <span className="text-xs text-[var(--text-muted)]">Pagado el {formatDate(pago.fechaPago)}</span>
+                          <span className="text-xs text-[var(--text-muted)]">{t("adminNomina.pagadoElPrefix")} {formatDate(pago.fechaPago)}</span>
                         )}
                       </td>
                     </tr>

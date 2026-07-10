@@ -8,10 +8,12 @@ import { useToast } from "../../context/ToastContext";
 import { PageHeader } from "../../components/PageHeader";
 import { Card } from "../../components/Card";
 import { Button, Field, Input, Select } from "../../components/ui";
+import { useLanguage } from "../../context/LanguageContext";
 
 const TIPOS = ["Contrato", "Certificado", "Seguridad social", "Identificación", "Otro"];
 
 export default function AdminDocumentos() {
+  const { t } = useLanguage();
   const { empleado: adminActual } = useAuth();
   const { showToast } = useToast();
   const [documentos, setDocumentos] = useState<Documento[]>([]);
@@ -44,7 +46,7 @@ export default function AdminDocumentos() {
     setEnviando(true);
     try {
       await dataSource.addDocumento({ empleadoId, nombre, tipo, subidoPor: adminActual?.id ?? null });
-      showToast("Documento agregado al expediente del empleado.", "success");
+      showToast(t("adminDocumentos.toastExito"), "success");
       setNombre("");
       await cargar();
     } finally {
@@ -54,12 +56,12 @@ export default function AdminDocumentos() {
 
   return (
     <div className="azahar-fade-in">
-      <PageHeader breadcrumb="Administración" title="Documentos" description="Consulta y agrega documentos al expediente de cualquier empleado." />
+      <PageHeader breadcrumb={t("adminDocumentos.breadcrumb")} title={t("adminDocumentos.titulo")} description={t("adminDocumentos.descripcion")} />
 
       <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
-        <Card title="Agregar documento" className="lg:col-span-1">
+        <Card title={t("adminDocumentos.agregarTitulo")} className="lg:col-span-1">
           <form onSubmit={handleSubmit} className="space-y-4">
-            <Field label="Empleado">
+            <Field label={t("adminDocumentos.campoEmpleado")}>
               <Select value={empleadoId} onChange={(e) => setEmpleadoId(e.target.value)} required>
                 {empleados.map((emp) => (
                   <option key={emp.id} value={emp.id}>
@@ -68,37 +70,37 @@ export default function AdminDocumentos() {
                 ))}
               </Select>
             </Field>
-            <Field label="Nombre del documento">
-              <Input required placeholder="Ej. Otrosí contrato 2026.pdf" value={nombre} onChange={(e) => setNombre(e.target.value)} />
+            <Field label={t("adminDocumentos.campoNombre")}>
+              <Input required placeholder={t("adminDocumentos.placeholderNombre")} value={nombre} onChange={(e) => setNombre(e.target.value)} />
             </Field>
-            <Field label="Tipo">
+            <Field label={t("adminDocumentos.campoTipo")}>
               <Select value={tipo} onChange={(e) => setTipo(e.target.value)}>
-                {TIPOS.map((t) => (
-                  <option key={t} value={t}>
-                    {t}
+                {TIPOS.map((tipoOpcion) => (
+                  <option key={tipoOpcion} value={tipoOpcion}>
+                    {tipoOpcion}
                   </option>
                 ))}
               </Select>
             </Field>
             <Button type="submit" disabled={enviando} className="w-full">
               <FolderPlus className="h-4 w-4" strokeWidth={1.75} />
-              Agregar documento
+              {t("adminDocumentos.botonAgregar")}
             </Button>
           </form>
         </Card>
 
-        <Card title={`Todos los documentos (${documentos.length})`} className="lg:col-span-2">
+        <Card title={`${t("adminDocumentos.tablaTitulo")} (${documentos.length})`} className="lg:col-span-2">
           {cargando ? (
-            <p className="py-6 text-center text-sm text-[var(--text-muted)]">Cargando…</p>
+            <p className="py-6 text-center text-sm text-[var(--text-muted)]">{t("adminDocumentos.cargando")}</p>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full min-w-[560px] text-left text-sm">
                 <thead>
                   <tr className="border-b border-[var(--border-subtle)] text-xs uppercase tracking-wide text-[var(--text-muted)]">
-                    <th className="py-2 pr-4 font-semibold">Empleado</th>
-                    <th className="py-2 pr-4 font-semibold">Documento</th>
-                    <th className="py-2 pr-4 font-semibold">Tipo</th>
-                    <th className="py-2 pr-4 font-semibold">Fecha</th>
+                    <th className="py-2 pr-4 font-semibold">{t("adminDocumentos.colEmpleado")}</th>
+                    <th className="py-2 pr-4 font-semibold">{t("adminDocumentos.colDocumento")}</th>
+                    <th className="py-2 pr-4 font-semibold">{t("adminDocumentos.colTipo")}</th>
+                    <th className="py-2 pr-4 font-semibold">{t("adminDocumentos.colFecha")}</th>
                   </tr>
                 </thead>
                 <tbody>

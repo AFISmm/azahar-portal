@@ -3,14 +3,16 @@ import { ArrowLeft, Layers } from "lucide-react";
 import { PageHeader } from "../components/PageHeader";
 import { Card } from "../components/Card";
 import { etapaIconos, etapasProduccion } from "../lib/mockMercadoCafe";
+import { useLanguage } from "../context/LanguageContext";
 
 export default function CadenaProduccion() {
+  const { t } = useLanguage();
   return (
     <div className="azahar-fade-in">
       <PageHeader
-        breadcrumb="Inicio"
-        title="Cadena de producción del café"
-        description="Un recorrido por cada etapa del proceso, desde la siembra en la finca hasta el empaque final."
+        breadcrumb={t("cadenaProduccion.breadcrumb")}
+        title={t("cadenaProduccion.titulo")}
+        description={t("cadenaProduccion.descripcion")}
       />
 
       <Link
@@ -18,7 +20,7 @@ export default function CadenaProduccion() {
         className="mb-5 inline-flex items-center gap-1.5 text-sm font-semibold text-brand-800 hover:underline"
       >
         <ArrowLeft className="h-4 w-4" strokeWidth={1.75} />
-        Volver a Inicio
+        {t("cadenaProduccion.volverInicio")}
       </Link>
 
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
@@ -30,7 +32,9 @@ export default function CadenaProduccion() {
                 <Icon className="h-7 w-7" strokeWidth={1.75} />
               </div>
               <div>
-                <p className="text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]">Etapa {i + 1}</p>
+                <p className="text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]">
+                  {t("cadenaProduccion.etapaPrefix")} {i + 1}
+                </p>
                 <h3 className="mt-0.5 font-heading text-base font-bold text-[var(--text-primary)]">{etapa.titulo}</h3>
                 <p className="mt-1.5 text-sm text-[var(--text-secondary)]">{etapa.descripcion}</p>
               </div>

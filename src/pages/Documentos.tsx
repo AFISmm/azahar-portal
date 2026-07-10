@@ -8,9 +8,11 @@ import { PageHeader } from "../components/PageHeader";
 import { Card } from "../components/Card";
 import { Button } from "../components/ui";
 import { SubirDocumentoModal } from "../components/SubirDocumentoModal";
+import { useLanguage } from "../context/LanguageContext";
 
 export default function Documentos() {
   const { empleado } = useAuth();
+  const { t } = useLanguage();
   const [documentos, setDocumentos] = useState<Documento[]>([]);
   const [cargando, setCargando] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
@@ -31,18 +33,18 @@ export default function Documentos() {
 
   return (
     <div className="azahar-fade-in">
-      <PageHeader breadcrumb="Mi portal" title="Documentos" description="Consulta los documentos asociados a tu vínculo laboral.">
+      <PageHeader breadcrumb={t("documentos.breadcrumb")} title={t("documentos.titulo")} description={t("documentos.descripcion")}>
         <Button onClick={() => setModalOpen(true)}>
           <UploadCloud className="h-4 w-4" strokeWidth={1.75} />
-          Subir documento
+          {t("documentos.subir")}
         </Button>
       </PageHeader>
 
       <Card>
         {cargando ? (
-          <p className="py-6 text-center text-sm text-[var(--text-muted)]">Cargando…</p>
+          <p className="py-6 text-center text-sm text-[var(--text-muted)]">{t("documentos.cargando")}</p>
         ) : documentos.length === 0 ? (
-          <p className="py-6 text-center text-sm text-[var(--text-muted)]">No tienes documentos registrados todavía.</p>
+          <p className="py-6 text-center text-sm text-[var(--text-muted)]">{t("documentos.sinDocumentos")}</p>
         ) : (
           <ul className="divide-y divide-[var(--border-subtle)]">
             {documentos.map((doc) => (
@@ -54,13 +56,13 @@ export default function Documentos() {
                   <div>
                     <p className="text-sm font-semibold text-[var(--text-primary)]">{doc.nombre}</p>
                     <p className="text-xs text-[var(--text-muted)]">
-                      {doc.tipo} · Subido el {formatDate(doc.subidoEn)}
+                      {doc.tipo} · {t("documentos.subidoEl")} {formatDate(doc.subidoEn)}
                     </p>
                   </div>
                 </div>
-                <Button variant="outline" disabled title="Disponible próximamente">
+                <Button variant="outline" disabled title={t("documentos.disponibleProximamente")}>
                   <Download className="h-4 w-4" strokeWidth={1.75} />
-                  Descargar
+                  {t("documentos.descargar")}
                 </Button>
               </li>
             ))}

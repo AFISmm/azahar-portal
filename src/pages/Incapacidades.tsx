@@ -10,10 +10,12 @@ import { Card } from "../components/Card";
 import { Modal } from "../components/Modal";
 import { Button, Field, Input, Textarea } from "../components/ui";
 import { StatusBadge } from "../components/StatusBadge";
+import { useLanguage } from "../context/LanguageContext";
 
 export default function Incapacidades() {
   const { empleado } = useAuth();
   const { showToast } = useToast();
+  const { t } = useLanguage();
   const [solicitudes, setSolicitudes] = useState<Solicitud[]>([]);
   const [cargando, setCargando] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
@@ -41,7 +43,7 @@ export default function Incapacidades() {
     if (!empleado) return;
     setEnviando(true);
     try {
-      const motivoCompleto = soporte ? `${motivo} (soporte adjunto: ${soporte})` : motivo;
+      const motivoCompleto = soporte ? `${motivo} (${t("incapacidades.soporteAdjunto")}: ${soporte})` : motivo;
       await dataSource.createSolicitud({
         empleadoId: empleado.id,
         tipo: "incapacidad",
@@ -49,7 +51,7 @@ export default function Incapacidades() {
         fechaFin,
         motivo: motivoCompleto,
       });
-      showToast("Incapacidad reportada. Talento Humano la revisará pronto.", "success");
+      showToast(t("incapacidades.toastExito"), "success");
       setFechaInicio("");
       setFechaFin("");
       setMotivo("");
@@ -65,27 +67,27 @@ export default function Incapacidades() {
 
   return (
     <div className="azahar-fade-in">
-      <PageHeader breadcrumb="Mi portal" title="Incapacidades" description="Reporta tus incapacidades médicas y haz seguimiento a su estado.">
+      <PageHeader breadcrumb={t("incapacidades.breadcrumb")} title={t("incapacidades.titulo")} description={t("incapacidades.descripcion")}>
         <Button onClick={() => setModalOpen(true)}>
           <HeartPulse className="h-4 w-4" strokeWidth={1.75} />
-          Reportar incapacidad
+          {t("incapacidades.reportar")}
         </Button>
       </PageHeader>
 
-      <Card title="Historial de incapacidades">
+      <Card title={t("incapacidades.historial")}>
         {cargando ? (
-          <p className="py-6 text-center text-sm text-[var(--text-muted)]">Cargando…</p>
+          <p className="py-6 text-center text-sm text-[var(--text-muted)]">{t("incapacidades.cargando")}</p>
         ) : solicitudes.length === 0 ? (
-          <p className="py-6 text-center text-sm text-[var(--text-muted)]">No has reportado incapacidades.</p>
+          <p className="py-6 text-center text-sm text-[var(--text-muted)]">{t("incapacidades.sinRegistros")}</p>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full min-w-[560px] text-left text-sm">
               <thead>
                 <tr className="border-b border-[var(--border-subtle)] text-xs uppercase tracking-wide text-[var(--text-muted)]">
-                  <th className="py-2 pr-4 font-semibold">Periodo</th>
-                  <th className="py-2 pr-4 font-semibold">Detalle</th>
-                  <th className="py-2 pr-4 font-semibold">Reportada</th>
-                  <th className="py-2 pr-4 font-semibold">Estado</th>
+                  <th className="py-2 pr-4 font-semibold">{t("incapacidades.colPeriodo")}</th>
+                  <th className="py-2 pr-4 font-semibold">{t("incapacidades.colDetalle")}</th>
+                  <th className="py-2 pr-4 font-semibold">{t("incapacidades.colReportada")}</th>
+                  <th className="py-2 pr-4 font-semibold">{t("incapacidades.colEstado")}</th>
                 </tr>
               </thead>
               <tbody>
@@ -107,20 +109,20 @@ export default function Incapacidades() {
         )}
       </Card>
 
-      <Modal open={modalOpen} onClose={() => setModalOpen(false)} title="Reportar incapacidad">
+      <Modal open={modalOpen} onClose={() => setModalOpen(false)} title={t("incapacidades.reportar")}>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-2 gap-3">
-            <Field label="Fecha de inicio">
+            <Field label={t("incapacidades.campoFechaInicio")}>
               <Input type="date" required value={fechaInicio} onChange={(e) => setFechaInicio(e.target.value)} />
             </Field>
-            <Field label="Fecha de fin">
+            <Field label={t("incapacidades.campoFechaFin")}>
               <Input type="date" required value={fechaFin} min={fechaInicio || undefined} onChange={(e) => setFechaFin(e.target.value)} />
             </Field>
           </div>
-          <Field label="Motivo / diagnóstico general">
-            <Textarea rows={3} required placeholder="Ej. Gripe viral, reposo médico." value={motivo} onChange={(e) => setMotivo(e.target.value)} />
+          <Field label={t("incapacidades.campoMotivo")}>
+            <Textarea rows={3} required placeholder={t("incapacidades.placeholderMotivo")} value={motivo} onChange={(e) => setMotivo(e.target.value)} />
           </Field>
-          <Field label="Adjuntar soporte médico">
+          <Field label={t("incapacidades.campoSoporte")}>
             <Input type="file" onChange={(e) => setSoporte(e.target.files?.[0]?.name ?? "")} />
             {soporte && (
               <p className="mt-1.5 flex items-center gap-1.5 text-xs text-[var(--text-secondary)]">
@@ -129,14 +131,14 @@ export default function Incapacidades() {
               </p>
             )}
           </Field>
-          <p className="text-xs text-[var(--text-muted)]">Modo demo: el archivo no se sube a ningún servidor, solo se registra su nombre.</p>
+          <p className="text-xs text-[var(--text-muted)]">{t("incapacidades.notaDemo")}</p>
           <div className="flex justify-end gap-3 pt-2">
             <Button type="button" variant="ghost" onClick={() => setModalOpen(false)}>
-              Cancelar
+              {t("incapacidades.cancelar")}
             </Button>
             <Button type="submit" disabled={enviando}>
               <HeartPulse className="h-4 w-4" strokeWidth={1.75} />
-              Enviar reporte
+              {t("incapacidades.enviarReporte")}
             </Button>
           </div>
         </form>

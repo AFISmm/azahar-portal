@@ -5,6 +5,7 @@ import { dataSource } from "../../lib/dataSource";
 import type { Documento, Empleado, NominaPago, Solicitud } from "../../lib/types";
 import { calcularAntiguedad, formatCOP, formatDate, formatDateTime, iniciales } from "../../lib/format";
 import { useToast } from "../../context/ToastContext";
+import { useLanguage } from "../../context/LanguageContext";
 import { PageHeader } from "../../components/PageHeader";
 import { Card } from "../../components/Card";
 import { Modal } from "../../components/Modal";
@@ -16,10 +17,18 @@ import { EmpleadoForm, type EmpleadoFormValues } from "../../components/admin/Em
 const TABS = ["Contrato", "Vacaciones", "Solicitudes", "Documentos"] as const;
 type Tab = (typeof TABS)[number];
 
+const TAB_LABEL_KEYS: Record<Tab, "empleadoDetalle.tabContrato" | "empleadoDetalle.tabVacaciones" | "empleadoDetalle.tabSolicitudes" | "empleadoDetalle.tabDocumentos"> = {
+  Contrato: "empleadoDetalle.tabContrato",
+  Vacaciones: "empleadoDetalle.tabVacaciones",
+  Solicitudes: "empleadoDetalle.tabSolicitudes",
+  Documentos: "empleadoDetalle.tabDocumentos",
+};
+
 export default function EmpleadoDetalle() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { showToast } = useToast();
+  const { t } = useLanguage();
 
   const [empleado, setEmpleado] = useState<Empleado | null>(null);
   const [solicitudes, setSolicitudes] = useState<Solicitud[]>([]);
@@ -57,18 +66,18 @@ export default function EmpleadoDetalle() {
     setEnviando(true);
     try {
       await dataSource.updateEmpleado(empleado.id, valores);
-      showToast("Datos del empleado actualizados.", "success");
+      showToast(t("empleadoDetalle.toastActualizadoOk"), "success");
       setModalEditar(false);
       await cargar();
     } catch {
-      showToast("No se pudo actualizar el empleado.", "error");
+      showToast(t("empleadoDetalle.toastActualizadoError"), "error");
     } finally {
       setEnviando(false);
     }
   }
 
   if (cargando && !empleado) {
-    return <p className="py-10 text-center text-sm text-[var(--text-muted)]">Cargando empleado…</p>;
+    return <p className="py-10 text-center text-sm text-[var(--text-muted)]">{t("empleadoDetalle.cargando")}</p>;
   }
 
   if (!empleado) {
@@ -76,9 +85,9 @@ export default function EmpleadoDetalle() {
       <div className="azahar-fade-in">
         <Button variant="ghost" onClick={() => navigate("/admin/empleados")}>
           <ArrowLeft className="h-4 w-4" strokeWidth={1.75} />
-          Volver a empleados
+          {t("empleadoDetalle.volver")}
         </Button>
-        <p className="mt-6 text-sm text-[var(--text-muted)]">No se encontró este empleado.</p>
+        <p className="mt-6 text-sm text-[var(--text-muted)]">{t("empleadoDetalle.noEncontrado")}</p>
       </div>
     );
   }
@@ -90,13 +99,13 @@ export default function EmpleadoDetalle() {
         className="mb-4 inline-flex items-center gap-1.5 text-sm font-medium text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
       >
         <ArrowLeft className="h-4 w-4" strokeWidth={1.75} />
-        Volver a empleados
+        {t("empleadoDetalle.volver")}
       </button>
 
-      <PageHeader breadcrumb="Administración / Empleados" title={empleado.nombre} description={`${empleado.cargo} · ${empleado.departamento}`}>
+      <PageHeader breadcrumb={t("empleadoDetalle.breadcrumb")} title={empleado.nombre} description={`${empleado.cargo} · ${empleado.departamento}`}>
         <Button variant="outline" onClick={() => setModalEditar(true)}>
           <Pencil className="h-4 w-4" strokeWidth={1.75} />
-          Editar
+          {t("empleadoDetalle.editar")}
         </Button>
       </PageHeader>
 
@@ -107,36 +116,36 @@ export default function EmpleadoDetalle() {
           </div>
           <div>
             <p className="font-heading text-base font-semibold text-[var(--text-primary)]">{empleado.nombre}</p>
-            <p className="text-xs text-[var(--text-muted)]">{empleado.rol === "admin" ? "Administrador" : "Empleado"}</p>
+            <p className="text-xs text-[var(--text-muted)]">{empleado.rol === "admin" ? t("empleadoDetalle.rolAdmin") : t("empleadoDetalle.rolEmpleado")}</p>
           </div>
           <div className="w-full space-y-1.5 border-t border-[var(--border-subtle)] pt-3 text-left text-xs text-[var(--text-secondary)]">
             <p className="flex items-center gap-1.5">
               <Mail className="h-3.5 w-3.5 shrink-0" strokeWidth={1.75} /> {empleado.correo}
             </p>
             <p className="flex items-center gap-1.5">
-              <Phone className="h-3.5 w-3.5 shrink-0" strokeWidth={1.75} /> {empleado.telefono ?? "No registrado"}
+              <Phone className="h-3.5 w-3.5 shrink-0" strokeWidth={1.75} /> {empleado.telefono ?? t("empleadoDetalle.noRegistrado")}
             </p>
           </div>
         </Card>
 
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-          <MiniStat label="Estado" valor={empleado.estado === "activo" ? "Activo" : "Inactivo"} />
-          <MiniStat label="Vacaciones" valor={`${empleado.diasVacacionesDisponibles} días`} />
-          <MiniStat label="Antigüedad" valor={antiguedad?.texto ?? "—"} />
-          <MiniStat label="Salario" valor={formatCOP(empleado.salario)} mono />
+          <MiniStat label={t("empleadoDetalle.campoEstado")} valor={empleado.estado === "activo" ? t("empleadoDetalle.estadoActivo") : t("empleadoDetalle.estadoInactivo")} />
+          <MiniStat label={t("empleadoDetalle.campoVacaciones")} valor={`${empleado.diasVacacionesDisponibles} ${t("empleadoDetalle.dias")}`} />
+          <MiniStat label={t("empleadoDetalle.campoAntiguedad")} valor={antiguedad?.texto ?? "—"} />
+          <MiniStat label={t("empleadoDetalle.campoSalario")} valor={formatCOP(empleado.salario)} mono />
         </div>
       </div>
 
       <div className="mb-5 flex gap-1 border-b border-[var(--border-subtle)]">
-        {TABS.map((t) => (
+        {TABS.map((tabItem) => (
           <button
-            key={t}
-            onClick={() => setTab(t)}
+            key={tabItem}
+            onClick={() => setTab(tabItem)}
             className={`border-b-2 px-4 py-2.5 text-sm font-semibold transition ${
-              tab === t ? "border-brand-800 text-brand-800" : "border-transparent text-[var(--text-muted)] hover:text-[var(--text-primary)]"
+              tab === tabItem ? "border-brand-800 text-brand-800" : "border-transparent text-[var(--text-muted)] hover:text-[var(--text-primary)]"
             }`}
           >
-            {t}
+            {t(TAB_LABEL_KEYS[tabItem])}
           </button>
         ))}
       </div>
@@ -144,36 +153,36 @@ export default function EmpleadoDetalle() {
       {tab === "Contrato" && (
         <Card>
           <dl className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <Dato label="Cargo" valor={empleado.cargo} />
-            <Dato label="Departamento" valor={empleado.departamento} />
-            <Dato label="Tipo de contrato" valor={empleado.tipoContrato} />
-            <Dato label="Fecha de ingreso" valor={formatDate(empleado.fechaIngreso)} mono />
-            <Dato label="Antigüedad" valor={antiguedad?.texto ?? "—"} />
-            <Dato label="Salario" valor={formatCOP(empleado.salario)} mono />
+            <Dato label={t("empleadoDetalle.campoCargo")} valor={empleado.cargo} />
+            <Dato label={t("empleadoDetalle.campoDepartamento")} valor={empleado.departamento} />
+            <Dato label={t("empleadoDetalle.campoTipoContrato")} valor={empleado.tipoContrato} />
+            <Dato label={t("empleadoDetalle.campoFechaIngreso")} valor={formatDate(empleado.fechaIngreso)} mono />
+            <Dato label={t("empleadoDetalle.campoAntiguedad")} valor={antiguedad?.texto ?? "—"} />
+            <Dato label={t("empleadoDetalle.campoSalario")} valor={formatCOP(empleado.salario)} mono />
           </dl>
         </Card>
       )}
 
       {tab === "Vacaciones" && (
         <Card className="flex flex-col items-center gap-4 sm:flex-row sm:items-start">
-          <ProgressRing value={empleado.diasVacacionesDisponibles} max={15} label="disponibles" sublabel="de 15 días/año" />
+          <ProgressRing value={empleado.diasVacacionesDisponibles} max={15} label={t("empleadoDetalle.progresoDisponibles")} sublabel={t("empleadoDetalle.progresoSublabel")} />
           <div className="flex-1">
-            <h3 className="mb-3 font-heading text-sm font-semibold uppercase tracking-wide text-[var(--text-secondary)]">Historial de vacaciones</h3>
+            <h3 className="mb-3 font-heading text-sm font-semibold uppercase tracking-wide text-[var(--text-secondary)]">{t("empleadoDetalle.historialVacaciones")}</h3>
             <SolicitudesLista items={solicitudes.filter((s) => s.tipo === "vacaciones")} />
           </div>
         </Card>
       )}
 
       {tab === "Solicitudes" && (
-        <Card title="Todas las solicitudes">
+        <Card title={t("empleadoDetalle.todasSolicitudes")}>
           <SolicitudesLista items={solicitudes} mostrarTipo />
         </Card>
       )}
 
       {tab === "Documentos" && (
-        <Card title="Documentos del expediente">
+        <Card title={t("empleadoDetalle.documentosExpediente")}>
           {documentos.length === 0 ? (
-            <p className="py-4 text-sm text-[var(--text-muted)]">Sin documentos registrados.</p>
+            <p className="py-4 text-sm text-[var(--text-muted)]">{t("empleadoDetalle.sinDocumentos")}</p>
           ) : (
             <ul className="divide-y divide-[var(--border-subtle)]">
               {documentos.map((doc) => (
@@ -189,13 +198,13 @@ export default function EmpleadoDetalle() {
           )}
           {pagos.length > 0 && (
             <p className="mt-4 text-xs text-[var(--text-muted)]">
-              Último pago de nómina: {formatDate(pagos[0]?.fechaPago)} · {formatCOP(pagos[0]?.monto)}
+              {t("empleadoDetalle.ultimoPago")} {formatDate(pagos[0]?.fechaPago)} · {formatCOP(pagos[0]?.monto)}
             </p>
           )}
         </Card>
       )}
 
-      <Modal open={modalEditar} onClose={() => setModalEditar(false)} title="Editar empleado" widthClassName="max-w-2xl">
+      <Modal open={modalEditar} onClose={() => setModalEditar(false)} title={t("empleadoDetalle.modalEditarTitulo")} widthClassName="max-w-2xl">
         <EmpleadoForm modo="editar" valoresIniciales={empleado} enviando={enviando} onSubmit={(v) => void handleEditar(v)} onCancel={() => setModalEditar(false)} />
       </Modal>
     </div>
@@ -221,7 +230,8 @@ function Dato({ label, valor, mono }: { label: string; valor: string; mono?: boo
 }
 
 function SolicitudesLista({ items, mostrarTipo }: { items: Solicitud[]; mostrarTipo?: boolean }) {
-  if (items.length === 0) return <p className="py-4 text-sm text-[var(--text-muted)]">Sin solicitudes registradas.</p>;
+  const { t } = useLanguage();
+  if (items.length === 0) return <p className="py-4 text-sm text-[var(--text-muted)]">{t("empleadoDetalle.sinSolicitudes")}</p>;
   return (
     <ul className="space-y-2.5">
       {items.map((s) => (

@@ -1,47 +1,87 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
-import { Bot, Loader2, MessageCircle, Send, Settings2, Volume2, X } from "lucide-react";
+import { Bot, Loader2, Mic, MicOff, MessageCircle, Send, Settings2, Volume2, VolumeX, X } from "lucide-react";
 
 interface Mensaje {
   rol: "user" | "assistant";
   contenido: string;
 }
 
+type GeneroVoz = "masculina" | "femenina";
+
+interface SpeechRecognitionInstance extends EventTarget {
+  lang: string;
+  continuous: boolean;
+  interimResults: boolean;
+  onresult: ((event: SpeechRecognitionEvent) => void) | null;
+  onerror: ((event: SpeechRecognitionErrorEvent) => void) | null;
+  onend: (() => void) | null;
+  start: () => void;
+  stop: () => void;
+}
+
+declare global {
+  interface Window {
+    SpeechRecognition?: new () => SpeechRecognitionInstance;
+    webkitSpeechRecognition?: new () => SpeechRecognitionInstance;
+  }
+}
+
 const SALUDO: Mensaje = {
   rol: "assistant",
   contenido:
-    "¡Hola! Soy JARVIS, el asistente del Portal Azahar. Pregúntame qué hace algún módulo o cómo hacer algo (por ejemplo: \"¿cómo pido vacaciones?\").",
+    "¡Hola! Soy JARVIS, el asistente del Portal Azahar. Pregúntame qué hace algún módulo o cómo hacer algo (por ejemplo: \"¿cómo pido vacaciones?\"), o usa el micrófono para hablarme.",
 };
 
 const FRASE_BIENVENIDA = "Bienvenido al portal, mi nombre es JARVIS y estoy disponible para ayudarte en lo que necesites.";
 const FRASE_PRUEBA = "Hola, bienvenido al portal de Azahar, acá estoy para ayudarte.";
-const STORAGE_KEY_VOZ = "jarvis-voz-uri";
+const STORAGE_KEY_GENERO = "jarvis-genero-voz";
+const STORAGE_KEY_MUTE = "jarvis-voz-desactivada";
 
-/** Busca la mejor voz en español disponible en el navegador para la síntesis de voz. */
-function elegirVozEspanol(voces: SpeechSynthesisVoice[]): SpeechSynthesisVoice | undefined {
+const PISTAS_VOZ_FEMENINA = [
+  "female", "mujer", "sabina", "dalia", "helena", "elena", "elvira", "laura",
+  "lucia", "paulina", "raquel", "monica", "isabela", "camila", "valentina",
+  "sofia", "carmen", "maria", "conchita", "esperanza", "marisol", "penelope",
+  "salome", "victoria", "zira", "paloma", "catalina", "renata", "alba",
+];
+
+const PISTAS_VOZ_MASCULINA = [
+  "male", "hombre", "pablo", "diego", "jorge", "raul", "raúl", "alvaro", "álvaro",
+  "carlos", "andres", "andrés", "miguel", "juan", "enrique", "fernando",
+  "santiago", "sebastian", "sebastián", "mateo", "tomas", "tomás", "david", "jorge",
+];
+
+/** Heurística de género según el nombre reportado por el navegador (la Web Speech API no expone género). */
+function generoDeVoz(v: SpeechSynthesisVoice): GeneroVoz | undefined {
+  const nombre = v.name.toLowerCase();
+  if (PISTAS_VOZ_FEMENINA.some((p) => nombre.includes(p))) return "femenina";
+  if (PISTAS_VOZ_MASCULINA.some((p) => nombre.includes(p))) return "masculina";
+  return undefined;
+}
+
+/** Busca la mejor voz en español para el género pedido; si el sistema no distingue, cae a cualquier voz en español. */
+function resolverVozPorGenero(voces: SpeechSynthesisVoice[], genero: GeneroVoz): SpeechSynthesisVoice | undefined {
+  const esVoces = voces.filter((v) => v.lang?.toLowerCase().startsWith("es"));
+  const candidatas = esVoces.length > 0 ? esVoces : voces;
   return (
-    voces.find((v) => v.lang?.toLowerCase().startsWith("es") && /female|mujer|f\b/i.test(v.name)) ??
-    voces.find((v) => v.lang?.toLowerCase().startsWith("es")) ??
-    undefined
+    candidatas.find((v) => generoDeVoz(v) === genero) ??
+    candidatas.find((v) => generoDeVoz(v) === undefined) ??
+    candidatas[0]
   );
 }
 
-/** Resuelve qué voz usar: la elegida y guardada por la persona, o la mejor en español por defecto. */
-function resolverVoz(voces: SpeechSynthesisVoice[]): SpeechSynthesisVoice | undefined {
-  const uriGuardado = typeof window !== "undefined" ? localStorage.getItem(STORAGE_KEY_VOZ) : null;
-  const guardada = uriGuardado ? voces.find((v) => v.voiceURI === uriGuardado) : undefined;
-  return guardada ?? elegirVozEspanol(voces);
-}
-
-/** Síntesis de voz nativa del navegador (gratuita, calidad y variedad dependen del sistema). */
-function hablarConVozDelNavegador(texto: string) {
+/**
+ * Síntesis de voz nativa del navegador (gratuita). Cuando el sistema no trae voces masculina/femenina
+ * distinguibles por nombre, se usa el tono (pitch) para diferenciar igual las dos opciones.
+ */
+function hablarConVozDelNavegador(texto: string, genero: GeneroVoz) {
   if (typeof window === "undefined" || !("speechSynthesis" in window)) return;
 
   function hablar() {
     const utterance = new SpeechSynthesisUtterance(texto);
-    const voz = resolverVoz(window.speechSynthesis.getVoices());
+    const voz = resolverVozPorGenero(window.speechSynthesis.getVoices(), genero);
     utterance.lang = voz?.lang || "es-ES";
+    utterance.pitch = genero === "masculina" ? 0.85 : 1.15;
     utterance.rate = 1;
-    utterance.pitch = 1;
     if (voz) utterance.voice = voz;
     window.speechSynthesis.cancel();
     window.speechSynthesis.speak(utterance);
@@ -59,42 +99,42 @@ export function ChatbotWidget() {
   const [mensajes, setMensajes] = useState<Mensaje[]>([SALUDO]);
   const [entrada, setEntrada] = useState("");
   const [enviando, setEnviando] = useState(false);
-  const [mostrarVoces, setMostrarVoces] = useState(false);
-  const [voces, setVoces] = useState<SpeechSynthesisVoice[]>([]);
-  const [vozUri, setVozUri] = useState(() => (typeof window !== "undefined" ? localStorage.getItem(STORAGE_KEY_VOZ) ?? "" : ""));
+  const [escuchando, setEscuchando] = useState(false);
+  const [mostrarAjustes, setMostrarAjustes] = useState(false);
+  const [genero, setGenero] = useState<GeneroVoz>(
+    () => (typeof window !== "undefined" ? (localStorage.getItem(STORAGE_KEY_GENERO) as GeneroVoz | null) ?? "femenina" : "femenina"),
+  );
+  const [vozActivada, setVozActivada] = useState(
+    () => (typeof window !== "undefined" ? localStorage.getItem(STORAGE_KEY_MUTE) !== "1" : true),
+  );
   const finRef = useRef<HTMLDivElement>(null);
   const yaSaludoRef = useRef(false);
+  const reconocimientoRef = useRef<SpeechRecognitionInstance | null>(null);
+
+  const soportaReconocimiento =
+    typeof window !== "undefined" && !!(window.SpeechRecognition || window.webkitSpeechRecognition);
 
   useEffect(() => {
     if (abierto) finRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [mensajes, abierto]);
 
   useEffect(() => {
-    if (typeof window === "undefined" || !("speechSynthesis" in window)) return;
-    function actualizarVoces() {
-      setVoces(window.speechSynthesis.getVoices());
-    }
-    actualizarVoces();
-    window.speechSynthesis.addEventListener("voiceschanged", actualizarVoces);
-    return () => window.speechSynthesis.removeEventListener("voiceschanged", actualizarVoces);
+    return () => reconocimientoRef.current?.stop();
   }, []);
 
-  const vocesEspanol = voces.filter((v) => v.lang?.toLowerCase().startsWith("es"));
-  const listaVoces = vocesEspanol.length > 0 ? vocesEspanol : voces;
-
-  function probarVoz(uri: string) {
-    const voz = voces.find((v) => v.voiceURI === uri);
-    const utterance = new SpeechSynthesisUtterance(FRASE_PRUEBA);
-    utterance.lang = voz?.lang || "es-ES";
-    if (voz) utterance.voice = voz;
-    window.speechSynthesis.cancel();
-    window.speechSynthesis.speak(utterance);
+  function elegirGenero(g: GeneroVoz) {
+    setGenero(g);
+    if (typeof window !== "undefined") localStorage.setItem(STORAGE_KEY_GENERO, g);
+    hablarConVozDelNavegador(FRASE_PRUEBA, g);
   }
 
-  function elegirVoz(uri: string) {
-    setVozUri(uri);
-    if (typeof window !== "undefined") localStorage.setItem(STORAGE_KEY_VOZ, uri);
-    probarVoz(uri);
+  function alternarVoz() {
+    setVozActivada((actual) => {
+      const nuevo = !actual;
+      if (typeof window !== "undefined") localStorage.setItem(STORAGE_KEY_MUTE, nuevo ? "0" : "1");
+      if (!nuevo && typeof window !== "undefined" && "speechSynthesis" in window) window.speechSynthesis.cancel();
+      return nuevo;
+    });
   }
 
   function alternarChat() {
@@ -102,20 +142,17 @@ export function ChatbotWidget() {
       const nuevo = !actual;
       if (nuevo && !yaSaludoRef.current) {
         yaSaludoRef.current = true;
-        hablarConVozDelNavegador(FRASE_BIENVENIDA);
+        if (vozActivada) hablarConVozDelNavegador(FRASE_BIENVENIDA, genero);
       }
       return nuevo;
     });
   }
 
-  async function enviarMensaje(e: FormEvent) {
-    e.preventDefault();
-    const texto = entrada.trim();
-    if (!texto || enviando) return;
+  async function enviarTexto(texto: string) {
+    if (!texto.trim() || enviando) return;
 
     const historialPrevio = mensajes;
-    const propios: Mensaje = { rol: "user", contenido: texto };
-    setMensajes((actuales) => [...actuales, propios]);
+    setMensajes((actuales) => [...actuales, { rol: "user", contenido: texto }]);
     setEntrada("");
     setEnviando(true);
 
@@ -137,14 +174,44 @@ export function ChatbotWidget() {
         respuesta = datos?.mensaje || "No pude responder en este momento. Intenta de nuevo en un momento.";
       }
       setMensajes((actuales) => [...actuales, { rol: "assistant", contenido: respuesta }]);
+      if (vozActivada) hablarConVozDelNavegador(respuesta, genero);
     } catch {
-      setMensajes((actuales) => [
-        ...actuales,
-        { rol: "assistant", contenido: "No pude conectarme en este momento. Revisa tu conexión e intenta de nuevo." },
-      ]);
+      const respuesta = "No pude conectarme en este momento. Revisa tu conexión e intenta de nuevo.";
+      setMensajes((actuales) => [...actuales, { rol: "assistant", contenido: respuesta }]);
+      if (vozActivada) hablarConVozDelNavegador(respuesta, genero);
     } finally {
       setEnviando(false);
     }
+  }
+
+  function enviarMensaje(e: FormEvent) {
+    e.preventDefault();
+    void enviarTexto(entrada);
+  }
+
+  function alternarEscucha() {
+    if (!soportaReconocimiento) return;
+
+    if (escuchando) {
+      reconocimientoRef.current?.stop();
+      return;
+    }
+
+    const Constructor = window.SpeechRecognition ?? window.webkitSpeechRecognition!;
+    const reconocimiento = new Constructor();
+    reconocimiento.lang = "es-CO";
+    reconocimiento.continuous = false;
+    reconocimiento.interimResults = false;
+    reconocimiento.onresult = (evento) => {
+      const texto = evento.results[0]?.[0]?.transcript ?? "";
+      if (texto.trim()) void enviarTexto(texto.trim());
+    };
+    reconocimiento.onerror = () => setEscuchando(false);
+    reconocimiento.onend = () => setEscuchando(false);
+
+    reconocimientoRef.current = reconocimiento;
+    setEscuchando(true);
+    reconocimiento.start();
   }
 
   return (
@@ -158,8 +225,16 @@ export function ChatbotWidget() {
             </div>
             <div className="flex items-center gap-1">
               <button
-                onClick={() => setMostrarVoces((v) => !v)}
-                className={`rounded-full p-1 text-cream-100/80 transition hover:bg-white/10 hover:text-cream-100 ${mostrarVoces ? "bg-white/10 text-cream-100" : ""}`}
+                onClick={alternarVoz}
+                className="rounded-full p-1 text-cream-100/80 transition hover:bg-white/10 hover:text-cream-100"
+                aria-label={vozActivada ? "Silenciar respuestas habladas" : "Activar respuestas habladas"}
+                title={vozActivada ? "Silenciar respuestas habladas" : "Activar respuestas habladas"}
+              >
+                {vozActivada ? <Volume2 className="h-4 w-4" strokeWidth={1.75} /> : <VolumeX className="h-4 w-4" strokeWidth={1.75} />}
+              </button>
+              <button
+                onClick={() => setMostrarAjustes((v) => !v)}
+                className={`rounded-full p-1 text-cream-100/80 transition hover:bg-white/10 hover:text-cream-100 ${mostrarAjustes ? "bg-white/10 text-cream-100" : ""}`}
                 aria-label="Elegir voz del asistente"
                 title="Elegir voz del asistente"
               >
@@ -175,41 +250,37 @@ export function ChatbotWidget() {
             </div>
           </div>
 
-          {mostrarVoces && (
+          {mostrarAjustes && (
             <div className="space-y-2 border-b border-[var(--border-subtle)] bg-[var(--surface-muted)] px-3 py-3">
               <p className="text-xs font-semibold text-[var(--text-secondary)]">Voz del asistente (gratuita, del navegador)</p>
-              {listaVoces.length === 0 ? (
-                <p className="text-xs text-[var(--text-muted)]">
-                  Tu navegador no reportó voces todavía. Prueba abrir el chat de nuevo en unos segundos.
-                </p>
-              ) : (
-                <div className="flex items-center gap-2">
-                  <select
-                    value={vozUri}
-                    onChange={(e) => elegirVoz(e.target.value)}
-                    className="flex-1 rounded-lg border border-[var(--border-subtle)] bg-[var(--surface-app)] px-2 py-1.5 text-xs text-[var(--text-primary)] outline-none focus:border-brand-800"
-                  >
-                    <option value="">Automática (mejor voz en español)</option>
-                    {listaVoces.map((v) => (
-                      <option key={v.voiceURI} value={v.voiceURI}>
-                        {v.name} ({v.lang})
-                      </option>
-                    ))}
-                  </select>
-                  <button
-                    type="button"
-                    onClick={() => probarVoz(vozUri || resolverVoz(voces)?.voiceURI || "")}
-                    className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-brand-800 text-cream-100 transition hover:bg-brand-900"
-                    aria-label="Probar voz"
-                    title="Probar voz"
-                  >
-                    <Volume2 className="h-4 w-4" strokeWidth={1.75} />
-                  </button>
-                </div>
-              )}
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => elegirGenero("femenina")}
+                  className={`flex-1 rounded-lg border px-3 py-1.5 text-xs font-medium transition ${
+                    genero === "femenina"
+                      ? "border-brand-800 bg-brand-800 text-cream-100"
+                      : "border-[var(--border-subtle)] bg-[var(--surface-app)] text-[var(--text-primary)] hover:border-brand-800"
+                  }`}
+                >
+                  Voz femenina
+                </button>
+                <button
+                  type="button"
+                  onClick={() => elegirGenero("masculina")}
+                  className={`flex-1 rounded-lg border px-3 py-1.5 text-xs font-medium transition ${
+                    genero === "masculina"
+                      ? "border-brand-800 bg-brand-800 text-cream-100"
+                      : "border-[var(--border-subtle)] bg-[var(--surface-app)] text-[var(--text-primary)] hover:border-brand-800"
+                  }`}
+                >
+                  Voz masculina
+                </button>
+              </div>
               <p className="text-[11px] leading-snug text-[var(--text-muted)]">
-                Las voces disponibles dependen de tu sistema operativo y navegador (Windows y Chrome suelen traer varias en
-                español). Tu elección queda guardada en este dispositivo.
+                Las voces disponibles dependen de tu sistema operativo y navegador. Tu elección queda guardada en este
+                dispositivo.
+                {!soportaReconocimiento && " El micrófono para hablarle a JARVIS no está disponible en este navegador."}
               </p>
             </div>
           )}
@@ -238,10 +309,25 @@ export function ChatbotWidget() {
           </div>
 
           <form onSubmit={enviarMensaje} className="flex items-center gap-2 border-t border-[var(--border-subtle)] p-2.5">
+            {soportaReconocimiento && (
+              <button
+                type="button"
+                onClick={alternarEscucha}
+                className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg transition ${
+                  escuchando
+                    ? "animate-pulse bg-red-600 text-white"
+                    : "bg-[var(--surface-muted)] text-[var(--text-primary)] hover:bg-brand-800 hover:text-cream-100"
+                }`}
+                aria-label={escuchando ? "Detener grabación" : "Hablarle a JARVIS"}
+                title={escuchando ? "Detener grabación" : "Hablarle a JARVIS"}
+              >
+                {escuchando ? <MicOff className="h-4 w-4" strokeWidth={1.75} /> : <Mic className="h-4 w-4" strokeWidth={1.75} />}
+              </button>
+            )}
             <input
               value={entrada}
               onChange={(e) => setEntrada(e.target.value)}
-              placeholder="Escribe tu pregunta…"
+              placeholder={escuchando ? "Escuchando…" : "Escribe tu pregunta…"}
               className="flex-1 rounded-lg border border-[var(--border-subtle)] bg-[var(--surface-app)] px-3 py-2 text-sm text-[var(--text-primary)] outline-none focus:border-brand-800"
             />
             <button

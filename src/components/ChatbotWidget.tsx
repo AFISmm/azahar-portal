@@ -83,8 +83,12 @@ function hablarConVozDelNavegador(texto: string, genero: GeneroVoz) {
     utterance.pitch = genero === "masculina" ? 0.85 : 1.15;
     utterance.rate = 1;
     if (voz) utterance.voice = voz;
-    window.speechSynthesis.cancel();
-    window.speechSynthesis.speak(utterance);
+    if (window.speechSynthesis.speaking || window.speechSynthesis.pending) {
+      window.speechSynthesis.cancel();
+    }
+    // Chrome a veces ignora speak() en silencio si se llama en el mismo tick que cancel();
+    // un pequeño retraso evita esa condición de carrera conocida del navegador.
+    window.setTimeout(() => window.speechSynthesis.speak(utterance), 50);
   }
 
   if (window.speechSynthesis.getVoices().length === 0) {

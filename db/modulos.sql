@@ -33,3 +33,7 @@ update empleados set permisos_modulos = jsonb_build_object(
     'informacion', permisos_modulos -> 'negocio'
   ) || (permisos_modulos - 'negocio')
 where permisos_modulos ? 'negocio';
+
+-- Desactivación de cuentas: motivo y fecha (se muestran en Gestión de usuarios)
+alter table empleados add column if not exists motivo_desactivacion text;
+alter table empleados add column if not exists desactivado_en timestamptz;

@@ -24,6 +24,7 @@ interface EmpleadoPatchPayload {
   avatarUrl?: string | null;
   telefono?: string | null;
   permisosModulos?: unknown;
+  motivoDesactivacion?: string | null;
 }
 
 function obtenerId(req: VercelRequest): string {
@@ -81,6 +82,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const estado = body.estado ?? actual.estado;
       const avatarUrl = body.avatarUrl !== undefined ? body.avatarUrl : actual.avatar_url;
       const telefono = body.telefono !== undefined ? body.telefono : actual.telefono;
+      // Motivo de la desactivación: solo vive mientras la cuenta está inactiva.
+      const motivoTexto = typeof body.motivoDesactivacion === "string" ? body.motivoDesactivacion.trim().slice(0, 500) : null;
+      const motivoDesactivacion = estado === "inactivo" ? (motivoTexto || (actual.estado === "inactivo" ? actual.motivo_desactivacion : null)) : null;
+      const desactivadoEn = estado === "inactivo" ? (actual.estado === "inactivo" && actual.desactivado_en ? actual.desactivado_en : new Date().toISOString()) : null;
       // Dar o quitar permisos de módulos es el corazón de Gestión de usuarios: exige 'editar'
       // en ese módulo (no basta RRHH), y nadie puede cambiarse los suyos (evita quedarse sin acceso).
       if (body.permisosModulos !== undefined) {
@@ -102,7 +107,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             rol = ${rol},
             estado = ${estado},
             avatar_url = ${avatarUrl},
-            telefono = ${telefono}
+            telefono = ${telefono},
+            motivo_desactivacion = ${motivoDesactivacion},
+            desactivado_en = ${desactivadoEn}
           where id = ${id}
           returning *
         `;

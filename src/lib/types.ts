@@ -53,6 +53,9 @@ export interface Empleado {
   accesoTotal?: boolean;
   /** Nivel por módulo (ver / editar). Las cuentas @mercurymethods.com lo tienen todo en 'editar'. */
   permisosModulos: PermisosModulos;
+  /** Por qué se desactivó la cuenta (solo si está inactiva). */
+  motivoDesactivacion?: string | null;
+  desactivadoEn?: string | null;
   createdAt: string;
 }
 
@@ -71,7 +74,7 @@ export type NuevoEmpleadoInput = Omit<
   | "debeCambiarPassword"
   | "permisosModulos"
 > &
-  Partial<Pick<Empleado, "estado" | "avatarUrl" | "telefono" | "salario" | "fechaNacimiento" | "numeroIdentificacion" | "username" | "tipoCuenta" | "permisosModulos">> & {
+  Partial<Pick<Empleado, "estado" | "avatarUrl" | "telefono" | "salario" | "fechaNacimiento" | "numeroIdentificacion" | "username" | "tipoCuenta" | "permisosModulos" | "motivoDesactivacion">> & {
     /** Contraseña inicial elegida por el admin al crear la cuenta (alta manual). Si no se manda, el servidor genera una aleatoria. */
     passwordTemporal?: string;
   };

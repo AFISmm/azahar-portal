@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from "react";
+import type { ReactNode } from "react";
 
 // ============================================================================
 // Base del tablero de widgets del Inicio (estilo iOS): tamaños, contenedor
@@ -16,21 +16,6 @@ export const DIM: Record<Tam, { cols: number; rows: number; etiqueta: string }> 
   L: { cols: 2, rows: 2, etiqueta: "Grande" },
   XL: { cols: 4, rows: 2, etiqueta: "Extra grande" },
 };
-
-export const ORDEN_TAM: Tam[] = ["S", "M", "W", "L", "XL"];
-
-/** Cuántas columnas tiene la cuadrícula ahora mismo (4 desde 1024 px de ancho, 2 antes). */
-export function useColumnas(): number {
-  const consulta = "(min-width: 1024px)";
-  const [grande, setGrande] = useState(() => (typeof window !== "undefined" ? window.matchMedia(consulta).matches : true));
-  useEffect(() => {
-    const m = window.matchMedia(consulta);
-    const alCambiar = () => setGrande(m.matches);
-    m.addEventListener("change", alCambiar);
-    return () => m.removeEventListener("change", alCambiar);
-  }, []);
-  return grande ? 4 : 2;
-}
 
 interface WidgetShellProps {
   titulo: string;

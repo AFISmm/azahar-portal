@@ -114,7 +114,8 @@ export default function App() {
                       <Route path="/contable" element={<ContableInicio />} />
                       <Route path="/contable/comprobantes" element={<ContableComprobantes />} />
                       <Route path="/contable/conciliacion" element={<ContableConciliacion />} />
-                      <Route path="/contable/carga" element={<ContableCarga />} />
+                      <Route path="/contable/importacion" element={<ContableCarga />} />
+                      <Route path="/contable/carga" element={<Navigate to="/contable/importacion" replace />} />
                       <Route path="/contable/nomina" element={<ContableNomina />} />
                       <Route path="/contable/terceros" element={<ContableTerceros />} />
                       <Route path="/contable/catalogo" element={<ContableCatalogo />} />

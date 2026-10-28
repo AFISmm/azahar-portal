@@ -70,8 +70,8 @@ const GESTION_NEGOCIO: { to: string; claveLabel: ClaveTraduccion; Icon: typeof H
   { to: "/gestion-estrategica", claveLabel: "sidebar.gestionEstrategica", Icon: Compass, modulo: "estrategica" },
   { to: "/gestion-comercial", claveLabel: "sidebar.gestionComercial", Icon: Store, modulo: "comercial" },
   { to: "/gestion-operativa", claveLabel: "sidebar.gestionOperativa", Icon: Sprout, modulo: "operativa" },
-  { to: "/informacion-general", claveLabel: "sidebar.informacionGeneral", Icon: Info, modulo: "informacion" },
   { to: "/contable", claveLabel: "sidebar.gestionContable", Icon: Calculator, modulo: "contable" },
+  { to: "/informacion-general", claveLabel: "sidebar.informacionGeneral", Icon: Info, modulo: "informacion" },
 ];
 
 // Trazabilidad y POS: cada ítem pide un nivel mínimo en su módulo ('ver' | 'editar'),

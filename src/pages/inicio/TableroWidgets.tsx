@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
-import { AlignVerticalJustifyStart, ArrowDown, ArrowUp, Check, Hand, MoveDiagonal2, Pencil, Plus, RotateCcw, X } from "lucide-react";
+import { AlignVerticalJustifyStart, ArrowDown, ArrowUp, Check, Hand, Minus, MoveDiagonal2, Pencil, Plus, RotateCcw } from "lucide-react";
 import { useAuth } from "../../auth/AuthContext";
 import { useAcceso } from "../../auth/acceso";
 import { Modal } from "../../components/Modal";
@@ -176,7 +176,7 @@ function ItemWidget({
   return (
     <div
       data-widget={def.id}
-      className={`group absolute min-h-0 rounded-2xl ${editando ? "touch-none select-none outline-dashed outline-2 outline-offset-2 outline-accent-500/70" : ""}`}
+      className={`group absolute min-h-0 rounded-2xl ${editando ? "touch-none select-none" : ""}`}
       style={{
         left: rect.x,
         top: rect.y,
@@ -188,6 +188,9 @@ function ItemWidget({
         boxShadow: activo ? "0 18px 40px -12px rgba(42,21,21,0.45)" : editando ? "0 6px 18px -10px rgba(42,21,21,0.35)" : undefined,
         zIndex: activo ? 30 : editando ? 1 : undefined,
         willChange: activo ? "transform, left, top" : undefined,
+        // marco fino y continuo alrededor del widget (como en el modo edición de iOS)
+        outline: editando ? "2px solid var(--marco-edicion)" : undefined,
+        outlineOffset: editando ? 2 : undefined,
       }}
       onPointerDown={alPulsar}
       onPointerMove={(e) => {
@@ -230,53 +233,63 @@ function ItemWidget({
               aria-label={`Mover ${def.titulo}`}
             />
           )}
+          {/* Quitar: pastilla pequeña y translúcida con un "−" en la esquina superior izquierda */}
           <button
             type="button"
             onPointerDown={(e) => e.stopPropagation()}
             onClick={onQuitar}
-            className="absolute -left-2.5 -top-2.5 z-10 flex h-7 w-7 items-center justify-center rounded-full bg-status-rechazada text-white shadow-card transition hover:scale-110"
+            className="absolute -left-1.5 -top-1.5 z-10 flex h-5 w-5 items-center justify-center rounded-full border border-[var(--border-subtle)] bg-[var(--surface-card)]/80 text-[var(--text-secondary)] shadow-sm backdrop-blur-sm transition hover:border-status-rechazada hover:bg-status-rechazada hover:text-white"
             aria-label={`Quitar ${def.titulo}`}
             title="Quitar este widget"
           >
-            <X className="h-4 w-4" strokeWidth={2.5} />
+            <Minus className="h-3 w-3" strokeWidth={3} />
           </button>
 
           {apilado && (
-            <div className="absolute -top-2.5 right-2 z-10 flex gap-1" onPointerDown={(e) => e.stopPropagation()}>
+            <div className="absolute -top-1.5 right-3 z-10 flex gap-1" onPointerDown={(e) => e.stopPropagation()}>
               <button
                 type="button"
                 disabled={!puedeSubir}
                 onClick={onSubir}
-                className="flex h-7 w-7 items-center justify-center rounded-full bg-brand-800 text-cream-100 shadow-card disabled:opacity-40"
+                className="flex h-5 w-5 items-center justify-center rounded-full border border-[var(--border-subtle)] bg-[var(--surface-card)]/80 text-[var(--text-secondary)] shadow-sm backdrop-blur-sm disabled:opacity-40"
                 aria-label={`Subir ${def.titulo}`}
               >
-                <ArrowUp className="h-3.5 w-3.5" strokeWidth={2} />
+                <ArrowUp className="h-3 w-3" strokeWidth={2.5} />
               </button>
               <button
                 type="button"
                 disabled={!puedeBajar}
                 onClick={onBajar}
-                className="flex h-7 w-7 items-center justify-center rounded-full bg-brand-800 text-cream-100 shadow-card disabled:opacity-40"
+                className="flex h-5 w-5 items-center justify-center rounded-full border border-[var(--border-subtle)] bg-[var(--surface-card)]/80 text-[var(--text-secondary)] shadow-sm backdrop-blur-sm disabled:opacity-40"
                 aria-label={`Bajar ${def.titulo}`}
               >
-                <ArrowDown className="h-3.5 w-3.5" strokeWidth={2} />
+                <ArrowDown className="h-3 w-3" strokeWidth={2.5} />
               </button>
             </div>
           )}
 
-          {/* Esquina inferior derecha: arrastra para cambiar el tamaño a tu gusto */}
+          {/* Esquina inferior derecha: un arco que abraza la esquina; arrástralo para cambiar el tamaño */}
           <div
             role="slider"
             aria-label={`Cambiar el tamaño de ${def.titulo}`}
             aria-valuenow={Math.round(rect.w)}
-            className="absolute -bottom-3 -right-3 z-10 flex h-8 w-8 cursor-nwse-resize touch-none items-center justify-center rounded-full bg-accent-500 text-brand-900 shadow-card transition-transform duration-150 hover:scale-110"
+            className="group/esquina absolute -bottom-2 -right-2 z-10 h-8 w-8 cursor-nwse-resize touch-none"
             onPointerDown={(e) => onIniciar(e, "redim")}
             onPointerMove={onMover}
             onPointerUp={onSoltar}
             onPointerCancel={onSoltar}
             title="Arrastra para cambiar el tamaño"
           >
-            <MoveDiagonal2 className="h-4 w-4 rotate-90" strokeWidth={2.25} />
+            <svg viewBox="0 0 32 32" className="h-full w-full overflow-visible" aria-hidden="true">
+              <path
+                d="M 28 8 A 20 20 0 0 1 8 28"
+                fill="none"
+                strokeWidth={activo ? 5 : 4}
+                strokeLinecap="round"
+                className="stroke-[var(--marco-agarre)] transition-[stroke-width] duration-150 group-hover/esquina:stroke-accent-500"
+                style={{ filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.25))" }}
+              />
+            </svg>
           </div>
         </>
       )}
@@ -491,8 +504,8 @@ export function TableroWidgets() {
         {editando ? (
           <p className="min-w-0 flex-1 text-xs text-[var(--text-secondary)]">
             <strong className="text-[var(--text-primary)]">Modo personalizar:</strong>{" "}
-            {apilado ? "usa las flechas para ordenar" : "arrastra un widget para moverlo a donde quieras"}, cambia su tamaño desde el círculo naranja de la esquina inferior derecha y quita los que no uses con la{" "}
-            <span className="font-semibold text-status-rechazada">×</span> roja. Se guarda solo.
+            {apilado ? "usa las flechas para ordenar" : "arrastra un widget para moverlo a donde quieras"}, cambia su tamaño con el arco de la esquina inferior derecha y quita los que no uses con el botón{" "}
+            <span className="font-semibold">−</span> de la esquina superior izquierda. Se guarda solo.
           </p>
         ) : (
           <p className="text-xs text-[var(--text-muted)]">Personaliza tu inicio: mueve, cambia el tamaño o agrega widgets. También puedes mantener pulsado uno.</p>

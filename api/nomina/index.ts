@@ -10,20 +10,20 @@
 
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { sql } from "../_lib/db.js";
-import { esAdminEfectivo } from "../_lib/acceso.js";
-import { HttpError, manejarError, requireAdmin, requireAuth } from "../_lib/auth.js";
+import { cumple, permisosEfectivos } from "../_lib/acceso.js";
+import { HttpError, manejarError, requireAuth, requireModulo } from "../_lib/auth.js";
 import { mapNominaPagoRow, type EstadoNomina, type NominaPagoRow } from "../_lib/mappers.js";
 
 interface EmpleadoRolRow {
-  rol: "empleado" | "admin";
   correo: string;
+  permisos_modulos: unknown;
 }
 
 const ESTADOS_VALIDOS: EstadoNomina[] = ["pendiente", "pagado"];
 
 async function esAdmin(empleadoId: string): Promise<boolean> {
-  const { rows } = await sql<EmpleadoRolRow>`select rol, correo from empleados where id = ${empleadoId} limit 1`;
-  return rows[0] ? esAdminEfectivo(rows[0]) : false;
+  const { rows } = await sql<EmpleadoRolRow>`select correo, permisos_modulos from empleados where id = ${empleadoId} limit 1`;
+  return rows[0] ? cumple(permisosEfectivos(rows[0]), "rrhh", "ver") : false;
 }
 
 function primerValor(v: string | string[] | undefined): string | undefined {
@@ -44,7 +44,7 @@ async function listar(req: VercelRequest, res: VercelResponse) {
 }
 
 async function actualizarEstado(req: VercelRequest, res: VercelResponse) {
-  await requireAdmin(req);
+  await requireModulo(req, "rrhh", "editar");
   const id = primerValor(req.query.id);
   if (!id) throw new HttpError(400, "Falta el id del pago.");
   const body = req.body as Partial<{ estado: EstadoNomina }>;

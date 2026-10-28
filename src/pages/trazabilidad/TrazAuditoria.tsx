@@ -8,10 +8,10 @@ function fmt(iso: string) {
 }
 
 export default function TrazAuditoria() {
-  const { esAdmin } = usePermisosTraz();
+  const { editar } = usePermisosTraz();
   const { datos, error, cargando } = useCarga(() => trazabilidadApi.auditoria());
 
-  if (!esAdmin) return <AccesoDenegado etapa="el registro de auditoría" />;
+  if (!editar) return <AccesoDenegado etapa="el registro de auditoría" />;
 
   return (
     <div className="azahar-fade-in">

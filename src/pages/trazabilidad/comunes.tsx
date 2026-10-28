@@ -2,28 +2,14 @@ import { type FormEvent, type ReactNode, useCallback, useEffect, useState } from
 import { Link } from "react-router-dom";
 import { Loader2 } from "lucide-react";
 import { Card } from "../../components/Card";
-import { useAuth } from "../../auth/AuthContext";
-import type { PermisoTrazabilidad } from "../../lib/types";
+import { useAcceso } from "../../auth/acceso";
 
-export const ETIQUETA_PERMISO: Record<PermisoTrazabilidad, string> = {
-  ADMIN: "Administrador de trazabilidad",
-  FINCA: "Finca / Origen",
-  BENEFICIADO: "Beneficiado y trilla",
-  TUESTE: "Tueste",
-  EMPAQUE: "Empaque y distribución",
-};
-
-/** Permisos del usuario actual sobre el módulo, ya resueltos (ADMIN lo puede todo). */
+/** Permisos del usuario actual sobre trazabilidad: 'ver' consulta; 'editar' además registra y ve la auditoría. */
 export function usePermisosTraz() {
-  const { empleado } = useAuth();
-  const permisos = empleado?.permisosTrazabilidad ?? [];
-  const esAdmin = permisos.includes("ADMIN");
-  return {
-    permisos,
-    tieneAcceso: permisos.length > 0,
-    esAdmin,
-    puede: (etapa: PermisoTrazabilidad) => esAdmin || permisos.includes(etapa),
-  };
+  const acceso = useAcceso();
+  const ver = acceso.ver("trazabilidad");
+  const editar = acceso.editar("trazabilidad");
+  return { ver, editar, tieneAcceso: ver };
 }
 
 /** Carga datos al montar y expone `recargar`. */

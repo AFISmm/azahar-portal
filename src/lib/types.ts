@@ -6,13 +6,23 @@ export type Rol = "empleado" | "admin";
 export type EstadoEmpleado = "activo" | "inactivo";
 export type TipoCuenta = "empleado" | "desarrollador";
 
-/** Permiso de trazabilidad: una etapa de la cadena, o 'ADMIN' (todas las etapas + auditoría). */
-export type PermisoTrazabilidad = "ADMIN" | "FINCA" | "BENEFICIADO" | "TUESTE" | "EMPAQUE";
-export const PERMISOS_TRAZABILIDAD: PermisoTrazabilidad[] = ["ADMIN", "FINCA", "BENEFICIADO", "TUESTE", "EMPAQUE"];
+/**
+ * Módulos con permiso configurable. Cada empleado tiene, por módulo, 'ver' o
+ * 'editar' ('editar' implica 'ver'); sin entrada = sin acceso. Los asigna un
+ * administrador en Gestión de usuarios. Inicio, Nómina personal y Mi perfil son
+ * para todos y no aparecen aquí.
+ */
+export type Modulo = "negocio" | "rrhh" | "usuarios" | "trazabilidad" | "pos";
+export type NivelModulo = "ver" | "editar";
+export type PermisosModulos = Partial<Record<Modulo, NivelModulo>>;
 
-/** Permiso del POS: 'ADMIN' (todo), 'CAJA' (vende y cobra) o 'COCINA' (pantalla KDS). */
-export type PermisoPos = "ADMIN" | "CAJA" | "COCINA";
-export const PERMISOS_POS: PermisoPos[] = ["ADMIN", "CAJA", "COCINA"];
+export const MODULOS_INFO: { clave: Modulo; nombre: string; descripcion: string }[] = [
+  { clave: "negocio", nombre: "Gestión del negocio", descripcion: "Gestión estratégica, comercial, operativa e información general" },
+  { clave: "rrhh", nombre: "RRHH y nómina", descripcion: "Solicitudes, incapacidades, documentos, empleados y nómina" },
+  { clave: "usuarios", nombre: "Gestión de usuarios", descripcion: "Cuentas, accesos y permisos por módulo" },
+  { clave: "trazabilidad", nombre: "Trazabilidad", descripcion: "Finca, beneficiado, tueste, empaque y QR" },
+  { clave: "pos", nombre: "Punto de venta", descripcion: "Caja, cocina e historial de ventas" },
+];
 
 export interface Empleado {
   id: string;
@@ -35,11 +45,10 @@ export interface Empleado {
   /** true cuando la contraseña la eligió un admin: fuerza cambiarla en el primer ingreso antes de usar el resto del portal. */
   debeCambiarPassword: boolean;
   /** Etapas de trazabilidad habilitadas para la cuenta; vacío = sin acceso al módulo. Las asigna un admin en Admin > Usuarios. */
-  permisosTrazabilidad: PermisoTrazabilidad[];
-  /** Funciones del POS habilitadas; vacío = sin acceso. Las asigna un admin en Admin > Usuarios. */
-  permisosPos: PermisoPos[];
   /** true = correo del dominio corporativo (@mercurymethods.com): acceso total fijo, no editable. */
   accesoTotal?: boolean;
+  /** Nivel por módulo (ver / editar). Las cuentas @mercurymethods.com lo tienen todo en 'editar'. */
+  permisosModulos: PermisosModulos;
   createdAt: string;
 }
 
@@ -56,10 +65,9 @@ export type NuevoEmpleadoInput = Omit<
   | "username"
   | "tipoCuenta"
   | "debeCambiarPassword"
-  | "permisosTrazabilidad"
-  | "permisosPos"
+  | "permisosModulos"
 > &
-  Partial<Pick<Empleado, "estado" | "avatarUrl" | "telefono" | "salario" | "fechaNacimiento" | "numeroIdentificacion" | "username" | "tipoCuenta" | "permisosTrazabilidad" | "permisosPos">> & {
+  Partial<Pick<Empleado, "estado" | "avatarUrl" | "telefono" | "salario" | "fechaNacimiento" | "numeroIdentificacion" | "username" | "tipoCuenta" | "permisosModulos">> & {
     /** Contraseña inicial elegida por el admin al crear la cuenta (alta manual). Si no se manda, el servidor genera una aleatoria. */
     passwordTemporal?: string;
   };

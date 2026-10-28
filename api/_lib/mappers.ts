@@ -13,7 +13,7 @@
 // las funciones de mapeo convierten explícitamente esos campos con `Number(...)`.
 // ============================================================================
 
-import { tieneAccesoTotal } from "./acceso.js";
+import { esAdminEfectivo, permisosEfectivos, tieneAccesoTotal, type PermisosModulos } from "./acceso.js";
 
 export type Rol = "empleado" | "admin";
 export type EstadoEmpleado = "activo" | "inactivo";
@@ -40,8 +40,7 @@ export interface EmpleadoRow {
   username: string | null;
   tipo_cuenta: TipoCuenta;
   debe_cambiar_password: boolean;
-  permisos_trazabilidad: string[] | null;
-  permisos_pos: string[] | null;
+  permisos_modulos: unknown;
   created_at: string;
 }
 
@@ -65,10 +64,8 @@ export interface EmpleadoPublico {
   username: string | null;
   tipoCuenta: TipoCuenta;
   debeCambiarPassword: boolean;
-  /** Etapas de trazabilidad que puede usar: 'ADMIN' | 'FINCA' | 'BENEFICIADO' | 'TUESTE' | 'EMPAQUE'. Vacío = sin acceso al módulo. */
-  permisosTrazabilidad: string[];
-  /** Funciones del POS habilitadas: 'ADMIN' | 'CAJA' | 'COCINA'. Vacío = sin acceso. */
-  permisosPos: string[];
+  /** Nivel por módulo ('ver' | 'editar'); sin entrada = sin acceso. Las cuentas @mercurymethods.com tienen 'editar' en todos. */
+  permisosModulos: PermisosModulos;
   /** true = cuenta del dominio corporativo: acceso total fijo (no editable desde Gestión de usuarios). */
   accesoTotal: boolean;
   createdAt: string;
@@ -86,7 +83,7 @@ export function mapEmpleadoRow(row: EmpleadoRow): EmpleadoPublico {
     fechaIngreso: row.fecha_ingreso,
     diasVacacionesDisponibles: Number(row.dias_vacaciones_disponibles),
     salario: row.salario === null ? null : Number(row.salario),
-    rol: accesoTotal ? "admin" : row.rol,
+    rol: esAdminEfectivo(row) ? "admin" : "empleado",
     estado: row.estado,
     avatarUrl: row.avatar_url,
     telefono: row.telefono,
@@ -95,8 +92,7 @@ export function mapEmpleadoRow(row: EmpleadoRow): EmpleadoPublico {
     username: row.username,
     tipoCuenta: row.tipo_cuenta,
     debeCambiarPassword: row.debe_cambiar_password,
-    permisosTrazabilidad: accesoTotal ? ["ADMIN"] : (row.permisos_trazabilidad ?? []),
-    permisosPos: accesoTotal ? ["ADMIN"] : (row.permisos_pos ?? []),
+    permisosModulos: permisosEfectivos(row),
     accesoTotal,
     createdAt: row.created_at,
   };

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
-import { Coffee, ShieldCheck, Trash2, UserPlus } from "lucide-react";
+import { ShieldCheck, Trash2, UserPlus } from "lucide-react";
 import { dataSource } from "../../lib/dataSource";
-import { PERMISOS_POS, PERMISOS_TRAZABILIDAD, type Empleado, type PermisoPos, type PermisoTrazabilidad, type Rol } from "../../lib/types";
+import { MODULOS_INFO, type Empleado, type Modulo, type NivelModulo, type PermisosModulos } from "../../lib/types";
 import { formatDate, iniciales } from "../../lib/format";
 import { useToast } from "../../context/ToastContext";
 import { useLanguage } from "../../context/LanguageContext";
@@ -9,15 +9,28 @@ import { useAuth } from "../../auth/AuthContext";
 import { PageHeader } from "../../components/PageHeader";
 import { Card } from "../../components/Card";
 import { Modal } from "../../components/Modal";
-import { Button, Select } from "../../components/ui";
-import { ETIQUETA_PERMISO } from "../trazabilidad/comunes";
-import { ETIQUETA_PERMISO_POS } from "../pos/comunes";
+import { Button } from "../../components/ui";
 import { EmpleadoForm, type EmpleadoFormValues } from "../../components/admin/EmpleadoForm";
 
 const ESTADO_ESTILO: Record<Empleado["estado"], string> = {
   activo: "bg-status-aprobada-bg text-status-aprobada",
   inactivo: "bg-status-rechazada-bg text-status-rechazada",
 };
+
+// Encabezados cortos para que la matriz entre sin scroll horizontal en pantallas normales.
+const ENCABEZADO_CORTO: Record<Modulo, string> = {
+  negocio: "Negocio",
+  rrhh: "RRHH",
+  usuarios: "Usuarios",
+  trazabilidad: "Trazab.",
+  pos: "POS",
+};
+
+/** Aplica un cambio de la casilla "Ver" o "Editar" ('editar' implica 'ver'). */
+function siguientePermiso(actual: NivelModulo | undefined, casilla: NivelModulo, marcada: boolean): NivelModulo | undefined {
+  if (casilla === "editar") return marcada ? "editar" : "ver"; // quitar "Editar" deja solo "Ver"
+  return marcada ? (actual ?? "ver") : undefined; // quitar "Ver" quita todo
+}
 
 export default function AdminUsuarios() {
   const { showToast } = useToast();
@@ -30,10 +43,6 @@ export default function AdminUsuarios() {
   const [eliminando, setEliminando] = useState(false);
   const [modalCrearOpen, setModalCrearOpen] = useState(false);
   const [creando, setCreando] = useState(false);
-  const [editandoTraz, setEditandoTraz] = useState<Empleado | null>(null);
-  const [permisosElegidos, setPermisosElegidos] = useState<PermisoTrazabilidad[]>([]);
-  const [permisosPosElegidos, setPermisosPosElegidos] = useState<PermisoPos[]>([]);
-  const [guardandoTraz, setGuardandoTraz] = useState(false);
 
   const cargar = useCallback(async () => {
     setCargando(true);
@@ -45,18 +54,23 @@ export default function AdminUsuarios() {
     void cargar();
   }, [cargar]);
 
-  async function handleCambiarRol(emp: Empleado, nuevoRol: Rol) {
-    if (nuevoRol === emp.rol) return;
+  function reemplazar(actualizado: Empleado) {
+    setEmpleados((actuales) => actuales.map((e) => (e.id === actualizado.id ? actualizado : e)));
+  }
+
+  async function handleCambiarPermiso(emp: Empleado, modulo: Modulo, casilla: NivelModulo, marcada: boolean) {
+    const nuevoNivel = siguientePermiso(emp.permisosModulos[modulo], casilla, marcada);
+    const nuevos: PermisosModulos = { ...emp.permisosModulos };
+    if (nuevoNivel) nuevos[modulo] = nuevoNivel;
+    else delete nuevos[modulo];
+
+    reemplazar({ ...emp, permisosModulos: nuevos }); // optimista: se revierte si el servidor lo rechaza
     setProcesandoId(emp.id);
     try {
-      const actualizado = await dataSource.updateEmpleado(emp.id, { rol: nuevoRol });
-      setEmpleados((actuales) => actuales.map((e) => (e.id === emp.id ? actualizado : e)));
-      showToast(
-        `${emp.nombre} ${t("adminUsuarios.toastRolCambiado")} ${nuevoRol === "admin" ? t("adminUsuarios.rolAdministradorMinuscula") : t("adminUsuarios.rolEmpleadoMinuscula")}.`,
-        "success",
-      );
-    } catch {
-      showToast(t("adminUsuarios.errorCambiarRol"), "error");
+      reemplazar(await dataSource.updateEmpleado(emp.id, { permisosModulos: nuevos }));
+    } catch (e) {
+      reemplazar(emp);
+      showToast(e instanceof Error && e.message ? e.message : "No se pudo actualizar el permiso.", "error");
     } finally {
       setProcesandoId(null);
     }
@@ -66,8 +80,7 @@ export default function AdminUsuarios() {
     const nuevoEstado: Empleado["estado"] = emp.estado === "activo" ? "inactivo" : "activo";
     setProcesandoId(emp.id);
     try {
-      const actualizado = await dataSource.updateEmpleado(emp.id, { estado: nuevoEstado });
-      setEmpleados((actuales) => actuales.map((e) => (e.id === emp.id ? actualizado : e)));
+      reemplazar(await dataSource.updateEmpleado(emp.id, { estado: nuevoEstado }));
       showToast(
         `${t("adminUsuarios.accesoPrefix")} ${emp.nombre} ${t("adminUsuarios.accesoFue")} ${nuevoEstado === "activo" ? t("adminUsuarios.accesoActivado") : t("adminUsuarios.accesoDesactivado")}.`,
         "success",
@@ -76,27 +89,6 @@ export default function AdminUsuarios() {
       showToast(t("adminUsuarios.errorCambiarEstado"), "error");
     } finally {
       setProcesandoId(null);
-    }
-  }
-
-  function abrirPermisosTraz(emp: Empleado) {
-    setEditandoTraz(emp);
-    setPermisosElegidos(emp.permisosTrazabilidad);
-    setPermisosPosElegidos(emp.permisosPos);
-  }
-
-  async function handleGuardarPermisosTraz() {
-    if (!editandoTraz) return;
-    setGuardandoTraz(true);
-    try {
-      const actualizado = await dataSource.updateEmpleado(editandoTraz.id, { permisosTrazabilidad: permisosElegidos, permisosPos: permisosPosElegidos });
-      setEmpleados((actuales) => actuales.map((e) => (e.id === editandoTraz.id ? actualizado : e)));
-      showToast(`Permisos de ${editandoTraz.nombre} actualizados.`, "success");
-      setEditandoTraz(null);
-    } catch {
-      showToast("No se pudieron actualizar los permisos.", "error");
-    } finally {
-      setGuardandoTraz(false);
     }
   }
 
@@ -134,7 +126,7 @@ export default function AdminUsuarios() {
       <PageHeader
         breadcrumb={t("adminUsuarios.breadcrumb")}
         title={t("adminUsuarios.titulo")}
-        description={t("adminUsuarios.descripcion")}
+        description="Marca en cada módulo si la persona puede verlo, o verlo y también editarlo. Los cambios se guardan al instante."
       >
         <Button onClick={() => setModalCrearOpen(true)}>
           <UserPlus className="h-4 w-4" strokeWidth={1.75} />
@@ -149,84 +141,91 @@ export default function AdminUsuarios() {
           <p className="py-6 text-center text-sm text-[var(--text-muted)]">{t("adminUsuarios.sinCuentas")}</p>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[960px] text-left text-sm">
+            <table className="w-full min-w-[820px] text-left text-sm">
               <thead>
-                <tr className="border-b border-[var(--border-subtle)] text-xs uppercase tracking-wide text-[var(--text-muted)]">
-                  <th className="py-2 pr-4 font-semibold">{t("adminUsuarios.colUsuario")}</th>
-                  <th className="py-2 pr-4 font-semibold">{t("adminUsuarios.colRol")}</th>
-                  <th className="py-2 pr-4 font-semibold">Módulos</th>
-                  <th className="py-2 pr-4 font-semibold">{t("adminUsuarios.colEstado")}</th>
-                  <th className="py-2 pr-4 font-semibold">{t("adminUsuarios.colRegistrado")}</th>
-                  <th className="py-2 pr-4 font-semibold">{t("adminUsuarios.colAcciones")}</th>
+                <tr className="text-xs uppercase tracking-wide text-[var(--text-muted)]">
+                  <th rowSpan={2} className="py-2 pr-4 align-bottom font-semibold">{t("adminUsuarios.colUsuario")}</th>
+                  {MODULOS_INFO.map((m) => (
+                    <th key={m.clave} colSpan={2} title={`${m.nombre}: ${m.descripcion}`} className="cursor-help border-l border-[var(--border-subtle)] px-2 pt-2 text-center font-semibold">
+                      {ENCABEZADO_CORTO[m.clave]}
+                    </th>
+                  ))}
+                  <th rowSpan={2} className="border-l border-[var(--border-subtle)] px-3 align-bottom font-semibold">{t("adminUsuarios.colEstado")}</th>
+                  <th rowSpan={2} className="py-2 pr-2 align-bottom font-semibold">{t("adminUsuarios.colAcciones")}</th>
+                </tr>
+                <tr className="border-b border-[var(--border-subtle)] text-[10px] uppercase tracking-wide text-[var(--text-muted)]">
+                  {MODULOS_INFO.map((m) => (
+                    <th key={m.clave} colSpan={2} className="border-l border-[var(--border-subtle)] px-1 pb-1.5 text-center font-medium">
+                      <span className="inline-block w-1/2">Ver</span>
+                      <span className="inline-block w-1/2">Editar</span>
+                    </th>
+                  ))}
                 </tr>
               </thead>
               <tbody>
                 {empleados.map((emp) => {
                   const esMiCuenta = emp.id === yo?.id;
                   const procesando = procesandoId === emp.id;
-                  const tituloBloqueo = t("adminUsuarios.bloqueoPropiaCuenta");
+                  const bloqueada = !!emp.accesoTotal || esMiCuenta;
+                  const motivoBloqueo = emp.accesoTotal
+                    ? "Cuenta @mercurymethods.com: acceso total fijo a todos los módulos"
+                    : esMiCuenta
+                      ? "No puedes cambiar tus propios permisos: pídeselo a otro administrador"
+                      : undefined;
                   return (
                     <tr key={emp.id} className="border-b border-[var(--border-subtle)] transition last:border-0 hover:bg-[var(--surface-muted)]">
-                      <td className="py-3 pr-4">
+                      <td className="py-2 pr-4">
                         <div className="flex items-center gap-2.5">
                           <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brand-800 font-heading text-[11px] font-bold text-cream-100">
                             {iniciales(emp.nombre)}
                           </div>
-                          <div>
-                            <p className="font-medium text-[var(--text-primary)]">{emp.nombre}</p>
-                            <p className="text-xs text-[var(--text-muted)]">{emp.correo}</p>
+                          <div className="min-w-0">
+                            <p className="truncate font-medium text-[var(--text-primary)]">{emp.nombre}</p>
+                            <p className="truncate text-xs text-[var(--text-muted)]">
+                              {emp.correo}
+                              {emp.accesoTotal && (
+                                <span title={motivoBloqueo} className="ml-1.5 inline-flex items-center gap-0.5 rounded-full bg-accent-300/30 px-1.5 py-0.5 text-[10px] font-semibold text-brand-800">
+                                  <ShieldCheck className="h-3 w-3" strokeWidth={1.75} /> Acceso total
+                                </span>
+                              )}
+                            </p>
                           </div>
                         </div>
                       </td>
-                      <td className="py-3 pr-4">
-                        <Select
-                          className="w-auto min-w-[9.5rem] py-1.5 text-xs"
-                          value={emp.rol}
-                          disabled={esMiCuenta || procesando || !!emp.accesoTotal}
-                          title={emp.accesoTotal ? "Cuenta @mercurymethods.com: acceso total fijo" : esMiCuenta ? tituloBloqueo : undefined}
-                          onChange={(e) => void handleCambiarRol(emp, e.target.value as Rol)}
-                        >
-                          <option value="empleado">{t("adminUsuarios.optEmpleado")}</option>
-                          <option value="admin">{t("adminUsuarios.optAdministrador")}</option>
-                        </Select>
-                      </td>
-                      <td className="py-3 pr-4">
-                        {emp.accesoTotal ? (
-                          <span
-                            title="Toda cuenta @mercurymethods.com tiene acceso total a todos los módulos; no se puede reducir."
-                            className="inline-flex items-center gap-1.5 rounded-lg bg-accent-300/30 px-2.5 py-1.5 text-xs font-semibold text-brand-800"
-                          >
-                            <ShieldCheck className="h-3.5 w-3.5" strokeWidth={1.75} />
-                            Acceso total · Mercury Methods
-                          </span>
-                        ) : (
-                        <button
-                          type="button"
-                          onClick={() => abrirPermisosTraz(emp)}
-                          className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--border-subtle)] px-2.5 py-1.5 text-xs font-semibold text-[var(--text-secondary)] transition hover:bg-[var(--surface-muted)]"
-                        >
-                          <Coffee className="h-3.5 w-3.5" strokeWidth={1.75} />
-                          {emp.permisosTrazabilidad.length === 0 && emp.permisosPos.length === 0
-                            ? "Sin acceso"
-                            : [emp.permisosTrazabilidad.length > 0 ? "Trazabilidad" : null, emp.permisosPos.length > 0 ? "POS" : null]
-                                .filter(Boolean)
-                                .join(" + ")}
-                        </button>
-                        )}
-                      </td>
-                      <td className="py-3 pr-4">
-                        <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${ESTADO_ESTILO[emp.estado]}`}>
+                      {MODULOS_INFO.map((m) => {
+                        const nivel = emp.permisosModulos[m.clave];
+                        return (
+                          <td key={m.clave} colSpan={2} className="border-l border-[var(--border-subtle)] px-1 py-2">
+                            <div className="flex">
+                              {(["ver", "editar"] as const).map((casilla) => (
+                                <label key={casilla} className="flex w-1/2 cursor-pointer justify-center" title={motivoBloqueo ?? `${m.nombre}: ${casilla === "ver" ? "puede ver" : "puede ver y editar"}`}>
+                                  <input
+                                    type="checkbox"
+                                    aria-label={`${emp.nombre} — ${m.nombre}: ${casilla}`}
+                                    className="h-4 w-4 accent-brand-800 disabled:cursor-not-allowed"
+                                    checked={casilla === "ver" ? !!nivel : nivel === "editar"}
+                                    disabled={bloqueada || procesando}
+                                    onChange={(e) => void handleCambiarPermiso(emp, m.clave, casilla, e.target.checked)}
+                                  />
+                                </label>
+                              ))}
+                            </div>
+                          </td>
+                        );
+                      })}
+                      <td className="border-l border-[var(--border-subtle)] px-3 py-2">
+                        <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-semibold ${ESTADO_ESTILO[emp.estado]}`}>
                           {emp.estado === "activo" ? t("adminUsuarios.estadoActivo") : t("adminUsuarios.estadoInactivo")}
                         </span>
+                        <p className="mt-0.5 text-[10px] text-[var(--text-muted)]">{formatDate(emp.createdAt)}</p>
                       </td>
-                      <td className="py-3 pr-4 text-[var(--text-secondary)]">{formatDate(emp.createdAt)}</td>
-                      <td className="py-3 pr-4">
-                        <div className="flex flex-wrap items-center gap-2">
+                      <td className="py-2 pr-2">
+                        <div className="flex items-center gap-1.5">
                           <Button
                             variant="outline"
-                            className="px-2.5 py-2 text-xs"
+                            className="px-2 py-1.5 text-xs"
                             disabled={esMiCuenta || procesando}
-                            title={esMiCuenta ? tituloBloqueo : undefined}
+                            title={esMiCuenta ? t("adminUsuarios.bloqueoPropiaCuenta") : undefined}
                             onClick={() => void handleCambiarEstado(emp)}
                           >
                             <ShieldCheck className="h-3.5 w-3.5" strokeWidth={1.75} />
@@ -234,13 +233,13 @@ export default function AdminUsuarios() {
                           </Button>
                           <Button
                             variant="danger"
-                            className="px-2.5 py-2 text-xs"
+                            className="px-2 py-1.5 text-xs"
                             disabled={esMiCuenta || procesando}
-                            title={esMiCuenta ? tituloBloqueo : undefined}
+                            title={esMiCuenta ? t("adminUsuarios.bloqueoPropiaCuenta") : t("adminUsuarios.eliminar")}
+                            aria-label={t("adminUsuarios.eliminar")}
                             onClick={() => setPorEliminar(emp)}
                           >
                             <Trash2 className="h-3.5 w-3.5" strokeWidth={1.75} />
-                            {t("adminUsuarios.eliminar")}
                           </Button>
                         </div>
                       </td>
@@ -251,6 +250,9 @@ export default function AdminUsuarios() {
             </table>
           </div>
         )}
+        <p className="mt-3 text-[11px] text-[var(--text-muted)]">
+          «Editar» incluye «Ver». Pasa el cursor sobre el nombre de un módulo para ver qué abarca. En el POS, aplicar descuentos, marcar agotados y cancelar cobros exige además editar algún módulo de administración (Negocio, RRHH o Usuarios).
+        </p>
       </Card>
 
       <Modal open={modalCrearOpen} onClose={() => setModalCrearOpen(false)} title={t("adminUsuarios.botonNuevo")} fullScreen>
@@ -261,50 +263,6 @@ export default function AdminUsuarios() {
           onSubmit={(v) => void handleCrear(v)}
           onCancel={() => setModalCrearOpen(false)}
         />
-      </Modal>
-
-      <Modal open={!!editandoTraz} onClose={() => setEditandoTraz(null)} title="Permisos de trazabilidad y POS">
-        <p className="mb-4 text-sm text-[var(--text-secondary)]">
-          Módulos que <span className="font-semibold text-[var(--text-primary)]">{editandoTraz?.nombre}</span> puede capturar. «Administrador de
-          trazabilidad» da acceso a todas las etapas y a la auditoría. Sin ninguna marcada, la persona no ve el módulo.
-        </p>
-        <div className="space-y-2">
-          {PERMISOS_TRAZABILIDAD.map((permiso) => (
-            <label key={permiso} className="flex items-center gap-2.5 text-sm text-[var(--text-primary)]">
-              <input
-                type="checkbox"
-                className="h-4 w-4 accent-brand-800"
-                checked={permisosElegidos.includes(permiso)}
-                onChange={(e) =>
-                  setPermisosElegidos((actuales) => (e.target.checked ? [...actuales, permiso] : actuales.filter((p) => p !== permiso)))
-                }
-              />
-              {ETIQUETA_PERMISO[permiso]}
-            </label>
-          ))}
-        </div>
-        <p className="mb-2 mt-5 text-sm font-semibold text-[var(--text-primary)]">Punto de venta (POS)</p>
-        <div className="space-y-2">
-          {PERMISOS_POS.map((permiso) => (
-            <label key={permiso} className="flex items-center gap-2.5 text-sm text-[var(--text-primary)]">
-              <input
-                type="checkbox"
-                className="h-4 w-4 accent-brand-800"
-                checked={permisosPosElegidos.includes(permiso)}
-                onChange={(e) => setPermisosPosElegidos((actuales) => (e.target.checked ? [...actuales, permiso] : actuales.filter((p) => p !== permiso)))}
-              />
-              {ETIQUETA_PERMISO_POS[permiso]}
-            </label>
-          ))}
-        </div>
-        <div className="mt-5 flex justify-end gap-3">
-          <Button type="button" variant="ghost" onClick={() => setEditandoTraz(null)} disabled={guardandoTraz}>
-            {t("adminUsuarios.cancelar")}
-          </Button>
-          <Button type="button" onClick={() => void handleGuardarPermisosTraz()} disabled={guardandoTraz}>
-            Guardar permisos
-          </Button>
-        </div>
       </Modal>
 
       <Modal open={!!porEliminar} onClose={() => setPorEliminar(null)} title={t("adminUsuarios.modalEliminarTitulo")}>

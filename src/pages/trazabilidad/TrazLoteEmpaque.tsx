@@ -9,7 +9,7 @@ import {
 } from "./comunes";
 
 export default function TrazLoteEmpaque() {
-  const { puede } = usePermisosTraz();
+  const { ver, editar } = usePermisosTraz();
   const navigate = useNavigate();
   const { datos, cargando } = useCarga(async () => ({
     tostados: await trazabilidadApi.lotesTostados(),
@@ -17,7 +17,7 @@ export default function TrazLoteEmpaque() {
   }));
   const { enviando, error, enviar } = useEnvio();
 
-  if (!puede("EMPAQUE")) return <AccesoDenegado etapa="empaque y distribución" />;
+  if (!ver) return <AccesoDenegado etapa="empaque y distribución" />;
   if (cargando) return <Cargando />;
   if (!datos) return <ErrorCaja mensaje="No se pudo cargar la información." />;
   if (datos.tostados.length === 0) return <RequiereAntes que="un" to="/trazabilidad/lote-tostado" enlace="lote tostado" />;
@@ -26,6 +26,7 @@ export default function TrazLoteEmpaque() {
     <div className="azahar-fade-in">
       <PageHeader breadcrumb="Trazabilidad" title="Etapa 4 — Empaque y distribución" description="Este es el punto que se enlaza al QR de la bolsa." />
       <div className="grid gap-6 lg:grid-cols-2">
+        {editar && (
         <Card>
           <h2 className={TITULO_FORM}>Registrar lote de empaque</h2>
           <p className={SUBTITULO_FORM}>Al guardar, el código QR se genera automáticamente.</p>
@@ -75,6 +76,7 @@ export default function TrazLoteEmpaque() {
             <Button type="submit" disabled={enviando} className="w-full">Registrar y generar QR</Button>
           </form>
         </Card>
+        )}
 
         <Card title={`Lotes empacados (${datos.empaques.length})`}>
           <ul className={LISTA}>

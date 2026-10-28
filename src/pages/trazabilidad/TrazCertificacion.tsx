@@ -8,14 +8,14 @@ import {
 } from "./comunes";
 
 export default function TrazCertificacion() {
-  const { puede } = usePermisosTraz();
+  const { ver, editar } = usePermisosTraz();
   const { datos, cargando, recargar } = useCarga(async () => ({
     fincas: await trazabilidadApi.fincas(),
     certificaciones: await trazabilidadApi.certificaciones(),
   }));
   const { enviando, error, exito, enviar } = useEnvio();
 
-  if (!puede("FINCA")) return <AccesoDenegado etapa="certificaciones" />;
+  if (!ver) return <AccesoDenegado etapa="certificaciones" />;
   if (cargando) return <Cargando />;
   if (!datos) return <ErrorCaja mensaje="No se pudo cargar la información." />;
   if (datos.fincas.length === 0) return <RequiereAntes que="una" to="/trazabilidad/finca" enlace="finca de origen" />;
@@ -26,6 +26,7 @@ export default function TrazCertificacion() {
     <div className="azahar-fade-in">
       <PageHeader breadcrumb="Trazabilidad" title="Certificaciones" description="Certificación vigente de una finca, con enlace verificable y evidencia opcional." />
       <div className="grid gap-6 lg:grid-cols-2">
+        {editar && (
         <Card>
           <h2 className={TITULO_FORM}>Registrar certificación</h2>
           <p className={SUBTITULO_FORM}>Aparece como insignia en la ficha pública de los lotes de esa finca.</p>
@@ -82,6 +83,7 @@ export default function TrazCertificacion() {
             <Button type="submit" disabled={enviando} className="w-full">Registrar certificación</Button>
           </form>
         </Card>
+        )}
 
         <Card title={`Certificaciones registradas (${datos.certificaciones.length})`}>
           <ul className={LISTA}>

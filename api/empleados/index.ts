@@ -24,7 +24,7 @@
 
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { sql } from "../_lib/db.js";
-import { HttpError, manejarError, requireAdmin } from "../_lib/auth.js";
+import { HttpError, manejarError, requireModulo } from "../_lib/auth.js";
 import { mapEmpleadoRow, type EmpleadoRow } from "../_lib/mappers.js";
 import { crearEmpleadoYUsuario } from "../_lib/crearEmpleado.js";
 
@@ -58,14 +58,14 @@ async function listarOVerificar(req: VercelRequest, res: VercelResponse) {
     return res.status(200).json({ ok: true, existe: Boolean(rows[0]?.existe) });
   }
 
-  await requireAdmin(req);
+  await requireModulo(req, ["usuarios", "rrhh"], "ver");
   const { rows } = await sql<EmpleadoRow>`select * from empleados order by nombre`;
   return res.status(200).json({ ok: true, empleados: rows.map(mapEmpleadoRow) });
 }
 
 async function crear(req: VercelRequest, res: VercelResponse) {
-  // Solo un administrador autenticado puede crear empleados manualmente.
-  await requireAdmin(req);
+  // Solo quien pueda editar usuarios o RRHH crea empleados manualmente.
+  await requireModulo(req, ["usuarios", "rrhh"], "editar");
 
   const body = req.body as Partial<EmpleadoCrearPayload>;
   const camposRequeridos: (keyof EmpleadoCrearPayload)[] = [

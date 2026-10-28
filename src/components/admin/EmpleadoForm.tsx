@@ -43,7 +43,7 @@ export function EmpleadoForm({ valoresIniciales, modo, enviando, onSubmit, onCan
   const [tipoContrato, setTipoContrato] = useState(valoresIniciales?.tipoContrato ?? TIPOS_CONTRATO[0]);
   const [fechaIngreso, setFechaIngreso] = useState(valoresIniciales?.fechaIngreso ?? "");
   const [diasVacaciones, setDiasVacaciones] = useState(valoresIniciales?.diasVacacionesDisponibles ?? 15);
-  const [rol, setRol] = useState<"empleado" | "admin">(valoresIniciales?.rol ?? "empleado");
+  const rol = valoresIniciales?.rol ?? "empleado"; // heredado: ya no otorga acceso (ver permisosModulos)
   const [estado, setEstado] = useState<"activo" | "inactivo">(valoresIniciales?.estado ?? "activo");
   const [telefono, setTelefono] = useState(valoresIniciales?.telefono ?? "");
   const [salario, setSalario] = useState(valoresIniciales?.salario ?? undefined);
@@ -116,12 +116,7 @@ export function EmpleadoForm({ valoresIniciales, modo, enviando, onSubmit, onCan
             </Field>
           </>
         )}
-        <Field label={t("empleadoForm.rolPortal")}>
-          <Select value={rol} onChange={(e) => setRol(e.target.value as "empleado" | "admin")}>
-            <option value="empleado">{t("empleadoForm.rolEmpleado")}</option>
-            <option value="admin">{t("empleadoForm.rolAdmin")}</option>
-          </Select>
-        </Field>
+        {/* El rol del portal ya no se elige aquí: el acceso se asigna por módulo (Ver / Editar) en Gestión de usuarios. */}
         {soloAccesoPortal && modo === "crear" && (
           <Field label={t("empleadoForm.contrasena")}>
             <Input

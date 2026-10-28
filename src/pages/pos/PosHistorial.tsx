@@ -8,10 +8,10 @@ import { ErrorCaja } from "../trazabilidad/comunes";
 import { SinAccesoPos, usePermisosPos } from "./comunes";
 
 export default function PosHistorial() {
-  const { puede } = usePermisosPos();
+  const { ver } = usePermisosPos();
   const [pedidos, setPedidos] = useState<PedidoPos[] | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const permitido = puede("CAJA");
+  const permitido = ver;
 
   useEffect(() => {
     if (!permitido) return;

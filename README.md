@@ -148,11 +148,17 @@ Ambos exigen backend real (Postgres) y **no tienen modo demo**.
   pesos COP enteros. Fuera de esta fase: recetas/insumos/stock, turnos de caja
   y cierre Z, combos, reportes y propinas.
 
-**Permisos.** Se asignan por persona en Administración > Usuarios (columna
-"Módulos"), no por rol del portal: ser admin del portal no da acceso a estos
-módulos. Trazabilidad: `ADMIN | FINCA | BENEFICIADO | TUESTE | EMPAQUE`
-(`empleados.permisos_trazabilidad`). POS: `ADMIN | CAJA | COCINA`
-(`empleados.permisos_pos`). La API valida los mismos permisos.
+**Permisos por módulo.** Se asignan por persona en Administración > Usuarios con
+una matriz de casillas **Ver / Editar** (Editar incluye Ver) para cinco módulos:
+`negocio` (gestión estratégica, comercial, operativa e información general),
+`rrhh` (solicitudes, incapacidades, documentos, empleados y nómina), `usuarios`,
+`trazabilidad` y `pos`. Se guardan en `empleados.permisos_modulos` (jsonb) y la API
+valida el mismo nivel (`requireModulo` en `api/_lib/auth.ts`; lecturas piden `ver`,
+escrituras `editar`). Inicio, Nómina personal y Mi perfil son para todos.
+Toda cuenta `@mercurymethods.com` tiene `editar` en todos los módulos siempre
+(`api/_lib/acceso.ts`); nadie puede cambiarse sus propios permisos. En el POS,
+descuentos, productos agotados (86) y cancelar cobros exigen además editar algún
+módulo de administración (negocio, rrhh o usuarios).
 
 **Funciones serverless.** El plan Hobby de Vercel permite 12; ya están todas en
 uso, así que trazabilidad y POS comparten `api/trazabilidad.ts` (se enruta con
@@ -161,11 +167,11 @@ esa misma función (ver `vercel.json`). No agregues funciones nuevas sin
 consolidar otra.
 
 **Base de datos.** `db/schema.sql` es el esquema base; `db/trazabilidad.sql`,
-`db/pos.sql` y `db/pos-catalogo.sql` agregan los módulos (idempotentes).
+`db/pos.sql`, `db/pos-catalogo.sql` y `db/modulos.sql` agregan los módulos (idempotentes).
 `db/migrar-trazabilidad.mjs` los aplica en una sola transacción sobre una base
 existente y, opcionalmente, copia los datos de la antigua app de trazabilidad
 (`ORIGEN_URL`); con `PRUEBA=1` hace un ensayo que no deja cambios. Para una base
-nueva basta aplicar los cuatro `.sql` en ese orden y crear el primer admin
+nueva basta aplicar los cinco `.sql` en ese orden y crear el primer admin
 (ver `db/schema.sql`, "Bootstrap").
 
 **Variables de entorno de producción:** `POSTGRES_URL`, `AUTH_SECRET`,

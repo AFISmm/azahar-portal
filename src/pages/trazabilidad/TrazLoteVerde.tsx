@@ -11,14 +11,14 @@ import {
 const SECCION = "pt-2 text-xs font-bold uppercase tracking-wide text-[var(--text-muted)]";
 
 export default function TrazLoteVerde() {
-  const { puede } = usePermisosTraz();
+  const { ver, editar } = usePermisosTraz();
   const { datos, cargando, recargar } = useCarga(async () => ({
     fincas: await trazabilidadApi.fincas(),
     lotes: await trazabilidadApi.lotesVerdes(),
   }));
   const { enviando, error, exito, enviar } = useEnvio();
 
-  if (!puede("BENEFICIADO")) return <AccesoDenegado etapa="beneficiado y trilla" />;
+  if (!ver) return <AccesoDenegado etapa="beneficiado y trilla" />;
   if (cargando) return <Cargando />;
   if (!datos) return <ErrorCaja mensaje="No se pudo cargar la información." />;
   if (datos.fincas.length === 0) return <RequiereAntes que="una" to="/trazabilidad/finca" enlace="finca de origen" />;
@@ -27,6 +27,7 @@ export default function TrazLoteVerde() {
     <div className="azahar-fade-in">
       <PageHeader breadcrumb="Trazabilidad" title="Etapa 2 — Beneficiado y trilla/exportación" description="Capturado por el beneficiadero y por trilla/exportación." />
       <div className="grid gap-6 lg:grid-cols-2">
+        {editar && (
         <Card>
           <h2 className={TITULO_FORM}>Registrar lote verde</h2>
           <p className={SUBTITULO_FORM}>Beneficiado y trilla son pasos secuenciales sobre el mismo lote físico antes del tueste.</p>
@@ -109,6 +110,7 @@ export default function TrazLoteVerde() {
             <Button type="submit" disabled={enviando} className="w-full">Registrar lote verde</Button>
           </form>
         </Card>
+        )}
 
         <Card title={`Lotes verdes registrados (${datos.lotes.length})`}>
           <ul className={LISTA}>

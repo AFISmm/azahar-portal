@@ -185,3 +185,7 @@ create index idx_pqr_empleado on pqr (empleado_id);
 -- Módulo de Trazabilidad: ver db/trazabilidad.sql (tablas traz_* y la columna
 -- empleados.permisos_trazabilidad).
 -- ----------------------------------------------------------------------------
+
+-- ----------------------------------------------------------------------------
+-- Permisos por módulo (ver / editar): ver db/modulos.sql (empleados.permisos_modulos).
+-- ----------------------------------------------------------------------------

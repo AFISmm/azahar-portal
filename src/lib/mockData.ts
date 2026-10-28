@@ -28,8 +28,7 @@ export const empleadosSeed: Empleado[] = [
     username: "mariacamila.restrepo",
     tipoCuenta: "empleado",
     debeCambiarPassword: false,
-    permisosTrazabilidad: [],
-    permisosPos: [],
+    permisosModulos: { negocio: "editar", rrhh: "editar", usuarios: "editar", trazabilidad: "editar", pos: "editar" },
     createdAt: "2019-03-11T13:00:00.000Z",
   },
   {
@@ -51,8 +50,7 @@ export const empleadosSeed: Empleado[] = [
     username: "juanesteban.gomez",
     tipoCuenta: "empleado",
     debeCambiarPassword: false,
-    permisosTrazabilidad: [],
-    permisosPos: [],
+    permisosModulos: {},
     createdAt: "2022-06-01T13:00:00.000Z",
   },
   {
@@ -74,8 +72,7 @@ export const empleadosSeed: Empleado[] = [
     username: "lauravalentina.torres",
     tipoCuenta: "empleado",
     debeCambiarPassword: false,
-    permisosTrazabilidad: [],
-    permisosPos: [],
+    permisosModulos: {},
     createdAt: "2020-09-15T13:00:00.000Z",
   },
   {
@@ -97,8 +94,7 @@ export const empleadosSeed: Empleado[] = [
     username: "andresfelipe.munoz",
     tipoCuenta: "empleado",
     debeCambiarPassword: false,
-    permisosTrazabilidad: [],
-    permisosPos: [],
+    permisosModulos: {},
     createdAt: "2021-01-20T13:00:00.000Z",
   },
   {
@@ -120,8 +116,7 @@ export const empleadosSeed: Empleado[] = [
     username: "danielasofia.ramirez",
     tipoCuenta: "empleado",
     debeCambiarPassword: false,
-    permisosTrazabilidad: [],
-    permisosPos: [],
+    permisosModulos: {},
     createdAt: "2023-02-06T13:00:00.000Z",
   },
   {
@@ -143,8 +138,7 @@ export const empleadosSeed: Empleado[] = [
     username: "santiago.zuluaga",
     tipoCuenta: "empleado",
     debeCambiarPassword: false,
-    permisosTrazabilidad: [],
-    permisosPos: [],
+    permisosModulos: {},
     createdAt: "2025-11-03T13:00:00.000Z",
   },
 ];

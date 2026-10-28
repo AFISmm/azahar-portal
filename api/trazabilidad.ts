@@ -12,11 +12,8 @@
 //   GET|POST /api/fincas  (rewrite de vercel.json -> ?r=gestion-fincas)  -> módulo Gestión Operativa.
 //   ?r=pos-*  -> POS (ver api/_lib/pos.ts). Comparte esta función por el límite de 12 de Vercel Hobby.
 //
-// PERMISOS: se manejan desde el portal. Cada empleado tiene
-// `empleados.permisos_trazabilidad` (text[]) con valores 'ADMIN' | 'FINCA' |
-// 'BENEFICIADO' | 'TUESTE' | 'EMPAQUE', editables en Admin > Usuarios. 'ADMIN'
-// ve y captura todas las etapas y la auditoría. Ser admin del portal NO da
-// acceso a trazabilidad por sí solo: el permiso se asigna explícitamente.
+// PERMISOS: por módulo (ver api/_lib/acceso.ts). 'ver' consulta todo; 'editar' registra en
+// todas las etapas y ve la auditoría. Se asignan en Gestión de usuarios.
 // ============================================================================
 
 import type { VercelRequest, VercelResponse } from "@vercel/node";
@@ -24,17 +21,16 @@ import QRCode from "qrcode";
 import { sql } from "./_lib/db.js";
 import { HttpError, manejarError, requireAuth } from "./_lib/auth.js";
 import fincasGestion from "./_lib/fincasGestion.js";
-import { tieneAccesoTotal } from "./_lib/acceso.js";
+import { cumple, permisosEfectivos, type Nivel, type PermisosModulos } from "./_lib/acceso.js";
 import { POS_GET, POS_POST } from "./_lib/pos.js";
 
-type Permiso = "ADMIN" | "FINCA" | "BENEFICIADO" | "TUESTE" | "EMPAQUE";
 type Fila = Record<string, unknown>;
 type Body = Record<string, unknown>;
 
 interface Actor {
   id: string;
   nombre: string;
-  permisos: string[];
+  permisos: PermisosModulos;
 }
 
 function primero(v: string | string[] | undefined): string | undefined {
@@ -63,23 +59,19 @@ function fecha(v: unknown): string | null {
 
 async function cargarActor(req: VercelRequest): Promise<Actor> {
   const { empleadoId } = await requireAuth(req);
-  const { rows } = await sql<{ nombre: string; correo: string; estado: string; permisos_trazabilidad: string[] | null }>`
-    select nombre, correo, estado, permisos_trazabilidad from empleados where id = ${empleadoId} limit 1
+  const { rows } = await sql<{ nombre: string; correo: string; estado: string; permisos_modulos: unknown }>`
+    select nombre, correo, estado, permisos_modulos from empleados where id = ${empleadoId} limit 1
   `;
   const fila = rows[0];
   if (!fila || fila.estado !== "activo") throw new HttpError(401, "La sesión ya no es válida.");
-  return { id: empleadoId, nombre: fila.nombre, permisos: tieneAccesoTotal(fila.correo) ? ["ADMIN"] : (fila.permisos_trazabilidad ?? []) };
+  return { id: empleadoId, nombre: fila.nombre, permisos: permisosEfectivos(fila) };
 }
 
-/**
- * Exige acceso al módulo (cualquier permiso). Si se pasa `etapas`, además
- * exige alguna de ellas o 'ADMIN'; con `[]` solo pasa 'ADMIN'.
- */
-async function exigir(req: VercelRequest, etapas?: Permiso[]): Promise<Actor> {
+/** Exige el nivel pedido en el módulo de trazabilidad: 'ver' para consultar, 'editar' para registrar. */
+async function exigir(req: VercelRequest, nivel: Nivel = "ver"): Promise<Actor> {
   const actor = await cargarActor(req);
-  if (actor.permisos.length === 0) throw new HttpError(403, "No tienes acceso al módulo de trazabilidad.");
-  if (etapas && !actor.permisos.includes("ADMIN") && !etapas.some((e) => actor.permisos.includes(e))) {
-    throw new HttpError(403, "Tu permiso no incluye esta etapa de la cadena.");
+  if (!cumple(actor.permisos, "trazabilidad", nivel)) {
+    throw new HttpError(403, nivel === "editar" ? "No tienes permiso de edición en trazabilidad." : "No tienes acceso al módulo de trazabilidad.");
   }
   return actor;
 }
@@ -382,7 +374,7 @@ async function lotesEmpaque(req: VercelRequest, res: VercelResponse) {
 }
 
 async function auditoria(req: VercelRequest, res: VercelResponse) {
-  await exigir(req, []);
+  await exigir(req, "editar");
   const { rows } = await sql`
     select id, usuario_nombre, entidad, resumen, creado_en from traz_auditoria order by creado_en desc limit 200
   `;
@@ -397,7 +389,7 @@ async function auditoria(req: VercelRequest, res: VercelResponse) {
 // ---------------------------------------------------------------------------
 
 async function crearFinca(req: VercelRequest, res: VercelResponse) {
-  const actor = await exigir(req, ["FINCA"]);
+  const actor = await exigir(req, "editar");
   const b = req.body as Body;
   const nombre = texto(b.nombre);
   if (!nombre) throw new HttpError(400, "El nombre de la finca es obligatorio.");
@@ -412,7 +404,7 @@ async function crearFinca(req: VercelRequest, res: VercelResponse) {
 }
 
 async function crearCertificacion(req: VercelRequest, res: VercelResponse) {
-  const actor = await exigir(req, ["FINCA"]);
+  const actor = await exigir(req, "editar");
   const b = req.body as Body;
   const fincaId = texto(b.fincaId);
   const nombre = texto(b.nombre);
@@ -429,7 +421,7 @@ async function crearCertificacion(req: VercelRequest, res: VercelResponse) {
 }
 
 async function crearLoteVerde(req: VercelRequest, res: VercelResponse) {
-  const actor = await exigir(req, ["BENEFICIADO"]);
+  const actor = await exigir(req, "editar");
   const b = req.body as Body;
   const fincaId = texto(b.fincaId);
   if (!fincaId) throw new HttpError(400, "Selecciona una finca de origen.");
@@ -446,7 +438,7 @@ async function crearLoteVerde(req: VercelRequest, res: VercelResponse) {
 }
 
 async function crearFichaCata(req: VercelRequest, res: VercelResponse) {
-  const actor = await exigir(req, ["BENEFICIADO"]);
+  const actor = await exigir(req, "editar");
   const b = req.body as Body;
   const loteVerdeId = texto(b.loteVerdeId);
   if (!loteVerdeId) throw new HttpError(400, "Selecciona el lote verde catado.");
@@ -460,7 +452,7 @@ async function crearFichaCata(req: VercelRequest, res: VercelResponse) {
 }
 
 async function crearLoteTostado(req: VercelRequest, res: VercelResponse) {
-  const actor = await exigir(req, ["TUESTE"]);
+  const actor = await exigir(req, "editar");
   const b = req.body as Body;
   const componentes = Array.isArray(b.componentes) ? (b.componentes as Body[]) : [];
   const validos = componentes.filter((c) => texto(c.loteVerdeId));
@@ -489,7 +481,7 @@ async function crearLoteTostado(req: VercelRequest, res: VercelResponse) {
 }
 
 async function crearLoteEmpaque(req: VercelRequest, res: VercelResponse) {
-  const actor = await exigir(req, ["EMPAQUE"]);
+  const actor = await exigir(req, "editar");
   const b = req.body as Body;
   const loteTostadoId = texto(b.loteTostadoId);
   if (!loteTostadoId) throw new HttpError(400, "Selecciona el lote tostado de origen.");

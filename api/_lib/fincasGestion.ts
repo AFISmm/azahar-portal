@@ -9,7 +9,7 @@
 // ============================================================================
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { sql } from "./db.js";
-import { HttpError, manejarError, requireAdmin } from "./auth.js";
+import { HttpError, manejarError, requireModulo } from "./auth.js";
 import { mapFincaRow, type FincaRow } from "./mappers.js";
 
 interface FincaPostPayload {
@@ -28,7 +28,7 @@ interface FincaPostPayload {
 }
 
 async function listar(req: VercelRequest, res: VercelResponse) {
-  await requireAdmin(req);
+  await requireModulo(req, "negocio", "ver");
   const { rows } = await sql<FincaRow>`select * from fincas order by nombre`;
   return res.status(200).json({ ok: true, fincas: rows.map(mapFincaRow) });
 }
@@ -40,7 +40,7 @@ async function generarCodigo(): Promise<string> {
 }
 
 async function crear(req: VercelRequest, res: VercelResponse) {
-  await requireAdmin(req);
+  await requireModulo(req, "negocio", "editar");
 
   const body = req.body as Partial<FincaPostPayload>;
   const camposRequeridos: (keyof FincaPostPayload)[] = [

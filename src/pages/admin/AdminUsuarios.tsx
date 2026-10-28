@@ -209,11 +209,11 @@ export default function AdminUsuarios() {
           <p className="py-6 text-center text-sm text-[var(--text-muted)]">{t("adminUsuarios.sinCuentas")}</p>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[1040px] text-left text-sm">
+            <table className="w-full min-w-[960px] text-left text-sm">
               <thead>
                 <tr className="text-xs uppercase tracking-wide text-[var(--text-muted)]">
                   <th rowSpan={2} className="py-2 pr-3 align-bottom font-semibold">{t("adminUsuarios.colUsuario")}</th>
-                  <th rowSpan={2} className="px-2 align-bottom font-semibold">Guardar</th>
+                  <th rowSpan={2} className="px-2 align-bottom font-semibold" title="Guardar los cambios de cada persona"><Save className="mx-auto h-4 w-4" strokeWidth={1.75} aria-label="Guardar" /></th>
                   <th rowSpan={2} className="border-l border-[var(--border-subtle)] px-3 align-bottom font-semibold">Rol</th>
                   {MODULOS_INFO.map((m) => (
                     <th
@@ -273,13 +273,13 @@ export default function AdminUsuarios() {
                           <div className="flex items-center gap-1">
                             <Button
                               variant={cambiado ? "secondary" : "outline"}
-                              className="px-2.5 py-1.5 text-xs"
+                              className="p-2"
                               disabled={!cambiado || guardando}
                               onClick={() => void handleGuardar(emp)}
                               title={cambiado ? "Guardar los cambios de permisos de esta persona" : "No hay cambios por guardar"}
+                              aria-label={`Guardar los cambios de ${emp.nombre}`}
                             >
-                              {guardando ? <Loader2 className="h-3.5 w-3.5 animate-spin" strokeWidth={1.75} /> : <Save className="h-3.5 w-3.5" strokeWidth={1.75} />}
-                              Guardar
+                              {guardando ? <Loader2 className="h-4 w-4 animate-spin" strokeWidth={1.75} /> : <Save className="h-4 w-4" strokeWidth={1.75} />}
                             </Button>
                             {cambiado && !guardando && (
                               <button

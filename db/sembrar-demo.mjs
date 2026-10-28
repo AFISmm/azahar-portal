@@ -92,6 +92,20 @@ for (const [nombre, correo, cargo, departamento, contrato, ingreso, vacaciones, 
     fecha_nacimiento: nacimiento, numero_identificacion: cedula, debe_cambiar_password: false,
   });
 }
+// Cuentas desactivadas (con motivo y fecha) para ver la ficha de Gestión de usuarios completa
+const desactivados = [
+  ["Sebastián Arango Mejía", "sebastian.arango@azaharcoffee.co", "Barista", "Operaciones de Tienda", "Término fijo", "2024-02-05", 4, 1800000, "1098765432", "1997-03-09", "320 555 0111", "Terminación del contrato a término fijo (vencimiento el 30 de septiembre).", 38],
+  ["Natalia Ospina Duque", "natalia.ospina@azaharcoffee.co", "Analista de Mercadeo", "Mercadeo", "Término indefinido", "2023-05-22", 0, 3900000, "1036547890", "1994-08-27", "321 555 0112", "Renuncia voluntaria: se retiró para trabajar en otra empresa.", 21],
+  ["Hernán Darío Vélez", "hernan.velez@azaharcoffee.co", "Auxiliar de Logística", "Logística y Abastecimiento", "Prestación de servicios", "2024-09-02", 6, 2100000, "71234567", "1990-12-01", "322 555 0113", "Cuenta desactivada por solicitud de Talento Humano: finalizó el contrato de prestación de servicios.", 9],
+];
+for (const [nombre, correo, cargo, departamento, contrato, ingreso, vacaciones, salario, cedula, nacimiento, tel, motivo, hace] of desactivados) {
+  insertar("empleados", {
+    id: uid(`emp:${correo}`), nombre, correo, password_hash: hashInutilizable, cargo, departamento, tipo_contrato: contrato, fecha_ingreso: ingreso,
+    dias_vacaciones_disponibles: vacaciones, salario, rol: "empleado", estado: "inactivo", telefono: tel,
+    fecha_nacimiento: nacimiento, numero_identificacion: cedula, debe_cambiar_password: false,
+    motivo_desactivacion: motivo, desactivado_en: haceDias(hace),
+  });
+}
 // quien resuelve las solicitudes: María Camila (gerente de talento humano)
 const resuelve = empId["mariacamila.restrepo@azaharcoffee.co"];
 // Los administradores (Mercury) y los demás también necesitan quedar con ids conocidos

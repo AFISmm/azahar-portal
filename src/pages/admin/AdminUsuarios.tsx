@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Loader2, Save, ShieldCheck, Trash2, Undo2, UserPlus } from "lucide-react";
+import { Loader2, Pencil, Save, ShieldCheck, Trash2, Undo2, UserPlus } from "lucide-react";
 import { dataSource } from "../../lib/dataSource";
 import { MODULOS_INFO, type Empleado, type Modulo, type NivelModulo, type PermisosModulos } from "../../lib/types";
 import { ROLES_PREDEFINIDOS, ROL_ACCESO_TOTAL, ROL_PERSONALIZADO, compararPorPermisos, igualPermisos, normalizar, rolDe } from "../../lib/roles";
@@ -59,6 +59,10 @@ export default function AdminUsuarios() {
   const [eliminando, setEliminando] = useState(false);
   const [modalCrearOpen, setModalCrearOpen] = useState(false);
   const [creando, setCreando] = useState(false);
+  // Ficha de la persona (lápiz): su id y el motivo que se escribe al desactivar.
+  const [perfilId, setPerfilId] = useState<string | null>(null);
+  const [motivo, setMotivo] = useState("");
+  const perfil = empleados.find((e) => e.id === perfilId) ?? null;
 
   const cargar = useCallback(async () => {
     setCargando(true);
@@ -148,11 +152,17 @@ export default function AdminUsuarios() {
     if (guardados > 0) showToast(`${guardados} ${guardados === 1 ? "persona guardada" : "personas guardadas"}.`, "success");
   }
 
-  async function handleCambiarEstado(emp: Empleado) {
+  async function handleCambiarEstado(emp: Empleado, motivoDesactivacion?: string) {
     const nuevoEstado: Empleado["estado"] = emp.estado === "activo" ? "inactivo" : "activo";
     setProcesandoId(emp.id);
     try {
-      reemplazar(await dataSource.updateEmpleado(emp.id, { estado: nuevoEstado }));
+      reemplazar(
+        await dataSource.updateEmpleado(emp.id, {
+          estado: nuevoEstado,
+          ...(nuevoEstado === "inactivo" ? { motivoDesactivacion: motivoDesactivacion ?? "" } : {}),
+        }),
+      );
+      setMotivo("");
       showToast(
         `${t("adminUsuarios.accesoPrefix")} ${emp.nombre} ${t("adminUsuarios.accesoFue")} ${nuevoEstado === "activo" ? t("adminUsuarios.accesoActivado") : t("adminUsuarios.accesoDesactivado")}.`,
         "success",
@@ -162,6 +172,11 @@ export default function AdminUsuarios() {
     } finally {
       setProcesandoId(null);
     }
+  }
+
+  function abrirFicha(emp: Empleado) {
+    setMotivo("");
+    setPerfilId(emp.id);
   }
 
   async function handleCrear(valores: EmpleadoFormValues) {
@@ -275,35 +290,45 @@ export default function AdminUsuarios() {
                         </div>
                       </td>
 
-                      {/* Guardar / deshacer, junto al nombre de cada persona */}
+                      {/* Guardar (disquete), deshacer y ficha (lápiz) */}
                       <td className="px-2 py-2">
-                        {bloqueada ? (
-                          <span className="text-[11px] text-[var(--text-muted)]" title={motivoBloqueo}>—</span>
-                        ) : (
-                          <div className="flex items-center gap-1">
-                            <Button
-                              variant={cambiado ? "secondary" : "outline"}
-                              className="p-2"
+                        <div className="flex items-center gap-0.5">
+                          {bloqueada ? (
+                            <span className="inline-flex w-7 justify-center text-[11px] text-[var(--text-muted)]" title={motivoBloqueo}>—</span>
+                          ) : (
+                            <button
+                              type="button"
                               disabled={!cambiado || guardando}
                               onClick={() => void handleGuardar(emp)}
                               title={cambiado ? "Guardar los cambios de permisos de esta persona" : "No hay cambios por guardar"}
                               aria-label={`Guardar los cambios de ${emp.nombre}`}
+                              className={`rounded-md p-1.5 transition disabled:cursor-not-allowed disabled:opacity-30 ${cambiado ? "text-brand-800 hover:bg-[var(--surface-muted)]" : "text-[var(--text-muted)]"}`}
                             >
                               {guardando ? <Loader2 className="h-4 w-4 animate-spin" strokeWidth={1.75} /> : <Save className="h-4 w-4" strokeWidth={1.75} />}
-                            </Button>
-                            {cambiado && !guardando && (
-                              <button
-                                type="button"
-                                onClick={() => descartar(emp)}
-                                className="rounded-lg p-1.5 text-[var(--text-muted)] transition hover:bg-[var(--surface-muted)] hover:text-[var(--text-primary)]"
-                                title="Descartar los cambios"
-                                aria-label={`Descartar los cambios de ${emp.nombre}`}
-                              >
-                                <Undo2 className="h-4 w-4" strokeWidth={1.75} />
-                              </button>
-                            )}
-                          </div>
-                        )}
+                            </button>
+                          )}
+                          {cambiado && !guardando ? (
+                            <button
+                              type="button"
+                              onClick={() => descartar(emp)}
+                              className="rounded-md p-1.5 text-[var(--text-muted)] transition hover:bg-[var(--surface-muted)] hover:text-[var(--text-primary)]"
+                              title="Descartar los cambios"
+                              aria-label={`Descartar los cambios de ${emp.nombre}`}
+                            >
+                              <Undo2 className="h-4 w-4" strokeWidth={1.75} />
+                            </button>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() => abrirFicha(emp)}
+                              className="rounded-md p-1.5 text-[var(--text-secondary)] transition hover:bg-[var(--surface-muted)] hover:text-[var(--text-primary)]"
+                              title="Ver y editar el perfil"
+                              aria-label={`Ver el perfil de ${emp.nombre}`}
+                            >
+                              <Pencil className="h-4 w-4" strokeWidth={1.75} />
+                            </button>
+                          )}
+                        </div>
                       </td>
 
                       {/* Rol: se elige de una lista (marca las casillas) y se recalcula si se cambian las casillas a mano */}
@@ -370,7 +395,7 @@ export default function AdminUsuarios() {
                             className="px-2 py-1.5 text-xs"
                             disabled={esMiCuenta || procesando}
                             title={esMiCuenta ? t("adminUsuarios.bloqueoPropiaCuenta") : emp.estado === "activo" ? t("adminUsuarios.accionDesactivar") : t("adminUsuarios.accionActivar")}
-                            onClick={() => void handleCambiarEstado(emp)}
+                            onClick={() => (emp.estado === "activo" ? abrirFicha(emp) : void handleCambiarEstado(emp))}
                           >
                             <ShieldCheck className="h-3.5 w-3.5" strokeWidth={1.75} />
                             <span className="sr-only">{emp.estado === "activo" ? t("adminUsuarios.accionDesactivar") : t("adminUsuarios.accionActivar")}</span>
@@ -399,6 +424,80 @@ export default function AdminUsuarios() {
           cobros exige además editar algún módulo de administración (las Gestiones, Información General, Nómina o Gestión de usuarios).
         </p>
       </Card>
+
+      <Modal open={!!perfil} onClose={() => setPerfilId(null)} title={perfil ? apodo(perfil.nombre) : ""}>
+        {perfil && (
+          <div className="space-y-4 text-sm">
+            <div className="flex items-center gap-3">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-brand-800 font-heading text-sm font-bold text-cream-100">
+                {iniciales(perfil.nombre)}
+              </div>
+              <div className="min-w-0">
+                <p className="truncate font-semibold text-[var(--text-primary)]">{perfil.nombre}</p>
+                <p className="truncate text-[var(--text-secondary)]">{perfil.cargo}</p>
+              </div>
+              <span className={`ml-auto inline-flex rounded-full px-2 py-0.5 text-xs font-semibold ${ESTADO_ESTILO[perfil.estado]}`}>
+                {perfil.estado === "activo" ? t("adminUsuarios.estadoActivo") : t("adminUsuarios.estadoInactivo")}
+              </span>
+            </div>
+
+            <dl className="grid grid-cols-1 gap-x-6 gap-y-2 sm:grid-cols-2">
+              {[
+                ["Correo", perfil.correo],
+                ["Teléfono", perfil.telefono],
+                ["Departamento", perfil.departamento],
+                ["Tipo de contrato", perfil.tipoContrato],
+                ["Fecha de ingreso", perfil.fechaIngreso ? formatDate(perfil.fechaIngreso) : null],
+                ["Identificación", perfil.numeroIdentificacion],
+                ["Rol", rolDe(vista(perfil), !!perfil.accesoTotal)],
+                ["Cuenta creada", formatDate(perfil.createdAt)],
+              ].map(([k, v]) => (
+                <div key={k} className="min-w-0">
+                  <dt className="text-[11px] uppercase tracking-wide text-[var(--text-muted)]">{k}</dt>
+                  <dd className="break-words text-[var(--text-primary)]">{v || "—"}</dd>
+                </div>
+              ))}
+            </dl>
+
+            {perfil.estado === "inactivo" ? (
+              <div className="rounded-xl border border-status-rechazada/40 bg-status-rechazada-bg p-3">
+                <p className="text-xs font-semibold uppercase tracking-wide text-status-rechazada">
+                  Cuenta desactivada{perfil.desactivadoEn ? ` el ${formatDate(perfil.desactivadoEn)}` : ""}
+                </p>
+                <p className="mt-1 text-[var(--text-primary)]">{perfil.motivoDesactivacion || "No se registró un motivo."}</p>
+                <Button className="mt-3" variant="secondary" disabled={procesandoId === perfil.id || perfil.id === yo?.id} onClick={() => void handleCambiarEstado(perfil)}>
+                  Reactivar cuenta
+                </Button>
+              </div>
+            ) : (
+              <div className="rounded-xl border border-[var(--border-subtle)] p-3">
+                <label htmlFor="motivo-desactivacion" className="text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]">
+                  Desactivar cuenta
+                </label>
+                <textarea
+                  id="motivo-desactivacion"
+                  value={motivo}
+                  onChange={(e) => setMotivo(e.target.value)}
+                  rows={2}
+                  maxLength={500}
+                  placeholder="Motivo de la desactivación (obligatorio)"
+                  disabled={perfil.id === yo?.id}
+                  className="mt-1.5 w-full rounded-lg border border-[var(--border-subtle)] bg-transparent px-3 py-2 text-sm outline-none focus:border-brand-800"
+                />
+                <Button
+                  className="mt-2"
+                  variant="danger"
+                  disabled={!motivo.trim() || procesandoId === perfil.id || perfil.id === yo?.id}
+                  title={perfil.id === yo?.id ? t("adminUsuarios.bloqueoPropiaCuenta") : undefined}
+                  onClick={() => void handleCambiarEstado(perfil, motivo.trim())}
+                >
+                  Desactivar cuenta
+                </Button>
+              </div>
+            )}
+          </div>
+        )}
+      </Modal>
 
       <Modal open={modalCrearOpen} onClose={() => setModalCrearOpen(false)} title={t("adminUsuarios.botonNuevo")} fullScreen>
         <EmpleadoForm modo="crear" soloAccesoPortal enviando={creando} onSubmit={(v) => void handleCrear(v)} onCancel={() => setModalCrearOpen(false)} />

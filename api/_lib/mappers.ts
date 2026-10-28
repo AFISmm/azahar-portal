@@ -41,6 +41,8 @@ export interface EmpleadoRow {
   tipo_cuenta: TipoCuenta;
   debe_cambiar_password: boolean;
   permisos_modulos: unknown;
+  motivo_desactivacion: string | null;
+  desactivado_en: string | null;
   created_at: string;
 }
 
@@ -68,6 +70,9 @@ export interface EmpleadoPublico {
   permisosModulos: PermisosModulos;
   /** true = cuenta del dominio corporativo: acceso total fijo (no editable desde Gestión de usuarios). */
   accesoTotal: boolean;
+  /** Por qué se desactivó la cuenta (solo si está inactiva). */
+  motivoDesactivacion: string | null;
+  desactivadoEn: string | null;
   createdAt: string;
 }
 
@@ -94,6 +99,8 @@ export function mapEmpleadoRow(row: EmpleadoRow): EmpleadoPublico {
     debeCambiarPassword: row.debe_cambiar_password,
     permisosModulos: permisosEfectivos(row),
     accesoTotal,
+    motivoDesactivacion: row.estado === "inactivo" ? (row.motivo_desactivacion ?? null) : null,
+    desactivadoEn: row.estado === "inactivo" ? (row.desactivado_en ?? null) : null,
     createdAt: row.created_at,
   };
 }

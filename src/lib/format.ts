@@ -13,7 +13,10 @@ export function formatCOP(monto: number | null | undefined): string {
 export function formatDate(iso: string | null | undefined, pattern = "d MMM yyyy"): string {
   if (!iso) return "—";
   try {
-    return format(parseISO(iso), pattern, { locale: es });
+    // Las columnas `date` llegan como medianoche UTC ("2026-10-28T00:00:00.000Z"); interpretadas en
+    // la zona local (Colombia, UTC-5) mostrarían el día anterior. Se toma solo la parte de fecha.
+    const soloDia = /^\d{4}-\d{2}-\d{2}T00:00:00(\.0+)?Z$/.test(iso) ? iso.slice(0, 10) : iso;
+    return format(parseISO(soloDia), pattern, { locale: es });
   } catch {
     return iso;
   }

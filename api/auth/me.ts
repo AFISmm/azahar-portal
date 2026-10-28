@@ -43,7 +43,7 @@ import type { VercelRequest, VercelResponse } from "@vercel/node";
 import bcrypt from "bcryptjs";
 import { put } from "@vercel/blob";
 import { sql } from "../_lib/db.js";
-import { tieneAccesoTotal } from "../_lib/acceso.js";
+import { cumple, permisosEfectivos, tieneAccesoTotal } from "../_lib/acceso.js";
 import { HttpError, leerEmpleadoIdDeSesion, manejarError, requireAuth } from "../_lib/auth.js";
 import { mapEmpleadoRow, mapPqrRow, type EmpleadoRow, type PqrEstado, type PqrRow } from "../_lib/mappers.js";
 
@@ -53,6 +53,11 @@ interface PerfilPatchPayload {
   correo?: string;
   password?: string;
   username?: string;
+  // Datos personales: solo los puede corregir quien edita usuarios o RRHH (ver más abajo).
+  nombre?: string;
+  fechaNacimiento?: string | null;
+  numeroIdentificacion?: string | null;
+  fechaIngreso?: string;
 }
 
 interface PqrPayload {
@@ -87,6 +92,23 @@ async function actualizarPerfilPropio(req: VercelRequest, res: VercelResponse) {
     throw new HttpError(403, "Ese dominio de correo está reservado. Pide a un administrador que cambie tu correo.");
   }
   const username = body.username !== undefined ? body.username.trim() || null : actual.username;
+
+  // Los datos personales (nombre, nacimiento, identificación, ingreso) son de solo lectura para
+  // el empleado común: los corrige Talento Humano. Quien puede editar usuarios o RRHH (todas las
+  // cuentas @mercurymethods.com incluidas) puede corregir los suyos aquí mismo.
+  const quiereCambiarDatos =
+    body.nombre !== undefined || body.fechaNacimiento !== undefined || body.numeroIdentificacion !== undefined || body.fechaIngreso !== undefined;
+  if (quiereCambiarDatos && !cumple(permisosEfectivos(actual), ["usuarios", "rrhh"], "editar")) {
+    throw new HttpError(403, "Tus datos personales son de solo lectura: pide a Talento Humano que los corrija.");
+  }
+  const esFecha = (v: unknown): v is string => typeof v === "string" && /^\d{4}-\d{2}-\d{2}$/.test(v);
+  const nombre = body.nombre !== undefined ? body.nombre.trim() : actual.nombre;
+  if (!nombre) throw new HttpError(400, "El nombre no puede quedar vacío.");
+  if (body.fechaNacimiento && !esFecha(body.fechaNacimiento)) throw new HttpError(400, "Fecha de nacimiento inválida.");
+  if (body.fechaIngreso !== undefined && !esFecha(body.fechaIngreso)) throw new HttpError(400, "Fecha de inicio inválida.");
+  const fechaNacimiento = body.fechaNacimiento !== undefined ? body.fechaNacimiento || null : actual.fecha_nacimiento;
+  const numeroIdentificacion = body.numeroIdentificacion !== undefined ? body.numeroIdentificacion?.trim() || null : actual.numero_identificacion;
+  const fechaIngreso = body.fechaIngreso !== undefined ? body.fechaIngreso : actual.fecha_ingreso;
   const passwordHash = body.password ? await bcrypt.hash(body.password, RONDAS_SAL) : actual.password_hash;
 
   // Cambiar la contraseña (sea la obligatoria del primer ingreso o una
@@ -97,7 +119,8 @@ async function actualizarPerfilPropio(req: VercelRequest, res: VercelResponse) {
   try {
     const { rows: actualizadas } = await sql<EmpleadoRow>`
       update empleados set correo = ${correo}, username = ${username}, password_hash = ${passwordHash},
-        debe_cambiar_password = ${debeCambiarPassword}
+        debe_cambiar_password = ${debeCambiarPassword}, nombre = ${nombre}, fecha_nacimiento = ${fechaNacimiento},
+        numero_identificacion = ${numeroIdentificacion}, fecha_ingreso = ${fechaIngreso}
       where id = ${empleadoId}
       returning *
     `;

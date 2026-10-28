@@ -2,6 +2,7 @@ import { type FormEvent, useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { ArrowLeft, Lock, MessageSquareWarning, Paperclip } from "lucide-react";
 import { useAuth } from "../auth/AuthContext";
+import { useAcceso } from "../auth/acceso";
 import { dataSource } from "../lib/dataSource";
 import type { DestinoPqr, Pqr } from "../lib/types";
 import { formatDate, formatDateTime } from "../lib/format";
@@ -27,6 +28,14 @@ export default function MiPerfil() {
   const [password, setPassword] = useState("");
   const [guardando, setGuardando] = useState(false);
 
+  // Datos personales: de solo lectura salvo para quien puede editar usuarios o RRHH (incluye @mercurymethods.com).
+  const puedeEditarDatos = useAcceso().editar(["usuarios", "rrhh"]);
+  const [nombre, setNombre] = useState("");
+  const [fechaNacimiento, setFechaNacimiento] = useState("");
+  const [numeroIdentificacion, setNumeroIdentificacion] = useState("");
+  const [fechaIngreso, setFechaIngreso] = useState("");
+  const [guardandoDatos, setGuardandoDatos] = useState(false);
+
   const [mostrarPqr, setMostrarPqr] = useState(() => searchParams.get("pqr") === "1");
   const [misPqr, setMisPqr] = useState<Pqr[]>([]);
   const [destinos, setDestinos] = useState<DestinoPqr[]>([]);
@@ -43,6 +52,10 @@ export default function MiPerfil() {
     setUsername(empleado.username ?? "");
     setCedulaPqr(empleado.numeroIdentificacion ?? "");
     setCorreoPqr(empleado.correo);
+    setNombre(empleado.nombre);
+    setFechaNacimiento(empleado.fechaNacimiento?.slice(0, 10) ?? "");
+    setNumeroIdentificacion(empleado.numeroIdentificacion ?? "");
+    setFechaIngreso(empleado.fechaIngreso?.slice(0, 10) ?? "");
   }, [empleado]);
 
   useEffect(() => {
@@ -82,6 +95,25 @@ export default function MiPerfil() {
       showToast(err instanceof Error ? err.message : t("miPerfil.errorActualizarPerfil"), "error");
     } finally {
       setGuardando(false);
+    }
+  }
+
+  async function guardarDatos(e: FormEvent) {
+    e.preventDefault();
+    setGuardandoDatos(true);
+    try {
+      await dataSource.actualizarPerfilPropio({
+        nombre: nombre.trim(),
+        fechaNacimiento: fechaNacimiento || null,
+        numeroIdentificacion: numeroIdentificacion.trim() || null,
+        fechaIngreso: fechaIngreso || undefined,
+      });
+      await refreshEmpleado();
+      showToast("Datos personales actualizados.", "success");
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : "No se pudieron actualizar los datos personales.", "error");
+    } finally {
+      setGuardandoDatos(false);
     }
   }
 
@@ -238,18 +270,43 @@ export default function MiPerfil() {
           </Card>
         ) : (
           <Card title={t("miPerfil.cardDatosPersonales")}>
-            <ul className="divide-y divide-[var(--border-subtle)]">
-              {datosBloqueados.map(({ label, valor }) => (
-                <li key={label} className="flex items-center justify-between gap-4 py-3">
-                  <div>
-                    <p className="text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]">{label}</p>
-                    <p className="mt-0.5 text-sm font-semibold text-[var(--text-primary)]">{valor}</p>
-                  </div>
-                  <Lock className="h-4 w-4 shrink-0 text-[var(--text-muted)]" strokeWidth={1.75} />
-                </li>
-              ))}
-            </ul>
-            <p className="mt-3 text-xs text-[var(--text-muted)]">{t("miPerfil.notaSoloLectura")}</p>
+            {puedeEditarDatos ? (
+              <form onSubmit={guardarDatos} className="space-y-4">
+                <Field label={t("miPerfil.labelNombres")}>
+                  <Input required value={nombre} onChange={(e) => setNombre(e.target.value)} autoComplete="name" />
+                </Field>
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <Field label={t("miPerfil.labelFechaNacimiento")}>
+                    <Input type="date" value={fechaNacimiento} onChange={(e) => setFechaNacimiento(e.target.value)} />
+                  </Field>
+                  <Field label={t("miPerfil.labelFechaIngreso")}>
+                    <Input type="date" required value={fechaIngreso} onChange={(e) => setFechaIngreso(e.target.value)} />
+                  </Field>
+                </div>
+                <Field label={t("miPerfil.labelNumeroIdentificacion")}>
+                  <Input value={numeroIdentificacion} onChange={(e) => setNumeroIdentificacion(e.target.value)} />
+                </Field>
+                <Button type="submit" disabled={guardandoDatos} className="w-full">
+                  Guardar datos personales
+                </Button>
+                <p className="text-xs text-[var(--text-muted)]">Puedes editarlos porque administras usuarios o RRHH. Para el resto del equipo siguen siendo de solo lectura.</p>
+              </form>
+            ) : (
+              <>
+                <ul className="divide-y divide-[var(--border-subtle)]">
+                  {datosBloqueados.map(({ label, valor }) => (
+                    <li key={label} className="flex items-center justify-between gap-4 py-3">
+                      <div>
+                        <p className="text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]">{label}</p>
+                        <p className="mt-0.5 text-sm font-semibold text-[var(--text-primary)]">{valor}</p>
+                      </div>
+                      <Lock className="h-4 w-4 shrink-0 text-[var(--text-muted)]" strokeWidth={1.75} />
+                    </li>
+                  ))}
+                </ul>
+                <p className="mt-3 text-xs text-[var(--text-muted)]">{t("miPerfil.notaSoloLectura")}</p>
+              </>
+            )}
           </Card>
         )}
 

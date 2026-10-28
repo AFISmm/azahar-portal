@@ -7,14 +7,16 @@ import { contableApi, type ConciliacionBancolombia } from "../../lib/contableApi
 import { descargarCSV } from "../../lib/contableCarga";
 import { formatDate } from "../../lib/format";
 import { mesEtiquetaAIso, useFiltroFechas } from "../../lib/contableFechas";
+import { ConciliarAlegra } from "./ConciliarAlegra";
+import { ImportadosCard } from "./ImportadosCard";
 import { AccesoDenegado, AvisoDemo, Cargando, ErrorCaja, Notas, Pestanas, TD, TD_NUM, TH, Tabla, cop, num, pesos2, useCarga, usePermisoContable } from "./comunes";
 
-type Vista = "mensual" | "cuentas" | "unificado" | "cobros";
+type Vista = "conciliar" | "mensual" | "cuentas" | "unificado" | "cobros" | "extractos";
 
 export default function ContableConciliacion() {
   const { tieneAcceso } = usePermisoContable();
   const { datos, error, cargando } = useCarga(() => contableApi.conciliacion());
-  const [vista, setVista] = useState<Vista>("mensual");
+  const [vista, setVista] = useState<Vista>("conciliar");
 
   if (!tieneAcceso) return <AccesoDenegado etapa="Gestión Contable" />;
 
@@ -34,17 +36,21 @@ export default function ContableConciliacion() {
             valor={vista}
             onCambiar={setVista}
             opciones={[
+              { clave: "conciliar", etiqueta: "Conciliar (cuentas y terceros)" },
               { clave: "mensual", etiqueta: "Por mes" },
               { clave: "cuentas", etiqueta: "Cuentas PUC por mes" },
               { clave: "unificado", etiqueta: "53051501 + 42100501" },
               { clave: "cobros", etiqueta: "Cobros 13050501" },
+              { clave: "extractos", etiqueta: "Extractos importados" },
             ]}
           />
+          {vista === "conciliar" && <ConciliarAlegra datos={datos} />}
           {vista === "mensual" && <Mensual d={datos} />}
           {vista === "cuentas" && <Cuentas d={datos} />}
           {vista === "unificado" && <Unificado d={datos} />}
           {vista === "cobros" && <Cobros d={datos} />}
-          <Notas notas={datos.notas} />
+          {vista === "extractos" && <ImportadosCard destino="extracto" titulo="Extractos bancarios importados" />}
+          {vista !== "conciliar" && vista !== "extractos" && <Notas notas={datos.notas} />}
           <p className="text-[11px] text-[var(--text-muted)]">Generado el {formatDate(datos.generado)}.</p>
         </>
       )}

@@ -2,6 +2,7 @@ import { PageHeader } from "../../components/PageHeader";
 import { Card } from "../../components/Card";
 import { contableApi } from "../../lib/contableApi";
 import { useFiltroFechas } from "../../lib/contableFechas";
+import { ImportadosCard } from "./ImportadosCard";
 import { AccesoDenegado, AvisoDemo, Cargando, ErrorCaja, Kpi, TD, TD_NUM, TH, Tabla, num, useCarga, usePermisoContable } from "./comunes";
 
 export default function ContableTerceros() {
@@ -18,6 +19,7 @@ export default function ContableTerceros() {
         description="Estado de los terceros del balance 2025 y de los comprobantes de enero a marzo. Aquí solo hay conteos: no se muestran NIT, correos ni teléfonos."
       />
       <AvisoDemo />
+      <ImportadosCard destino="tercero" titulo="Terceros importados" />
       {cargando && <Cargando />}
       {error && <ErrorCaja mensaje={error} />}
       {datos && (

@@ -50,7 +50,7 @@ import ContableLayout from "./pages/contable/ContableLayout";
 import ContableInicio from "./pages/contable/ContableInicio";
 import ContableComprobantes from "./pages/contable/ContableComprobantes";
 import ContableConciliacion from "./pages/contable/ContableConciliacion";
-import ContableCarga from "./pages/contable/ContableCarga";
+import ContableImportacion from "./pages/contable/ContableImportacion";
 import ContableNomina from "./pages/contable/ContableNomina";
 import ContableTerceros from "./pages/contable/ContableTerceros";
 import ContableCatalogo from "./pages/contable/ContableCatalogo";
@@ -114,7 +114,7 @@ export default function App() {
                       <Route path="/contable" element={<ContableInicio />} />
                       <Route path="/contable/comprobantes" element={<ContableComprobantes />} />
                       <Route path="/contable/conciliacion" element={<ContableConciliacion />} />
-                      <Route path="/contable/importacion" element={<ContableCarga />} />
+                      <Route path="/contable/importacion" element={<ContableImportacion />} />
                       <Route path="/contable/carga" element={<Navigate to="/contable/importacion" replace />} />
                       <Route path="/contable/nomina" element={<ContableNomina />} />
                       <Route path="/contable/terceros" element={<ContableTerceros />} />

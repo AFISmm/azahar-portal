@@ -7,7 +7,8 @@ import { contableApi, type RespuestaComprobantes } from "../../lib/contableApi";
 import { descargarCSV } from "../../lib/contableCarga";
 import { mesIsoAEtiqueta, useFiltroFechas } from "../../lib/contableFechas";
 import { formatDate } from "../../lib/format";
-import { AccesoDenegado, AvisoDemo, Cargando, ErrorCaja, Kpi, TD, TD_NUM, TH, Tabla, cop, num, usePermisoContable } from "./comunes";
+import { ImportadosCard } from "./ImportadosCard";
+import { AccesoDenegado, Pestanas, AvisoDemo, Cargando, ErrorCaja, Kpi, TD, TD_NUM, TH, Tabla, cop, num, usePermisoContable } from "./comunes";
 
 const ESTADOS: Record<string, string> = { open: "Abierto", void: "Anulado", "vista previa": "Vista previa (sin subir)" };
 
@@ -19,6 +20,7 @@ export default function ContableComprobantes() {
   const [consulta, setConsulta] = useState("");
   const [estado, setEstado] = useState("");
   const [pagina, setPagina] = useState(1);
+  const [seccion, setSeccion] = useState<"alegra" | "comprobante" | "factura-compra" | "factura-venta">("alegra");
   const [datos, setDatos] = useState<RespuestaComprobantes | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [cargando, setCargando] = useState(true);
@@ -64,8 +66,21 @@ export default function ContableComprobantes() {
         description="Detalle de los comprobantes de Alegra desde noviembre de 2025, los cierres contables destacados desde diciembre de 2016 y los que están listos para subir. Alegra tiene unos 114.000 comprobantes; los anteriores a noviembre de 2025 aún no se listan uno a uno. Usa el filtro de fechas de arriba."
       />
       <AvisoDemo />
-      {error && <ErrorCaja mensaje={error} />}
-      {datos && (
+      <Pestanas
+        valor={seccion}
+        onCambiar={setSeccion}
+        opciones={[
+          { clave: "alegra", etiqueta: "Comprobantes de Alegra" },
+          { clave: "comprobante", etiqueta: "Comprobantes importados" },
+          { clave: "factura-compra", etiqueta: "Facturas de compra" },
+          { clave: "factura-venta", etiqueta: "Facturas de venta" },
+        ]}
+      />
+      {seccion === "comprobante" && <ImportadosCard destino="comprobante" titulo="Comprobantes contables importados" />}
+      {seccion === "factura-compra" && <ImportadosCard destino="factura-compra" titulo="Facturas de compra importadas" />}
+      {seccion === "factura-venta" && <ImportadosCard destino="factura-venta" titulo="Facturas de venta importadas" />}
+      {seccion === "alegra" && error && <ErrorCaja mensaje={error} />}
+      {seccion === "alegra" && datos && (
         <>
           <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
             <Kpi etiqueta="Comprobantes en el período" valor={num(datos.resumen.n)} nota={`de ${num(datos.totalGeneral)} en total`} />
@@ -180,7 +195,7 @@ export default function ContableComprobantes() {
           </Card>
         </>
       )}
-      {cargando && !datos && <Cargando />}
+      {seccion === "alegra" && cargando && !datos && <Cargando />}
     </div>
   );
 }

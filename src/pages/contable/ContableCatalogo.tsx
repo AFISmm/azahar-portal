@@ -5,6 +5,7 @@ import { Input, Select } from "../../components/ui";
 import { contableApi } from "../../lib/contableApi";
 import { useFiltroFechas } from "../../lib/contableFechas";
 import { formatDate } from "../../lib/format";
+import { ImportadosCard } from "./ImportadosCard";
 import { AccesoDenegado, AvisoDemo, Cargando, ErrorCaja, Kpi, TD, TD_NUM, TH, Tabla, cop, num, useCarga, usePermisoContable } from "./comunes";
 
 export default function ContableCatalogo() {
@@ -26,6 +27,7 @@ export default function ContableCatalogo() {
     <div className="azahar-fade-in space-y-6">
       <PageHeader breadcrumb="Gestión Contable" title="Catálogo de productos" description="Productos de café en Alegra, cambios aplicados y reglas de la actualización semanal." />
       <AvisoDemo />
+      <ImportadosCard destino="catalogo" titulo="Catálogo importado (productos y/o servicios)" />
       {cargando && <Cargando />}
       {error && <ErrorCaja mensaje={error} />}
       {datos && (

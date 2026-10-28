@@ -53,9 +53,9 @@ export const CATALOGO: WidgetDef[] = [
 
   { id: "por-aprobar", titulo: "Solicitudes por aprobar", descripcion: "Cuántas solicitudes del equipo esperan respuesta.", icono: ic(FileCheck2), tamanos: ["S", "M", "L"], tamInicial: "M", modulo: "rrhh", render: (t) => <WidgetPorAprobar tam={t} /> },
   { id: "equipo", titulo: "Equipo", descripcion: "Personas, activas y áreas de la empresa.", icono: ic(Users), tamanos: ["S", "M"], tamInicial: "M", modulo: ["usuarios", "rrhh"], render: (t) => <WidgetEquipo tam={t} /> },
-  { id: "tiendas", titulo: "Tiendas", descripcion: "Ventas del mes y estado de cada tienda.", icono: ic(Store), tamanos: ["M", "L", "XL"], tamInicial: "L", modulo: "negocio", render: (t) => <WidgetTiendas tam={t} /> },
-  { id: "certificados-fincas", titulo: "Certificados de fincas", descripcion: "Vigentes, por vencer y vencidos.", icono: ic(Award), tamanos: ["M", "L"], tamInicial: "L", modulo: "negocio", render: (t) => <WidgetCertificadosFincas tam={t} /> },
-  { id: "producto-top", titulo: "Productos más vendidos", descripcion: "Ranking de productos (datos de ejemplo).", icono: ic(Trophy), tamanos: ["M", "L"], tamInicial: "M", modulo: "negocio", render: (t) => <WidgetProductoTop tam={t} /> },
+  { id: "tiendas", titulo: "Tiendas", descripcion: "Ventas del mes y estado de cada tienda.", icono: ic(Store), tamanos: ["M", "L", "XL"], tamInicial: "L", modulo: "comercial", render: (t) => <WidgetTiendas tam={t} /> },
+  { id: "certificados-fincas", titulo: "Certificados de fincas", descripcion: "Vigentes, por vencer y vencidos.", icono: ic(Award), tamanos: ["M", "L"], tamInicial: "L", modulo: "operativa", render: (t) => <WidgetCertificadosFincas tam={t} /> },
+  { id: "producto-top", titulo: "Productos más vendidos", descripcion: "Ranking de productos (datos de ejemplo).", icono: ic(Trophy), tamanos: ["M", "L"], tamInicial: "M", modulo: "comercial", render: (t) => <WidgetProductoTop tam={t} /> },
   { id: "trazabilidad", titulo: "Trazabilidad del café", descripcion: "Fincas, lotes y últimos empaques con su ficha pública.", icono: ic(Coffee), tamanos: ["S", "M", "L"], tamInicial: "M", modulo: "trazabilidad", render: (t) => <WidgetTrazabilidad tam={t} /> },
 ];
 

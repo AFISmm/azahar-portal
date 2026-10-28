@@ -28,7 +28,7 @@ export const empleadosSeed: Empleado[] = [
     username: "mariacamila.restrepo",
     tipoCuenta: "empleado",
     debeCambiarPassword: false,
-    permisosModulos: { negocio: "editar", rrhh: "editar", usuarios: "editar", trazabilidad: "editar", pos: "editar" },
+    permisosModulos: { estrategica: "editar", comercial: "editar", operativa: "editar", informacion: "editar", pos: "editar", trazabilidad: "editar", rrhh: "editar", usuarios: "editar" },
     createdAt: "2019-03-11T13:00:00.000Z",
   },
   {

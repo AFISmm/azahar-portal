@@ -33,7 +33,7 @@ function esErrorFincaInexistente(err: unknown): boolean {
 }
 
 async function listar(req: VercelRequest, res: VercelResponse) {
-  await requireModulo(req, "negocio", "ver");
+  await requireModulo(req, "operativa", "ver");
   const fincaId = primerValor(req.query.fincaId);
 
   const { rows } = fincaId
@@ -44,7 +44,7 @@ async function listar(req: VercelRequest, res: VercelResponse) {
 }
 
 async function crear(req: VercelRequest, res: VercelResponse) {
-  const { empleadoId } = await requireModulo(req, "negocio", "editar");
+  const { empleadoId } = await requireModulo(req, "operativa", "editar");
 
   const body = req.body as Partial<CertificadoPostPayload>;
   const camposRequeridos: (keyof CertificadoPostPayload)[] = ["fincaId", "nombre", "entidadCertificadora", "fechaEmision"];

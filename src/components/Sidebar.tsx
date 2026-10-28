@@ -32,6 +32,7 @@ import {
   Package,
 } from "lucide-react";
 import { useAcceso } from "../auth/acceso";
+import type { Modulo } from "../lib/types";
 import { useAuth } from "../auth/AuthContext";
 import { useLanguage } from "../context/LanguageContext";
 import { IS_DEMO_MODE } from "../lib/dataSource";
@@ -59,11 +60,11 @@ const ADMINISTRACION: { to: string; claveLabel: ClaveTraduccion; Icon: typeof Ho
   { to: "/admin/nomina", claveLabel: "sidebar.adminNomina", Icon: Receipt },
 ];
 
-const GESTION_NEGOCIO: { to: string; claveLabel: ClaveTraduccion; Icon: typeof Home }[] = [
-  { to: "/gestion-estrategica", claveLabel: "sidebar.gestionEstrategica", Icon: Compass },
-  { to: "/gestion-comercial", claveLabel: "sidebar.gestionComercial", Icon: Store },
-  { to: "/gestion-operativa", claveLabel: "sidebar.gestionOperativa", Icon: Sprout },
-  { to: "/informacion-general", claveLabel: "sidebar.informacionGeneral", Icon: Info },
+const GESTION_NEGOCIO: { to: string; claveLabel: ClaveTraduccion; Icon: typeof Home; modulo: Modulo }[] = [
+  { to: "/gestion-estrategica", claveLabel: "sidebar.gestionEstrategica", Icon: Compass, modulo: "estrategica" },
+  { to: "/gestion-comercial", claveLabel: "sidebar.gestionComercial", Icon: Store, modulo: "comercial" },
+  { to: "/gestion-operativa", claveLabel: "sidebar.gestionOperativa", Icon: Sprout, modulo: "operativa" },
+  { to: "/informacion-general", claveLabel: "sidebar.informacionGeneral", Icon: Info, modulo: "informacion" },
 ];
 
 // Trazabilidad y POS: cada ítem pide un nivel mínimo en su módulo ('ver' | 'editar'),
@@ -224,11 +225,11 @@ export function Sidebar({ abierto = false, onCerrar }: SidebarProps) {
               </NavLink>
             </div>
 
-            {acceso.ver("negocio") && (
+            {GESTION_NEGOCIO.some((g) => acceso.ver(g.modulo)) && (
               <div>
                 <p className="mb-1 px-3 text-[10px] font-bold uppercase tracking-wider text-cream-200/60">{t("sidebar.gestionNegocio")}</p>
                 <div className="space-y-0.5">
-                  {GESTION_NEGOCIO.map(({ to, claveLabel, Icon }) => (
+                  {GESTION_NEGOCIO.filter((g) => acceso.ver(g.modulo)).map(({ to, claveLabel, Icon }) => (
                     <NavLink key={to} to={to} className={({ isActive }) => itemClase(isActive)}>
                       <Icon className="h-4 w-4 shrink-0" strokeWidth={1.75} />
                       {t(claveLabel)}

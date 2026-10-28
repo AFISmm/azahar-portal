@@ -22,3 +22,14 @@ update empleados set permisos_modulos = jsonb_strip_nulls(jsonb_build_object(
 ))
 where permisos_modulos = '{}'::jsonb
   and (rol = 'admin' or coalesce(cardinality(permisos_trazabilidad), 0) > 0 or coalesce(cardinality(permisos_pos), 0) > 0);
+
+-- El módulo único 'negocio' se separó en los cuatro ítems del sidebar (Gestión Estratégica,
+-- Gestión Comercial, Gestión Operativa e Información General). Quien tenía 'negocio' conserva
+-- ese mismo nivel en los cuatro. Los permisos ya definidos por separado tienen prioridad.
+update empleados set permisos_modulos = jsonb_build_object(
+    'estrategica', permisos_modulos -> 'negocio',
+    'comercial', permisos_modulos -> 'negocio',
+    'operativa', permisos_modulos -> 'negocio',
+    'informacion', permisos_modulos -> 'negocio'
+  ) || (permisos_modulos - 'negocio')
+where permisos_modulos ? 'negocio';

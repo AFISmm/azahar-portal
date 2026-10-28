@@ -32,13 +32,13 @@ function texto(v: unknown): string | null {
 }
 
 async function listar(req: VercelRequest, res: VercelResponse) {
-  await requireModulo(req, "negocio", "ver");
+  await requireModulo(req, "comercial", "ver");
   const { rows } = await sql<TiendaRow>`select id, nombre, ciudad, ventas_mes, estado from tiendas order by nombre`;
   return res.status(200).json({ ok: true, tiendas: rows.map(mapTienda) });
 }
 
 async function crear(req: VercelRequest, res: VercelResponse) {
-  await requireModulo(req, "negocio", "editar");
+  await requireModulo(req, "comercial", "editar");
   const b = req.body as Body;
   const nombre = texto(b.nombre);
   const ciudad = texto(b.ciudad);
@@ -54,7 +54,7 @@ async function crear(req: VercelRequest, res: VercelResponse) {
 }
 
 async function cambiarEstado(req: VercelRequest, res: VercelResponse) {
-  await requireModulo(req, "negocio", "editar");
+  await requireModulo(req, "comercial", "editar");
   const b = req.body as Body;
   const id = texto(b.id);
   const estado = typeof b.estado === "string" && ESTADOS.includes(b.estado) ? b.estado : null;
@@ -67,7 +67,7 @@ async function cambiarEstado(req: VercelRequest, res: VercelResponse) {
 }
 
 async function eliminar(req: VercelRequest, res: VercelResponse) {
-  await requireModulo(req, "negocio", "editar");
+  await requireModulo(req, "comercial", "editar");
   const id = texto((req.body as Body).id);
   if (!id) throw new HttpError(400, "Falta la tienda.");
   const { rows } = await sql`delete from tiendas where id = ${id}::uuid returning id`;

@@ -28,7 +28,7 @@ interface FincaPostPayload {
 }
 
 async function listar(req: VercelRequest, res: VercelResponse) {
-  await requireModulo(req, "negocio", "ver");
+  await requireModulo(req, "operativa", "ver");
   const { rows } = await sql<FincaRow>`select * from fincas order by nombre`;
   return res.status(200).json({ ok: true, fincas: rows.map(mapFincaRow) });
 }
@@ -40,7 +40,7 @@ async function generarCodigo(): Promise<string> {
 }
 
 async function crear(req: VercelRequest, res: VercelResponse) {
-  await requireModulo(req, "negocio", "editar");
+  await requireModulo(req, "operativa", "editar");
 
   const body = req.body as Partial<FincaPostPayload>;
   const camposRequeridos: (keyof FincaPostPayload)[] = [

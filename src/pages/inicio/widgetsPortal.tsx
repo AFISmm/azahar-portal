@@ -171,8 +171,8 @@ export function WidgetAccesosRapidos({ tam }: { tam: Tam }) {
     { to: "/nomina/certificados", etiqueta: "Certificados", Icon: Award, visible: true },
     { to: "/mi-perfil", etiqueta: "Mi perfil", Icon: UserCog, visible: true },
     { to: "/trazabilidad", etiqueta: "Trazabilidad", Icon: Coffee, visible: a.ver("trazabilidad") },
-    { to: "/gestion-comercial", etiqueta: "Tiendas", Icon: Store, visible: a.ver("negocio") },
-    { to: "/gestion-operativa", etiqueta: "Fincas", Icon: Sprout, visible: a.ver("negocio") },
+    { to: "/gestion-comercial", etiqueta: "Tiendas", Icon: Store, visible: a.ver("comercial") },
+    { to: "/gestion-operativa", etiqueta: "Fincas", Icon: Sprout, visible: a.ver("operativa") },
     { to: "/admin/usuarios", etiqueta: "Usuarios", Icon: Users, visible: a.ver("usuarios") },
   ];
   const visibles = accesos.filter((x) => x.visible).slice(0, tam === "L" ? 8 : 4);

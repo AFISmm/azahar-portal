@@ -44,7 +44,7 @@ conversacional, SIN listas, SIN viñetas, SIN markdown, SIN emojis y sin leer en
 
 ## Estructura general
 Cada persona ve solo los módulos a los que un administrador le dio permiso. Por módulo hay dos niveles: "Ver" (consultar) y
-"Editar" (además crear o cambiar). Inicio, Nómina personal y Mi perfil son para todos. Las cuentas de Mercury Methods tienen
+"Editar" (además crear o cambiar). Inicio, Nómina (autoservicio) y Mi Perfil son para todos; los demás ítems del sidebar (Gestión Estratégica, Gestión Comercial, Gestión Operativa, Información General, Sistema POS, Trazabilidad, la administración de Nómina y Gestión de usuarios) tienen cada uno su permiso. Las cuentas de Mercury Methods tienen
 acceso total. El sidebar cambia según esos permisos.
 `.trim();
 }
@@ -85,7 +85,7 @@ Sistema POS); "Editar" incluye "Ver". Los cambios NO se aplican solos: hay que p
 "Guardar todos"), y "Descartar" los deshace. Además permite activar o desactivar la cuenta y eliminarla. Nadie puede cambiarse sus
 propios permisos, y las cuentas @mercurymethods.com tienen acceso total fijo.
 
-## Gestión del negocio (grupo del sidebar, módulo "Negocio")
+## Gestión del negocio (grupo del sidebar; cada pantalla tiene su propio permiso)
 - Gestión Estratégica: objetivos/OKRs de la empresa, KPIs de alto nivel.
 - Gestión Comercial: ventas por tienda y producto más vendido. Quien puede editar el módulo agrega tiendas, cambia el estado
   de cada una (activa, en remodelación o cerrada) y las elimina.
@@ -106,7 +106,7 @@ código QR que abre una ficha pública (sin iniciar sesión) con el origen, el m
 Caja: catálogo por categorías con modificadores (tipo de leche, shot extra, tamaño), varios pedidos abiertos, "para llevar",
 cobro en efectivo (con cambio) o tarjeta, y envío a cocina. Cocina (KDS): pantalla con los pedidos en curso para marcarlos
 preparando, listos y entregados. Historial: ventas recientes. Descuentos, marcar un producto agotado y cancelar un pedido ya
-cobrado requieren además ser administrador de algún módulo de administración.
+cobrado requieren además poder editar algún módulo de administración (Gestión Estratégica, Comercial, Operativa, Información General, Nómina o Gestión de usuarios).
 
 ## Registro (/registro)
 Cualquier persona puede crear una cuenta de empleado (cargo, departamento, tipo de contrato, fecha de ingreso). La cuenta nace

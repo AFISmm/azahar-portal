@@ -20,13 +20,13 @@ export const ROLES_PREDEFINIDOS: RolPredefinido[] = [
     clave: "administrador",
     nombre: "Administrador",
     descripcion: "Edita todos los módulos, incluida la gestión de usuarios.",
-    permisos: { negocio: "editar", rrhh: "editar", usuarios: "editar", trazabilidad: "editar", pos: "editar" },
+    permisos: { estrategica: "editar", comercial: "editar", operativa: "editar", informacion: "editar", pos: "editar", trazabilidad: "editar", rrhh: "editar", usuarios: "editar" },
   },
   {
     clave: "gerencia",
     nombre: "Gerencia",
-    descripcion: "Consulta Negocio, RRHH y Usuarios (solo ver).",
-    permisos: { negocio: "ver", rrhh: "ver", usuarios: "ver" },
+    descripcion: "Consulta Gestión Estratégica, Comercial, Operativa, Información General, Nómina y Gestión de usuarios (solo ver).",
+    permisos: { estrategica: "ver", comercial: "ver", operativa: "ver", informacion: "ver", rrhh: "ver", usuarios: "ver" },
   },
   {
     clave: "calidad",
@@ -51,7 +51,7 @@ export const ROLES_PREDEFINIDOS: RolPredefinido[] = [
 export const ROL_ACCESO_TOTAL = "Acceso total";
 export const ROL_PERSONALIZADO = "Personalizado";
 
-const MODULOS: Modulo[] = ["negocio", "rrhh", "usuarios", "trazabilidad", "pos"];
+const MODULOS: Modulo[] = ["estrategica", "comercial", "operativa", "informacion", "pos", "trazabilidad", "rrhh", "usuarios"];
 
 /** Normaliza (solo módulos y niveles válidos) para poder comparar dos conjuntos de permisos. */
 export function normalizar(p: PermisosModulos | undefined): PermisosModulos {

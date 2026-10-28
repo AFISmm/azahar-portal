@@ -11,7 +11,7 @@ export function usePermisosPos() {
   return {
     ver: acceso.ver("pos"),
     editar: acceso.editar("pos"),
-    supervisor: acceso.editar(["negocio", "rrhh", "usuarios"]),
+    supervisor: acceso.editar(["estrategica", "comercial", "operativa", "informacion", "rrhh", "usuarios"]),
   };
 }
 

@@ -58,7 +58,7 @@ async function exigir(req: VercelRequest, nivel: Nivel): Promise<Actor> {
   if (!cumple(permisos, "pos", nivel)) {
     throw new HttpError(403, nivel === "editar" ? "No tienes permiso de edición en el POS." : "No tienes acceso al POS.");
   }
-  return { id: empleadoId, nombre: fila.nombre, permisos, supervisor: cumple(permisos, ["negocio", "rrhh", "usuarios"], "editar") };
+  return { id: empleadoId, nombre: fila.nombre, permisos, supervisor: cumple(permisos, ["estrategica", "comercial", "operativa", "informacion", "rrhh", "usuarios"], "editar") };
 }
 
 function exigirSupervisor(actor: Actor, mensaje: string) {

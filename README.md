@@ -148,17 +148,19 @@ Ambos exigen backend real (Postgres) y **no tienen modo demo**.
   pesos COP enteros. Fuera de esta fase: recetas/insumos/stock, turnos de caja
   y cierre Z, combos, reportes y propinas.
 
-**Permisos por módulo.** Se asignan por persona en Administración > Usuarios con
-una matriz de casillas **Ver / Editar** (Editar incluye Ver), con un **rol** por persona (Administrador, Gerencia, Calidad y trazabilidad, Operador POS, Empleado; ver `src/lib/roles.ts`), ordenada por cantidad de permisos y con un botón **Guardar** por fila (los cambios son borradores hasta guardarlos) para cinco módulos:
-`negocio` (gestión estratégica, comercial, operativa e información general),
-`rrhh` (solicitudes, incapacidades, documentos, empleados y nómina), `usuarios`,
-`trazabilidad` y `pos`. Se guardan en `empleados.permisos_modulos` (jsonb) y la API
-valida el mismo nivel (`requireModulo` en `api/_lib/auth.ts`; lecturas piden `ver`,
-escrituras `editar`). Inicio, Nómina personal y Mi perfil son para todos.
-Toda cuenta `@mercurymethods.com` tiene `editar` en todos los módulos siempre
-(`api/_lib/acceso.ts`); nadie puede cambiarse sus propios permisos. En el POS,
-descuentos, productos agotados (86) y cancelar cobros exigen además editar algún
-módulo de administración (negocio, rrhh o usuarios).
+**Permisos por módulo.** Hay un módulo por ítem del sidebar, con su mismo nombre: Gestión Estratégica,
+Gestión Comercial, Gestión Operativa, Información General, Sistema POS, Trazabilidad, Nómina (su
+administración: solicitudes, incapacidades, documentos, empleados y pagos) y Gestión de usuarios. Inicio, la
+Nómina de autoservicio y Mi Perfil son para todos. Se asignan por persona en Administración > Usuarios con
+una matriz de casillas **Ver / Editar** (Editar incluye Ver), con un **rol** por persona (Administrador,
+Gerencia, Calidad y trazabilidad, Operador POS, Empleado; ver `src/lib/roles.ts`), ordenada por cantidad de
+permisos y con un botón **Guardar** por fila (los cambios son borradores hasta guardarlos). Se guardan en
+`empleados.permisos_modulos` (jsonb; claves `estrategica`, `comercial`, `operativa`, `informacion`, `pos`,
+`trazabilidad`, `rrhh`, `usuarios`) y la API valida el mismo nivel (`requireModulo` en `api/_lib/auth.ts`;
+lecturas piden `ver`, escrituras `editar`). Una fila antigua con la clave única `negocio` vale para las cuatro
+Gestiones/Información hasta que `db/modulos.sql` la convierte. Toda cuenta `@mercurymethods.com` tiene `editar`
+en todos los módulos siempre (`api/_lib/acceso.ts`); nadie puede cambiarse sus propios permisos. En el POS,
+descuentos, productos agotados (86) y cancelar cobros exigen además editar algún módulo de administración.
 
 **Funciones serverless.** El plan Hobby de Vercel permite 12; ya están todas en
 uso, así que trazabilidad y POS comparten `api/trazabilidad.ts` (se enruta con

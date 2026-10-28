@@ -16,12 +16,18 @@
 
 export const DOMINIO_ACCESO_TOTAL = "@mercurymethods.com";
 
-export type Modulo = "negocio" | "rrhh" | "usuarios" | "trazabilidad" | "pos";
+/**
+ * Un módulo por ítem del sidebar. "rrhh" es la administración de Nómina (solicitudes, incapacidades,
+ * documentos, empleados y nómina); la Nómina personal, Inicio y Mi Perfil son para todos.
+ */
+export type Modulo = "estrategica" | "comercial" | "operativa" | "informacion" | "pos" | "trazabilidad" | "rrhh" | "usuarios";
 export type Nivel = "ver" | "editar";
 export type PermisosModulos = Partial<Record<Modulo, Nivel>>;
 
-export const MODULOS: Modulo[] = ["negocio", "rrhh", "usuarios", "trazabilidad", "pos"];
-const MODULOS_ADMIN: Modulo[] = ["negocio", "rrhh", "usuarios"];
+export const MODULOS: Modulo[] = ["estrategica", "comercial", "operativa", "informacion", "pos", "trazabilidad", "rrhh", "usuarios"];
+const MODULOS_ADMIN: Modulo[] = ["estrategica", "comercial", "operativa", "informacion", "rrhh", "usuarios"];
+/** Antes los cuatro primeros eran un solo módulo "negocio": si una fila aún lo trae, vale para los cuatro. */
+const GRUPO_NEGOCIO: Modulo[] = ["estrategica", "comercial", "operativa", "informacion"];
 
 export function tieneAccesoTotal(correo: string | null | undefined): boolean {
   return typeof correo === "string" && correo.trim().toLowerCase().endsWith(DOMINIO_ACCESO_TOTAL);
@@ -31,10 +37,13 @@ export function tieneAccesoTotal(correo: string | null | undefined): boolean {
 export function sanearPermisos(crudo: unknown): PermisosModulos {
   const limpio: PermisosModulos = {};
   if (typeof crudo !== "object" || crudo === null || Array.isArray(crudo)) return limpio;
+  const origen = crudo as Record<string, unknown>;
   for (const m of MODULOS) {
-    const nivel = (crudo as Record<string, unknown>)[m];
+    const nivel = origen[m];
     if (nivel === "ver" || nivel === "editar") limpio[m] = nivel;
   }
+  const antiguo = origen.negocio;
+  if (antiguo === "ver" || antiguo === "editar") for (const m of GRUPO_NEGOCIO) limpio[m] ??= antiguo;
   return limpio;
 }
 

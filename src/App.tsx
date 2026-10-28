@@ -115,11 +115,17 @@ export default function App() {
                   </Route>
                   <Route path="/admin/pqr" element={<GestionPqr />} />
 
-                  {/* Gestión del negocio */}
-                  <Route element={<ModuloRoute modulos="negocio" />}>
+                  {/* Gestión del negocio: cada pantalla con su propio permiso (igual que en el sidebar) */}
+                  <Route element={<ModuloRoute modulos="estrategica" />}>
                     <Route path="/gestion-estrategica" element={<GestionEstrategica />} />
+                  </Route>
+                  <Route element={<ModuloRoute modulos="comercial" />}>
                     <Route path="/gestion-comercial" element={<GestionComercial />} />
+                  </Route>
+                  <Route element={<ModuloRoute modulos="operativa" />}>
                     <Route path="/gestion-operativa" element={<GestionOperativa />} />
+                  </Route>
+                  <Route element={<ModuloRoute modulos="informacion" />}>
                     <Route path="/informacion-general" element={<InformacionGeneral />} />
                   </Route>
                 </Route>

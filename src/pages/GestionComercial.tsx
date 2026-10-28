@@ -26,7 +26,7 @@ const TIENDAS_DEMO: TiendaApi[] = tiendasComerciales.map((t) => ({ ...t, estado:
 export default function GestionComercial() {
   const { t } = useLanguage();
   const { showToast } = useToast();
-  const puedeEditar = useAcceso().editar("negocio");
+  const puedeEditar = useAcceso().editar("comercial");
 
   const [tiendas, setTiendas] = useState<TiendaApi[]>(IS_DEMO_MODE ? TIENDAS_DEMO : []);
   const [cargando, setCargando] = useState(!IS_DEMO_MODE);

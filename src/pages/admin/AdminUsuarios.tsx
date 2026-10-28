@@ -18,15 +18,6 @@ const ESTADO_ESTILO: Record<Empleado["estado"], string> = {
   inactivo: "bg-status-rechazada-bg text-status-rechazada",
 };
 
-// Encabezados cortos para que la matriz entre sin scroll horizontal en pantallas normales.
-const ENCABEZADO_CORTO: Record<Modulo, string> = {
-  negocio: "Negocio",
-  rrhh: "RRHH",
-  usuarios: "Usuarios",
-  trazabilidad: "Trazab.",
-  pos: "Sist. POS",
-};
-
 const ESTILO_ROL: Record<string, string> = {
   [ROL_ACCESO_TOTAL]: "border-accent-500/60 bg-accent-300/30 text-[var(--text-primary)]",
   Administrador: "border-brand-800 bg-brand-800 text-cream-100",
@@ -197,7 +188,7 @@ export default function AdminUsuarios() {
       <PageHeader
         breadcrumb={t("adminUsuarios.breadcrumb")}
         title={t("adminUsuarios.titulo")}
-        description="Elige el rol de cada persona o marca, módulo por módulo, si puede Ver o también Editar. Los cambios solo se aplican al pulsar Guardar junto a su nombre."
+        description="Elige el rol de cada persona o marca, en cada módulo del menú, si puede Ver o también Editar. Los cambios solo se aplican al pulsar Guardar junto a su nombre."
       >
         {pendientes.length > 0 && (
           <Button variant="secondary" onClick={() => void handleGuardarTodos()} disabled={guardandoIds.length > 0}>
@@ -218,15 +209,20 @@ export default function AdminUsuarios() {
           <p className="py-6 text-center text-sm text-[var(--text-muted)]">{t("adminUsuarios.sinCuentas")}</p>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[980px] text-left text-sm">
+            <table className="w-full min-w-[1040px] text-left text-sm">
               <thead>
                 <tr className="text-xs uppercase tracking-wide text-[var(--text-muted)]">
                   <th rowSpan={2} className="py-2 pr-3 align-bottom font-semibold">{t("adminUsuarios.colUsuario")}</th>
                   <th rowSpan={2} className="px-2 align-bottom font-semibold">Guardar</th>
                   <th rowSpan={2} className="border-l border-[var(--border-subtle)] px-3 align-bottom font-semibold">Rol</th>
                   {MODULOS_INFO.map((m) => (
-                    <th key={m.clave} colSpan={2} title={`${m.nombre}: ${m.descripcion}`} className="cursor-help border-l border-[var(--border-subtle)] px-2 pt-2 text-center font-semibold">
-                      {ENCABEZADO_CORTO[m.clave]}
+                    <th
+                      key={m.clave}
+                      colSpan={2}
+                      title={`${m.nombre}: ${m.descripcion}`}
+                      className="w-[4.25rem] cursor-help border-l border-[var(--border-subtle)] px-1 pt-2 text-center align-bottom text-[10px] font-semibold normal-case leading-tight tracking-normal text-[var(--text-secondary)]"
+                    >
+                      {m.nombre}
                     </th>
                   ))}
                   <th rowSpan={2} className="border-l border-[var(--border-subtle)] px-3 align-bottom font-semibold">{t("adminUsuarios.colEstado")}</th>
@@ -389,8 +385,8 @@ export default function AdminUsuarios() {
           </div>
         )}
         <p className="mt-3 text-[11px] text-[var(--text-muted)]">
-          Orden: primero quienes tienen acceso total y luego por cantidad de permisos. «Editar» incluye «Ver». Elegir un rol marca sus casillas; si las cambias a mano, el rol pasa a «Personalizado» (o al que corresponda). En el POS, aplicar descuentos, marcar agotados y cancelar
-          cobros exige además editar algún módulo de administración (Negocio, RRHH o Usuarios).
+          Los módulos llevan el nombre que tienen en el menú lateral; Inicio, Nómina (autoservicio) y Mi Perfil están disponibles para todos, y la columna Nómina controla su administración. Orden: primero quienes tienen acceso total y luego por cantidad de permisos. «Editar» incluye «Ver». Elegir un rol marca sus casillas; si las cambias a mano, el rol pasa a «Personalizado» (o al que corresponda). En el POS, aplicar descuentos, marcar agotados y cancelar
+          cobros exige además editar algún módulo de administración (las Gestiones, Información General, Nómina o Gestión de usuarios).
         </p>
       </Card>
 

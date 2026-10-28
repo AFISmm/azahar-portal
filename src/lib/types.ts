@@ -12,16 +12,20 @@ export type TipoCuenta = "empleado" | "desarrollador";
  * administrador en Gestión de usuarios. Inicio, Nómina personal y Mi perfil son
  * para todos y no aparecen aquí.
  */
-export type Modulo = "negocio" | "rrhh" | "usuarios" | "trazabilidad" | "pos";
+export type Modulo = "estrategica" | "comercial" | "operativa" | "informacion" | "pos" | "trazabilidad" | "rrhh" | "usuarios";
 export type NivelModulo = "ver" | "editar";
 export type PermisosModulos = Partial<Record<Modulo, NivelModulo>>;
 
+/** Un módulo por ítem del sidebar, con el nombre tal cual aparece allí y en el mismo orden. */
 export const MODULOS_INFO: { clave: Modulo; nombre: string; descripcion: string }[] = [
-  { clave: "negocio", nombre: "Gestión del negocio", descripcion: "Gestión estratégica, comercial, operativa e información general" },
-  { clave: "rrhh", nombre: "RRHH y nómina", descripcion: "Solicitudes, incapacidades, documentos, empleados y nómina" },
-  { clave: "usuarios", nombre: "Gestión de usuarios", descripcion: "Cuentas, accesos y permisos por módulo" },
-  { clave: "trazabilidad", nombre: "Trazabilidad", descripcion: "Finca, beneficiado, tueste, empaque y QR" },
+  { clave: "estrategica", nombre: "Gestión Estratégica", descripcion: "Objetivos de la empresa e indicadores de alto nivel" },
+  { clave: "comercial", nombre: "Gestión Comercial", descripcion: "Ventas por tienda; agregar, eliminar y cambiar el estado de las tiendas" },
+  { clave: "operativa", nombre: "Gestión Operativa", descripcion: "Fincas cafeteras y sus certificados" },
+  { clave: "informacion", nombre: "Información General", descripcion: "Calendario tributario, indicadores y calculadoras del negocio" },
   { clave: "pos", nombre: "Sistema POS", descripcion: "Caja, cocina e historial de ventas" },
+  { clave: "trazabilidad", nombre: "Trazabilidad", descripcion: "Finca, beneficiado, tueste, empaque y QR" },
+  { clave: "rrhh", nombre: "Nómina", descripcion: "Administración de nómina: solicitudes, incapacidades, documentos, empleados y pagos (la Nómina personal es para todos)" },
+  { clave: "usuarios", nombre: "Gestión de usuarios", descripcion: "Cuentas, roles y permisos por módulo" },
 ];
 
 export interface Empleado {

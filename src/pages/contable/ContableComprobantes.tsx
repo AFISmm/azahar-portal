@@ -61,7 +61,7 @@ export default function ContableComprobantes() {
       <PageHeader
         breadcrumb="Gestión Contable"
         title="Comprobantes contables"
-        description="Comprobantes destacados de Alegra desde diciembre de 2016 (cierres contables y nómina) y los que están listos para subir. Por ahora no es el listado completo. Usa el filtro de fechas de arriba para revisar un período."
+        description="Detalle de los comprobantes de Alegra desde noviembre de 2025, los cierres contables destacados desde diciembre de 2016 y los que están listos para subir. Alegra tiene unos 114.000 comprobantes; los anteriores a noviembre de 2025 aún no se listan uno a uno. Usa el filtro de fechas de arriba."
       />
       <AvisoDemo />
       {error && <ErrorCaja mensaje={error} />}

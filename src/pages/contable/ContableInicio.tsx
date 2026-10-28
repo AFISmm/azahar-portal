@@ -58,7 +58,7 @@ export default function ContableInicio() {
 
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {[
-              ["/contable/comprobantes", "Comprobantes contables", "Comprobantes destacados desde diciembre de 2016 (cierres y nómina) y los listos para subir."],
+              ["/contable/comprobantes", "Comprobantes contables", "Detalle desde noviembre de 2025, cierres desde diciembre de 2016 y los listos para subir."],
               ["/contable/conciliacion", "Conciliación bancaria", "Bancolombia 0590 por mes, cuentas PUC, monto unificado y cobros 13050501."],
               ["/contable/carga", "Cargue de archivos", "Sube un extracto o un listado de facturas (CSV) y obtén el resumen por mes. No sale de tu navegador."],
               ["/contable/nomina", "Pagos de nómina", "Pagos del Banco de Bogotá y el asiento propuesto en Alegra."],

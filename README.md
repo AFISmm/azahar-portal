@@ -191,7 +191,7 @@ Administrador y Gerencia lo incluyen y las cuentas `@mercurymethods.com` lo tien
 | Pantalla | Ruta | Qué muestra |
 |---|---|---|
 | Resumen | `/contable` | Indicadores, hitos y estado (hecho / listo sin subir / bloqueado) |
-| Comprobantes contables | `/contable/comprobantes` | Comprobantes **destacados** de Alegra desde diciembre de 2016 (13 cierres contables y comprobantes de nómina; **no es el listado completo**) y los pendientes de subir como «vista previa». Filtro en el servidor: fechas, texto y estado, con paginación y resumen por mes. Para cargar todos: `descargar_comprobantes_alegra.py` y apuntar el exportador a su salida |
+| Comprobantes contables | `/contable/comprobantes` | Comprobantes de Alegra: **detalle desde noviembre de 2025** (≈5.100) y 13 **destacados** desde diciembre de 2016 (cierres y nómina). Alegra tiene ≈114.000 en total, así que **no es el listado completo**. Incluye los pendientes de subir como «vista previa». Filtro en el servidor: fechas, texto y estado, con paginación y resumen por mes. Para cargar todos: `descargar_comprobantes_alegra.py` y apuntar el exportador a su salida |
 | Conciliación bancaria | `/contable/conciliacion` | Bancolombia 0590 por mes, cuentas PUC por mes, monto unificado de 53051501 + 42100501 y cobros de la 13050501 contra facturas (con CSV) |
 | Cargue de archivos | `/contable/carga` | Sube un CSV de extracto o de facturas y resume por mes. Se procesa en el navegador; no se envía ni se guarda |
 | Pagos de nómina | `/contable/nomina` | Pagos del Banco de Bogotá y el asiento propuesto |

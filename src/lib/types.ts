@@ -21,7 +21,7 @@ export const MODULOS_INFO: { clave: Modulo; nombre: string; descripcion: string 
   { clave: "rrhh", nombre: "RRHH y nómina", descripcion: "Solicitudes, incapacidades, documentos, empleados y nómina" },
   { clave: "usuarios", nombre: "Gestión de usuarios", descripcion: "Cuentas, accesos y permisos por módulo" },
   { clave: "trazabilidad", nombre: "Trazabilidad", descripcion: "Finca, beneficiado, tueste, empaque y QR" },
-  { clave: "pos", nombre: "Punto de venta", descripcion: "Caja, cocina e historial de ventas" },
+  { clave: "pos", nombre: "Sistema POS", descripcion: "Caja, cocina e historial de ventas" },
 ];
 
 export interface Empleado {

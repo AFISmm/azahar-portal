@@ -291,7 +291,7 @@ export default function PosVenta() {
 
   return (
     <div className="azahar-fade-in">
-      <PageHeader breadcrumb="POS" title="Caja" description="Toma pedidos, cóbralos y envíalos a cocina.">
+      <PageHeader breadcrumb="Sistema POS" title="Caja" description="Toma pedidos, cóbralos y envíalos a cocina.">
         <Button onClick={() => void nuevoPedido()}>
           <Plus className="h-4 w-4" strokeWidth={1.75} /> Nuevo pedido
         </Button>

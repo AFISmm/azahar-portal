@@ -23,7 +23,7 @@ const ENCABEZADO_CORTO: Record<Modulo, string> = {
   rrhh: "RRHH",
   usuarios: "Usuarios",
   trazabilidad: "Trazab.",
-  pos: "POS",
+  pos: "Sist. POS",
 };
 
 /** Aplica un cambio de la casilla "Ver" o "Editar" ('editar' implica 'ver'). */

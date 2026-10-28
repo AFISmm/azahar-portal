@@ -10,7 +10,8 @@
 //   GET  /api/trazabilidad?r=auditoria                    -> bitácora (solo ADMIN de trazabilidad).
 //   POST /api/trazabilidad?r=crear-finca | crear-certificacion | crear-lote-verde | crear-ficha-cata | crear-lote-tostado | crear-lote-empaque
 //   GET|POST /api/fincas  (rewrite de vercel.json -> ?r=gestion-fincas)  -> módulo Gestión Operativa.
-//   ?r=pos-*  -> POS (ver api/_lib/pos.ts). Comparte esta función por el límite de 12 de Vercel Hobby.
+//   ?r=tiendas | tienda-*  -> Gestión comercial (ver api/_lib/tiendas.ts).
+//   ?r=pos-*  -> Sistema POS (ver api/_lib/pos.ts). Comparte esta función por el límite de 12 de Vercel Hobby.
 //
 // PERMISOS: por módulo (ver api/_lib/acceso.ts). 'ver' consulta todo; 'editar' registra en
 // todas las etapas y ve la auditoría. Se asignan en Gestión de usuarios.
@@ -23,6 +24,7 @@ import { HttpError, manejarError, requireAuth } from "./_lib/auth.js";
 import fincasGestion from "./_lib/fincasGestion.js";
 import { cumple, permisosEfectivos, type Nivel, type PermisosModulos } from "./_lib/acceso.js";
 import { POS_GET, POS_POST } from "./_lib/pos.js";
+import { TIENDAS_GET, TIENDAS_POST } from "./_lib/tiendas.js";
 
 type Fila = Record<string, unknown>;
 type Body = Record<string, unknown>;
@@ -524,6 +526,7 @@ const GET_RUTAS: Record<string, Ruta> = {
   auditoria,
   "gestion-fincas": fincasGestion,
   ...POS_GET,
+  ...TIENDAS_GET,
 };
 
 const POST_RUTAS: Record<string, Ruta> = {
@@ -535,6 +538,7 @@ const POST_RUTAS: Record<string, Ruta> = {
   "crear-lote-empaque": crearLoteEmpaque,
   "gestion-fincas": fincasGestion,
   ...POS_POST,
+  ...TIENDAS_POST,
 };
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {

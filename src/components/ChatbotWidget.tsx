@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
-import { Bot, Loader2, Mic, MicOff, MessageCircle, Send, Settings2, Volume2, VolumeX, X } from "lucide-react";
+import { Loader2, Mic, MicOff, Send, Settings2, Volume2, VolumeX, X } from "lucide-react";
+import chatbotImg from "../assets/chatbot.png";
 
 interface Mensaje {
   rol: "user" | "assistant";
@@ -261,7 +262,7 @@ export function ChatbotWidget() {
         <div className="fixed inset-x-4 bottom-20 top-28 z-40 flex flex-col overflow-hidden rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface-card)] shadow-card sm:inset-x-auto sm:bottom-6 sm:right-6 sm:w-[50vw] sm:max-w-2xl">
           <div className="flex items-center justify-between bg-brand-800 px-4 py-3">
             <div className="flex items-center gap-2 text-cream-100">
-              <Bot className="h-4 w-4" strokeWidth={1.75} />
+              <img src={chatbotImg} alt="" className="h-7 w-7 rounded-full object-cover ring-1 ring-accent-300/70" />
               <p className="font-heading text-sm font-semibold">JARVIS</p>
             </div>
             <div className="flex items-center gap-1">
@@ -385,11 +386,11 @@ export function ChatbotWidget() {
 
       <button
         onClick={alternarChat}
-        className="fixed bottom-4 right-4 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-brand-800 text-cream-100 shadow-card transition hover:bg-brand-900 sm:bottom-6 sm:right-6"
+        className="fixed bottom-4 right-4 z-40 flex h-16 w-16 items-center justify-center overflow-hidden rounded-full bg-brand-800 text-cream-100 shadow-card transition hover:scale-105 sm:bottom-6 sm:right-6"
         aria-label={abierto ? "Cerrar a JARVIS" : "Abrir a JARVIS"}
         title="JARVIS — asistente del Portal Azahar"
       >
-        {abierto ? <X className="h-5 w-5" strokeWidth={1.75} /> : <MessageCircle className="h-6 w-6" strokeWidth={1.75} />}
+        {abierto ? <X className="h-5 w-5" strokeWidth={1.75} /> : <img src={chatbotImg} alt="" className="h-full w-full object-cover" />}
       </button>
     </>
   );

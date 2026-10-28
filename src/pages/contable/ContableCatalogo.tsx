@@ -3,11 +3,14 @@ import { PageHeader } from "../../components/PageHeader";
 import { Card } from "../../components/Card";
 import { Input, Select } from "../../components/ui";
 import { contableApi } from "../../lib/contableApi";
+import { useFiltroFechas } from "../../lib/contableFechas";
+import { formatDate } from "../../lib/format";
 import { AccesoDenegado, AvisoDemo, Cargando, ErrorCaja, Kpi, TD, TD_NUM, TH, Tabla, cop, num, useCarga, usePermisoContable } from "./comunes";
 
 export default function ContableCatalogo() {
   const { tieneAcceso } = usePermisoContable();
   const { datos, error, cargando } = useCarga(() => contableApi.catalogo());
+  const fechas = useFiltroFechas();
   const [situacion, setSituacion] = useState("");
   const [texto, setTexto] = useState("");
 
@@ -31,7 +34,7 @@ export default function ContableCatalogo() {
             <Kpi etiqueta="Productos en el archivo" valor={num(productos.length)} />
             <Kpi etiqueta="A la venta" valor={num(productos.filter((p) => p.situacion === "A la venta").length)} />
             <Kpi etiqueta="Sin ID en Alegra" valor={num(productos.filter((p) => p.id === null).length)} />
-            <Kpi etiqueta="Cambios aplicados" valor={num(datos.cambiosAplicados.length)} />
+            <Kpi etiqueta="Cambios aplicados en el período" valor={num(datos.cambiosAplicados.filter((c) => fechas.dentro(c.fecha)).length)} />
           </div>
 
           <Card title="Actualización semanal">
@@ -48,13 +51,15 @@ export default function ContableCatalogo() {
 
           <Card title="Cambios aplicados en Alegra">
             <ul className="divide-y divide-[var(--border-subtle)] text-sm">
-              {datos.cambiosAplicados.map((c) => (
+              {datos.cambiosAplicados.filter((c) => fechas.dentro(c.fecha)).map((c) => (
                 <li key={c.detalle} className="flex gap-3 py-2">
-                  <span className="w-14 shrink-0 text-xs font-bold uppercase text-accent-500">{c.tipo}</span>
+                  <span className="w-24 shrink-0 text-xs text-[var(--text-muted)]">{formatDate(c.fecha)}</span>
+                  <span className="w-24 shrink-0 text-xs font-bold uppercase text-accent-500">{c.tipo}</span>
                   <span>{c.detalle}</span>
                 </li>
               ))}
             </ul>
+            {datos.cambiosAplicados.every((c) => !fechas.dentro(c.fecha)) && <p className="text-sm text-[var(--text-muted)]">No se aplicaron cambios en este período.</p>}
           </Card>
 
           <Card title={`Productos (${filtrados.length})`}>

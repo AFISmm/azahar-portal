@@ -3,11 +3,13 @@ import { PageHeader } from "../../components/PageHeader";
 import { Card } from "../../components/Card";
 import { contableApi } from "../../lib/contableApi";
 import { formatDate } from "../../lib/format";
+import { useFiltroFechas } from "../../lib/contableFechas";
 import { AccesoDenegado, AvisoDemo, Cargando, ErrorCaja, EstadoPill, Kpi, cop, num, useCarga, usePermisoContable } from "./comunes";
 
 export default function ContableInicio() {
   const { tieneAcceso } = usePermisoContable();
   const { datos, error, cargando } = useCarga(() => contableApi.resumen());
+  const filtro = useFiltroFechas();
 
   if (!tieneAcceso) return <AccesoDenegado etapa="Gestión Contable" />;
 
@@ -32,18 +34,21 @@ export default function ContableInicio() {
 
           <Card title="Qué se ha hecho y en qué estado está">
             <ul className="divide-y divide-[var(--border-subtle)] text-sm">
-              {datos.hitos.map((h) => (
+              {datos.hitos.filter((h) => filtro.dentro(h.fecha)).map((h) => (
                 <li key={h.id} className="flex items-center justify-between gap-3 py-2.5">
                   <div className="min-w-0">
-                    <p className="text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]">{h.area}</p>
+                    <p className="text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]">
+                      {h.area} · {formatDate(h.fecha)}
+                    </p>
                     <p className="font-semibold text-[var(--text-primary)]">{h.titulo}</p>
                   </div>
                   <EstadoPill estado={h.estado} />
                 </li>
               ))}
             </ul>
+            {datos.hitos.every((h) => !filtro.dentro(h.fecha)) && <p className="py-2 text-sm text-[var(--text-muted)]">No hay hitos en este período. La línea de tiempo completa (desde diciembre de 2016) está en Documentación.</p>}
             <p className="mt-3 text-xs text-[var(--text-muted)]">
-              Actualizado el {formatDate(datos.actualizado)}. Hay {datos.pendientes} pendientes en{" "}
+              Los indicadores de arriba son acumulados. Actualizado el {formatDate(datos.actualizado)}. Hay {datos.pendientes} pendientes en{" "}
               <Link to="/contable/documentacion" className="font-semibold text-brand-800 underline">
                 Documentación
               </Link>
@@ -53,6 +58,7 @@ export default function ContableInicio() {
 
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {[
+              ["/contable/comprobantes", "Comprobantes contables", "Comprobantes destacados desde diciembre de 2016 (cierres y nómina) y los listos para subir."],
               ["/contable/conciliacion", "Conciliación bancaria", "Bancolombia 0590 por mes, cuentas PUC, monto unificado y cobros 13050501."],
               ["/contable/carga", "Cargue de archivos", "Sube un extracto o un listado de facturas (CSV) y obtén el resumen por mes. No sale de tu navegador."],
               ["/contable/nomina", "Pagos de nómina", "Pagos del Banco de Bogotá y el asiento propuesto en Alegra."],

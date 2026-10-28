@@ -46,7 +46,9 @@ import TrazLoteTostado from "./pages/trazabilidad/TrazLoteTostado";
 import TrazLoteEmpaque from "./pages/trazabilidad/TrazLoteEmpaque";
 import TrazLoteEmpaqueDetalle from "./pages/trazabilidad/TrazLoteEmpaqueDetalle";
 import TrazAuditoria from "./pages/trazabilidad/TrazAuditoria";
+import ContableLayout from "./pages/contable/ContableLayout";
 import ContableInicio from "./pages/contable/ContableInicio";
+import ContableComprobantes from "./pages/contable/ContableComprobantes";
 import ContableConciliacion from "./pages/contable/ContableConciliacion";
 import ContableCarga from "./pages/contable/ContableCarga";
 import ContableNomina from "./pages/contable/ContableNomina";
@@ -108,13 +110,16 @@ export default function App() {
 
                   {/* Gestión Contable: conciliaciones, cargue de archivos, terceros, nómina y catálogo (el acceso lo decide empleado.permisosModulos.contable). */}
                   <Route element={<ModuloRoute modulos="contable" />}>
-                    <Route path="/contable" element={<ContableInicio />} />
-                    <Route path="/contable/conciliacion" element={<ContableConciliacion />} />
-                    <Route path="/contable/carga" element={<ContableCarga />} />
-                    <Route path="/contable/nomina" element={<ContableNomina />} />
-                    <Route path="/contable/terceros" element={<ContableTerceros />} />
-                    <Route path="/contable/catalogo" element={<ContableCatalogo />} />
-                    <Route path="/contable/documentacion" element={<ContableDocumentacion />} />
+                    <Route element={<ContableLayout />}>
+                      <Route path="/contable" element={<ContableInicio />} />
+                      <Route path="/contable/comprobantes" element={<ContableComprobantes />} />
+                      <Route path="/contable/conciliacion" element={<ContableConciliacion />} />
+                      <Route path="/contable/carga" element={<ContableCarga />} />
+                      <Route path="/contable/nomina" element={<ContableNomina />} />
+                      <Route path="/contable/terceros" element={<ContableTerceros />} />
+                      <Route path="/contable/catalogo" element={<ContableCatalogo />} />
+                      <Route path="/contable/documentacion" element={<ContableDocumentacion />} />
+                    </Route>
                   </Route>
 
                   {/* RRHH y nómina */}

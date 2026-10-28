@@ -1,13 +1,14 @@
 // Documentación de la sesión de trabajo contable (20–28 de octubre de 2026): qué se hizo, qué quedó
 // pendiente y con qué scripts. Se mantiene a mano; los datos numéricos vienen de los demás módulos generados.
 
-export type EstadoHito = "hecho" | "listo-no-subido" | "bloqueado";
+export type EstadoHito = "hecho" | "listo-no-subido" | "bloqueado" | "pendiente";
 
 export const BITACORA = {
   actualizado: "2026-10-28",
   hitos: [
     {
       id: "catalogo-alegra",
+      fecha: "2026-10-27",
       area: "Catálogo de productos",
       titulo: "Productos corregidos y creados en Alegra",
       estado: "hecho" as EstadoHito,
@@ -16,6 +17,7 @@ export const BITACORA = {
     },
     {
       id: "sync-martes",
+      fecha: "2026-10-27",
       area: "Catálogo de productos",
       titulo: "Sincronización semanal archivo → Alegra (martes 5:00 p. m.)",
       estado: "hecho" as EstadoHito,
@@ -24,6 +26,7 @@ export const BITACORA = {
     },
     {
       id: "cuentas-2025",
+      fecha: "2026-10-20",
       area: "Balance 2025",
       titulo: "Cuentas contables creadas en Alegra",
       estado: "hecho" as EstadoHito,
@@ -31,6 +34,7 @@ export const BITACORA = {
     },
     {
       id: "balance-2025",
+      fecha: "2026-10-26",
       area: "Balance 2025",
       titulo: "Nota contable NC-002 (22.591 líneas) lista, sin subir",
       estado: "bloqueado" as EstadoHito,
@@ -39,6 +43,7 @@ export const BITACORA = {
     },
     {
       id: "terceros-eneromar",
+      fecha: "2026-10-23",
       area: "Terceros",
       titulo: "Terceros en comprobantes de enero–marzo 2026",
       estado: "listo-no-subido" as EstadoHito,
@@ -47,6 +52,7 @@ export const BITACORA = {
     },
     {
       id: "nomina",
+      fecha: "2026-10-23",
       area: "Nómina",
       titulo: "Pagos de nómina del Banco de Bogotá (47 asientos)",
       estado: "listo-no-subido" as EstadoHito,
@@ -55,6 +61,7 @@ export const BITACORA = {
     },
     {
       id: "conciliacion",
+      fecha: "2026-10-26",
       area: "Conciliaciones",
       titulo: "Conciliación Bancolombia 0590 (abril–septiembre)",
       estado: "listo-no-subido" as EstadoHito,
@@ -63,12 +70,32 @@ export const BITACORA = {
     },
     {
       id: "retenciones",
+      fecha: "2026-10-23",
       area: "Cargue de facturas",
       titulo: "Retenciones de facturas de compra (TRO RETENCION)",
       estado: "hecho" as EstadoHito,
       detalle:
         "Se copiaron las columnas AJ–AU de la pestaña 'A CONTB' (PUC, base, % y monto de RTEFTE, RTEICA y RTEIVA) a 'HOJA BASE', línea por línea, en las columnas AR–BC. 2.305 líneas; los totales coinciden con el origen (Retefuente $2.695.036, Reteica $312.738, Reteiva $87.649).",
     },
+  ],
+  /**
+   * Línea de tiempo desde diciembre de 2016 hasta hoy: cierres contables históricos, años pendientes y el trabajo de
+   * 2026. Los números de comprobante (journal) son los de Alegra; los montos, los publicados en cada comprobante.
+   */
+  lineaTiempo: [
+    { fecha: "2016-12-31", area: "Cierres históricos", titulo: "Cierre 2016: balance de cierre", estado: "hecho" as EstadoHito, detalle: "Comprobante AC-114596 (id 114607), 33 líneas, $1.041.677.342 balanceado. Fuente: balance de prueba de diciembre 2016 de Siigo (42 cuentas de nivel más detallado; 9 con saldo $0 se excluyeron). Se crearon 4 cuentas que faltaban en Alegra." },
+    { fecha: "2016-12-31", area: "Cierres históricos", titulo: "Cierre 2016: ajuste (segunda pasada)", estado: "hecho" as EstadoHito, detalle: "Comprobante AC-114597 (id 114608). Compara el balance de Siigo con el saldo real de Alegra por cuenta. Al publicarse (13-oct-2026) tenía 24 líneas y $1.061.406.203; hoy en Alegra figura con 28 líneas y $1.962.416.793 (fue modificado después)." },
+    { fecha: "2017-12-31", area: "Cierres históricos", titulo: "Cierre 2017: ajuste de saldos", estado: "hecho" as EstadoHito, detalle: "Comprobante AC-114598 (id 114610), 1.152 líneas (369 cuentas), $3.234.383.154. Una cuenta de $258.577.485 es un control automático de Alegra (ajustes de inventario): se usó una cuenta puente temporal; falta identificar su origen con soporte de Alegra." },
+    { fecha: "2018-12-31", area: "Cierres históricos", titulo: "Cierre 2018: ajuste de saldos", estado: "hecho" as EstadoHito, detalle: "Comprobante AC-114600 (id 114613), 247 líneas, $3.399.832.395. Mismo tratamiento de cuenta puente para un saldo de $592.471.523." },
+    { fecha: "2019-12-31", area: "Cierres históricos", titulo: "Cierre 2019: ajuste de saldos", estado: "hecho" as EstadoHito, detalle: "Comprobante AC-114603 (id 114617), 77 líneas, $833.419.835. Se crearon 2 cuentas nuevas." },
+    { fecha: "2020-12-31", area: "Cierres históricos", titulo: "Cierres 2020, 2021 y 2022", estado: "pendiente" as EstadoHito, detalle: "Sin cierre publicado en Alegra. Estimado: una jornada de trabajo por año una vez se definan los años a cerrar." },
+    { fecha: "2023-12-31", area: "Cierres históricos", titulo: "Cierre 2023: ajuste parcial", estado: "hecho" as EstadoHito, detalle: "Comprobante AC-114607 (id 114625). Parcial: solo 8 de 44 líneas (2,1% del valor) porque el archivo trae códigos de Siigo a nivel de grupo; con cuenta puente. Al publicarse tenía 9 líneas y $90.961.763; hoy en Alegra figura con 4 líneas y $26.663.801 (fue modificado después)." },
+    { fecha: "2024-12-31", area: "Cierres históricos", titulo: "Cierre 2024: ajuste de saldos", estado: "hecho" as EstadoHito, detalle: "Comprobante AC-114608 (id 114627), 180 líneas, $5.245.904.607, con cuenta puente. Fuente: nc 2024.xlsx (cuentas de Alegra ya asignadas por el equipo de Azahar)." },
+    { fecha: "2025-12-31", area: "Balance 2025", titulo: "Nota contable NC-002 (22.591 líneas) lista, sin subir", estado: "bloqueado" as EstadoHito, detalle: "Por cuenta y tercero, $45.105.962.937 en débitos. Falta crear 2.673 contactos en Alegra (error 502)." },
+    { fecha: "2026-03-31", area: "Ventas y comprobantes", titulo: "Enero–marzo 2026: ventas diarias y comprobantes de Siigo", estado: "hecho" as EstadoHito, detalle: "2.039 comprobantes en Alegra: 473 de ventas diarias por sede (resumen DIAN), 1.565 del diario de Siigo (tipos P, R, F, G, L, N, J) y 1 de vacaciones. Ninguno tiene tercero asociado; se preparó la asignación (ver Terceros)." },
+    { fecha: "2026-09-30", area: "Nómina", titulo: "Nómina abril–septiembre 2026", estado: "hecho" as EstadoHito, detalle: "6 comprobantes mensuales (AC-114541 a AC-114546, ids 114552–114557) con el desglose de BUK, 30 liquidaciones ($113.604.863) y 19 vacaciones ($24.705.360). Nómina electrónica ante la DIAN: no habilitada (403)." },
+    { fecha: "2026-10-12", area: "Compras", titulo: "Reclasificación de compras de abril, mayo y julio", estado: "hecho" as EstadoHito, detalle: "761 facturas (2.316 líneas) con el detalle real de Siigo: 743 de 751 reclasificadas; 8 no se pudieron editar (estado cerrado) y 9 con información incompleta. Quedan 479 partidas por clasificar y 24 facturas cerradas." },
+    { fecha: "2026-10-13", area: "Conciliaciones", titulo: "Auditoría de conciliación bancaria de las 6 cuentas", estado: "hecho" as EstadoHito, detalle: "30 extractos (Bancolombia, Banco de Bogotá, Davivienda 7043/7050/7999 y Fiducia) contra ventas de enero a septiembre, con control de calidad. En Bancolombia solo el 9,2% de las ventas tiene un depósito identificable." },
   ],
   decisiones: [
     "Cuentas acumulativas: usar la subcuenta de movimiento (aprobado).",

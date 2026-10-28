@@ -1,11 +1,13 @@
 import { PageHeader } from "../../components/PageHeader";
 import { Card } from "../../components/Card";
 import { contableApi } from "../../lib/contableApi";
+import { useFiltroFechas } from "../../lib/contableFechas";
 import { AccesoDenegado, AvisoDemo, Cargando, ErrorCaja, Kpi, TD, TD_NUM, TH, Tabla, num, useCarga, usePermisoContable } from "./comunes";
 
 export default function ContableTerceros() {
   const { tieneAcceso } = usePermisoContable();
   const { datos, error, cargando } = useCarga(() => contableApi.terceros());
+  const fechas = useFiltroFechas();
   if (!tieneAcceso) return <AccesoDenegado etapa="Gestión Contable" />;
 
   return (
@@ -20,7 +22,13 @@ export default function ContableTerceros() {
       {error && <ErrorCaja mensaje={error} />}
       {datos && (
         <>
-          <Card title="Balance 2025 (nota contable por tercero)">
+          {!fechas.periodoDentro("2025-12-31", "2025-12-31") && !fechas.periodoDentro("2026-01-01", "2026-03-31") && (
+            <Card>
+              <p className="text-sm text-[var(--text-secondary)]">Los terceros pendientes corresponden al balance de diciembre de 2025 y a los comprobantes de enero a marzo de 2026. Amplía el filtro de fechas para verlos.</p>
+            </Card>
+          )}
+          {fechas.periodoDentro("2025-12-31", "2025-12-31") && (
+          <Card title="Balance 2025 (nota contable por tercero, 31 de diciembre de 2025)">
             <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
               <Kpi etiqueta="Líneas del comprobante" valor={num(datos.balance2025.lineas)} />
               <Kpi etiqueta="Terceros distintos" valor={num(datos.balance2025.nitDistintos)} />
@@ -30,7 +38,9 @@ export default function ContableTerceros() {
             <p className="mt-3 text-xs text-[var(--text-secondary)]">Fuente: {datos.balance2025.fuente}.</p>
             <p className="mt-1 rounded-lg bg-status-rechazada-bg px-3 py-2 text-xs text-status-rechazada">Bloqueo: {datos.balance2025.bloqueo}</p>
           </Card>
+          )}
 
+          {fechas.periodoDentro("2026-01-01", "2026-03-31") && (
           <Card title="Comprobantes de enero a marzo 2026">
             <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
               <Kpi etiqueta="Comprobantes revisados" valor={num(datos.eneroMarzo.comprobantes)} nota="Ninguno tenía tercero asociado" />
@@ -59,6 +69,7 @@ export default function ContableTerceros() {
               </Tabla>
             </div>
           </Card>
+          )}
         </>
       )}
     </div>

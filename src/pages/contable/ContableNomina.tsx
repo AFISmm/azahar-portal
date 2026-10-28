@@ -6,20 +6,23 @@ import { Button, Select } from "../../components/ui";
 import { contableApi } from "../../lib/contableApi";
 import { descargarCSV } from "../../lib/contableCarga";
 import { formatDate } from "../../lib/format";
+import { useFiltroFechas } from "../../lib/contableFechas";
 import { AccesoDenegado, AvisoDemo, Cargando, ErrorCaja, Kpi, Notas, TD, TD_NUM, TH, Tabla, cop, num, useCarga, usePermisoContable } from "./comunes";
 
 export default function ContableNomina() {
   const { tieneAcceso } = usePermisoContable();
   const { datos, error, cargando } = useCarga(() => contableApi.nomina());
+  const fechas = useFiltroFechas();
   const [estado, setEstado] = useState("");
   const [tipo, setTipo] = useState("");
 
-  const filtrados = useMemo(() => (datos?.pagos ?? []).filter((p) => (!estado || p.estado === estado) && (!tipo || p.tipo === tipo)), [datos, estado, tipo]);
+  const delPeriodo = useMemo(() => (datos?.pagos ?? []).filter((p) => fechas.dentro(p.fecha)), [datos, fechas]);
+  const filtrados = useMemo(() => delPeriodo.filter((p) => (!estado || p.estado === estado) && (!tipo || p.tipo === tipo)), [delPeriodo, estado, tipo]);
   if (!tieneAcceso) return <AccesoDenegado etapa="Gestión Contable" />;
 
   const suma = (xs: typeof filtrados) => xs.reduce((s, p) => s + p.valor, 0);
-  const aSubir = (datos?.pagos ?? []).filter((p) => p.estado === "vista previa");
-  const excluidos = (datos?.pagos ?? []).filter((p) => p.estado === "excluido");
+  const aSubir = delPeriodo.filter((p) => p.estado === "vista previa");
+  const excluidos = delPeriodo.filter((p) => p.estado === "excluido");
   const tipos = [...new Set((datos?.pagos ?? []).map((p) => p.tipo))];
 
   return (
@@ -31,10 +34,10 @@ export default function ContableNomina() {
       {datos && (
         <>
           <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-            <Kpi etiqueta="Pagos del archivo" valor={num(datos.pagos.length)} />
+            <Kpi etiqueta="Pagos en el período" valor={num(delPeriodo.length)} nota={`de ${num(datos.pagos.length)} del archivo`} />
             <Kpi etiqueta="Asientos por subir" valor={num(aSubir.length)} nota={cop(suma(aSubir))} />
             <Kpi etiqueta="Excluidos (ya registrados)" valor={num(excluidos.length)} nota={cop(suma(excluidos))} />
-            <Kpi etiqueta="Publicados en Alegra" valor={num(datos.pagos.filter((p) => p.estado === "publicado").length)} />
+            <Kpi etiqueta="Publicados en Alegra" valor={num(delPeriodo.filter((p) => p.estado === "publicado").length)} />
           </div>
           <Card title="Asiento propuesto">
             <p className="text-sm text-[var(--text-secondary)]">{datos.asiento}</p>

@@ -6,6 +6,7 @@ import { Button, Input, Select } from "../../components/ui";
 import { contableApi, type ConciliacionBancolombia } from "../../lib/contableApi";
 import { descargarCSV } from "../../lib/contableCarga";
 import { formatDate } from "../../lib/format";
+import { mesEtiquetaAIso, useFiltroFechas } from "../../lib/contableFechas";
 import { AccesoDenegado, AvisoDemo, Cargando, ErrorCaja, Notas, Pestanas, TD, TD_NUM, TH, Tabla, cop, num, pesos2, useCarga, usePermisoContable } from "./comunes";
 
 type Vista = "mensual" | "cuentas" | "unificado" | "cobros";
@@ -51,8 +52,18 @@ export default function ContableConciliacion() {
   );
 }
 
+/** Meses del extracto que caen dentro del filtro de fechas. */
+function useMeses(d: ConciliacionBancolombia) {
+  const filtro = useFiltroFechas();
+  return d.mensual.filter((m) => {
+    const iso = mesEtiquetaAIso(m.mes);
+    return !iso || filtro.mesDentro(iso);
+  });
+}
+
 function Mensual({ d }: { d: ConciliacionBancolombia }) {
-  const tot = (k: "abonos" | "cargos" | "movimientos") => d.mensual.reduce((s, m) => s + m[k], 0);
+  const meses = useMeses(d);
+  const tot = (k: "abonos" | "cargos" | "movimientos") => meses.reduce((s, m) => s + m[k], 0);
   return (
     <Card title="Saldo calculado contra el extracto de cada mes">
       <Tabla>
@@ -66,7 +77,7 @@ function Mensual({ d }: { d: ConciliacionBancolombia }) {
           </tr>
         </thead>
         <tbody>
-          {d.mensual.map((m) => (
+          {meses.map((m) => (
             <tr key={m.mes}>
               <td className={TD}>{m.mes}</td>
               <td className={TD_NUM}>{pesos2(m.saldoAnterior)}</td>
@@ -95,7 +106,8 @@ function Mensual({ d }: { d: ConciliacionBancolombia }) {
 }
 
 function Cuentas({ d }: { d: ConciliacionBancolombia }) {
-  const meses = d.mensual.map((m) => m.mes);
+  const meses = useMeses(d).map((m) => m.mes);
+  const sumar = (c: ConciliacionBancolombia["cuentas"][number], k: "debito" | "credito") => meses.reduce((s, m) => s + (c.porMes[m]?.[k] ?? 0), 0);
   return (
     <Card
       title="Débitos y créditos por cuenta (columna K de la pestaña b)"
@@ -106,7 +118,7 @@ function Cuentas({ d }: { d: ConciliacionBancolombia }) {
           onClick={() =>
             descargarCSV("cuentas_puc_por_mes.csv", [
               ["Cuenta", "Nombre", ...meses.flatMap((m) => [`${m} Débito`, `${m} Crédito`]), "Total Débito", "Total Crédito"],
-              ...d.cuentas.map((c) => [c.cuenta, c.nombre, ...meses.flatMap((m) => [c.porMes[m]?.debito ?? 0, c.porMes[m]?.credito ?? 0]), c.totalDebito, c.totalCredito]),
+              ...d.cuentas.map((c) => [c.cuenta, c.nombre, ...meses.flatMap((m) => [c.porMes[m]?.debito ?? 0, c.porMes[m]?.credito ?? 0]), sumar(c, "debito"), sumar(c, "credito")]),
             ])
           }
         >
@@ -140,7 +152,7 @@ function Cuentas({ d }: { d: ConciliacionBancolombia }) {
                 </td>
               ))}
               <td className={`${TD_NUM} font-semibold`}>
-                {num(Math.round(c.totalDebito))} / {num(Math.round(c.totalCredito))}
+                {num(Math.round(sumar(c, "debito")))} / {num(Math.round(sumar(c, "credito")))}
               </td>
             </tr>
           ))}
@@ -151,7 +163,12 @@ function Cuentas({ d }: { d: ConciliacionBancolombia }) {
 }
 
 function Unificado({ d }: { d: ConciliacionBancolombia }) {
-  const tot = (k: "comisiones" | "intereses" | "neto") => d.unificado.reduce((s, m) => s + m[k], 0);
+  const filtro = useFiltroFechas();
+  const filas = d.unificado.filter((m) => {
+    const iso = mesEtiquetaAIso(m.mes);
+    return !iso || filtro.mesDentro(iso);
+  });
+  const tot = (k: "comisiones" | "intereses" | "neto") => filas.reduce((s, m) => s + m[k], 0);
   return (
     <Card title="Gasto financiero neto: comisiones (53051501) menos intereses (42100501)">
       <Tabla>
@@ -165,7 +182,7 @@ function Unificado({ d }: { d: ConciliacionBancolombia }) {
           </tr>
         </thead>
         <tbody>
-          {d.unificado.map((m) => (
+          {filas.map((m) => (
             <tr key={m.mes}>
               <td className={TD}>{m.mes}</td>
               <td className={TD_NUM}>{pesos2(m.comisiones)}</td>
@@ -186,14 +203,16 @@ function Unificado({ d }: { d: ConciliacionBancolombia }) {
 }
 
 function Cobros({ d }: { d: ConciliacionBancolombia }) {
+  const filtro = useFiltroFechas();
+  const meses = useMeses(d);
   const [mes, setMes] = useState("");
   const [estado, setEstado] = useState("");
   const [texto, setTexto] = useState("");
   const filtrados = useMemo(
-    () => d.cobros.filter((c) => (!mes || c.mes === mes) && (!estado || c.estado === estado) && (!texto || c.descripcion.toLowerCase().includes(texto.toLowerCase()))),
-    [d.cobros, mes, estado, texto],
+    () => d.cobros.filter((c) => filtro.dentro(c.fecha) && (!mes || c.mes === mes) && (!estado || c.estado === estado) && (!texto || c.descripcion.toLowerCase().includes(texto.toLowerCase()))),
+    [d.cobros, filtro, mes, estado, texto],
   );
-  const ambiguos = d.cobros.filter((c) => c.estado === "CONCILIADO" && c.candidatas > 1).length;
+  const ambiguos = d.cobros.filter((c) => filtro.dentro(c.fecha) && c.estado === "CONCILIADO" && c.candidatas > 1).length;
   return (
     <div className="space-y-4">
       <Card title="Resumen de cobros por mes">
@@ -208,7 +227,7 @@ function Cobros({ d }: { d: ConciliacionBancolombia }) {
             </tr>
           </thead>
           <tbody>
-            {d.resumenCobros.map((m) => (
+            {d.resumenCobros.filter((m) => meses.some((x) => x.mes === m.mes)).map((m) => (
               <tr key={m.mes}>
                 <td className={TD}>{m.mes}</td>
                 <td className={TD_NUM}>{num(m.pagos)}</td>
@@ -250,7 +269,7 @@ function Cobros({ d }: { d: ConciliacionBancolombia }) {
         <div className="mb-3 grid gap-3 sm:grid-cols-3">
           <Select value={mes} onChange={(e) => setMes(e.target.value)} aria-label="Mes">
             <option value="">Todos los meses</option>
-            {d.mensual.map((m) => (
+            {meses.map((m) => (
               <option key={m.mes}>{m.mes}</option>
             ))}
           </Select>

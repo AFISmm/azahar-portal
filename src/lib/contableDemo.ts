@@ -1,7 +1,7 @@
 // Datos de EJEMPLO (inventados) para el modo demo de Gestión Contable. No son cifras reales de Azahar: los
 // datos reales los sirve la API con sesión y permiso del módulo (ver api/_lib/contable.ts).
 
-import type { Bitacora, Catalogo, ConciliacionBancolombia, PagosNomina, ResumenContable, Terceros } from "./contableApi";
+import type { Bitacora, ComprobanteFila, Catalogo, ConciliacionBancolombia, PagosNomina, ResumenContable, Terceros } from "./contableApi";
 
 const MESES = ["Mes 1 (ejemplo)", "Mes 2 (ejemplo)", "Mes 3 (ejemplo)"];
 
@@ -71,16 +71,25 @@ const catalogo: Catalogo = {
     { id: 1, nombre: "PRODUCTO DE EJEMPLO 1", sku: "EJ-001", categoria: "Café", situacion: "A la venta", precioBase: 50_000, precioTotal: 52_500 },
     { id: null, nombre: "PRODUCTO DE EJEMPLO 2", sku: null, categoria: "Café", situacion: "Rotativo (fuera de stock)", precioBase: null, precioTotal: null },
   ],
-  cambiosAplicados: [{ tipo: "Precio", detalle: "Producto de ejemplo: $45.000 → $50.000" }],
+  cambiosAplicados: [{ fecha: "2026-01-10", tipo: "Precio", detalle: "Producto de ejemplo: $45.000 → $50.000" }],
   sincronizacion: { programacion: "Todos los martes a las 5:00 p. m.", sentido: "Archivo → Alegra", reglas: ["Regla de ejemplo."] },
 };
 
 const bitacora: Bitacora = {
   actualizado: "2026-01-01",
   hitos: [
-    { id: "ej-1", area: "Ejemplo", titulo: "Hito terminado (demostración)", estado: "hecho", detalle: "Descripción de ejemplo." },
-    { id: "ej-2", area: "Ejemplo", titulo: "Hito listo sin subir (demostración)", estado: "listo-no-subido", detalle: "Descripción de ejemplo." },
-    { id: "ej-3", area: "Ejemplo", titulo: "Hito bloqueado (demostración)", estado: "bloqueado", detalle: "Descripción de ejemplo." },
+    { id: "ej-1", fecha: "2026-01-05", area: "Ejemplo", titulo: "Hito terminado (demostración)", estado: "hecho", detalle: "Descripción de ejemplo." },
+    { id: "ej-2", fecha: "2026-02-05", area: "Ejemplo", titulo: "Hito listo sin subir (demostración)", estado: "listo-no-subido", detalle: "Descripción de ejemplo." },
+    { id: "ej-3", fecha: "2026-03-05", area: "Ejemplo", titulo: "Hito bloqueado (demostración)", estado: "bloqueado", detalle: "Descripción de ejemplo." },
+  ],
+  lineaTiempo: [
+    { fecha: "2016-12-31", area: "Ejemplo", titulo: "Cierre histórico de ejemplo", estado: "hecho", detalle: "Detalle de ejemplo." },
+    { fecha: "2020-12-31", area: "Ejemplo", titulo: "Cierre pendiente de ejemplo", estado: "pendiente", detalle: "Detalle de ejemplo." },
+    { fecha: "2026-03-05", area: "Ejemplo", titulo: "Hito bloqueado (demostración)", estado: "bloqueado", detalle: "Detalle de ejemplo." },
+  ],
+  actividad: [
+    { mes: "2016-12", n: 2, total: 2_000_000, lineas: 40, conTercero: 0 },
+    { mes: "2026-01", n: 50, total: 80_000_000, lineas: 150, conTercero: 20 },
   ],
   decisiones: ["Decisión de ejemplo."],
   pendientes: [{ responsable: "Responsable", tarea: "Tarea de ejemplo.", bloquea: "—" }],
@@ -95,8 +104,14 @@ const resumen: ResumenContable = {
   nomina: { asientosPendientes: 1, valorPendiente: 12_000_000 },
   terceros: { faltantesEnAlegra: 50, cubiertos: 45 },
   catalogo: { productos: 2, cambios: 1 },
-  hitos: bitacora.hitos.map(({ id, area, titulo, estado }) => ({ id, area, titulo, estado })),
+  hitos: bitacora.hitos.map(({ id, fecha, area, titulo, estado }) => ({ id, fecha, area, titulo, estado })),
   pendientes: 1,
 };
 
-export const CONTABLE_DEMO = { resumen, conciliacion, nomina, terceros, catalogo, bitacora };
+const comprobantes: ComprobanteFila[] = [
+  { id: "1", numero: "EJ-1", fecha: "2016-12-31", obs: "Cierre contable de ejemplo", total: 1_000_000, estado: "open", lineas: 20, conTercero: 0, origen: "alegra" },
+  { id: "2", numero: "EJ-2", fecha: "2026-01-05", obs: "Ventas diarias de ejemplo", total: 4_000_000, estado: "open", lineas: 3, conTercero: 0, origen: "alegra" },
+  { id: null, numero: "EJ-3", fecha: "2025-12-31", obs: "Ajuste de ejemplo (vista previa)", total: 9_000_000, estado: "vista previa", lineas: 100, conTercero: 90, origen: "vista previa" },
+];
+
+export const CONTABLE_DEMO = { resumen, conciliacion, nomina, terceros, catalogo, bitacora, comprobantes };

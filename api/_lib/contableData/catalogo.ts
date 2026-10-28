@@ -619,40 +619,54 @@ export const CATALOGO = {
  ],
  "cambiosAplicados": [
   {
+   "fecha": "2026-10-27",
    "tipo": "Precio",
    "detalle": "Pin de barranquero: $15.462 → $17.226,89"
   },
   {
+   "fecha": "2026-10-27",
    "tipo": "Precio",
    "detalle": "Pin de capibara: $15.462 → $17.226,89"
   },
   {
+   "fecha": "2026-10-27",
    "tipo": "Precio",
    "detalle": "Pin de gallina de finca: $15.462 → $17.226,89"
   },
   {
+   "fecha": "2026-10-27",
    "tipo": "Precio",
    "detalle": "Pin despulpadora: $15.462 → $17.226,89"
   },
   {
+   "fecha": "2026-10-27",
    "tipo": "Precio",
    "detalle": "Pin flor de café: $15.462 → $17.226,89"
   },
   {
+   "fecha": "2026-10-27",
    "tipo": "Precio",
    "detalle": "Pin perro: $15.462 → $17.226,89"
   },
   {
+   "fecha": "2026-10-27",
    "tipo": "Precio",
    "detalle": "Tote Bag Colombia: $65.294 → $68.655,46"
   },
   {
+   "fecha": "2026-10-27",
    "tipo": "SKU",
    "detalle": "Kit café método 3: 'kit-cafe-metodo-3' → 'KIT CAFÉ MÉTODO 3'"
   },
   {
+   "fecha": "2026-10-27",
    "tipo": "SKU",
    "detalle": "Kit café método 4: 'kit-cafe-metodo-4' → 'KIT CAFÉ MÉTODO 4'"
+  },
+  {
+   "fecha": "2026-10-27",
+   "tipo": "Producto nuevo",
+   "detalle": "11 productos creados (IDs 64 a 74): 4 activos con precio y 7 inactivos sin precio"
   }
  ],
  "sincronizacion": {

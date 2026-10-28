@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Download, FileUp } from "lucide-react";
 import { PageHeader } from "../../components/PageHeader";
 import { Card } from "../../components/Card";
 import { Button } from "../../components/ui";
 import { descargarCSV, procesarArchivo, type Perfil, type Resultado } from "../../lib/contableCarga";
+import { useFiltroFechas } from "../../lib/contableFechas";
 import { AccesoDenegado, ErrorCaja, Kpi, Pestanas, TD, TD_NUM, TH, Tabla, cop, num, usePermisoContable } from "./comunes";
 
 const AYUDA: Record<Perfil, { titulo: string; columnas: string; descripcion: string }> = {
@@ -24,13 +25,20 @@ export default function ContableCarga() {
   const [perfil, setPerfil] = useState<Perfil>("extracto");
   const [resultado, setResultado] = useState<Resultado | null>(null);
   const [nombre, setNombre] = useState("");
+  const [texto, setTexto] = useState("");
+  const fechas = useFiltroFechas();
+
+  // El archivo cargado se vuelve a resumir cuando cambia el filtro de fechas (no se vuelve a leer).
+  useEffect(() => {
+    if (texto) setResultado(procesarArchivo(texto, perfil, { desde: fechas.desde, hasta: fechas.hasta }));
+  }, [texto, perfil, fechas.desde, fechas.hasta]);
 
   if (!tieneAcceso) return <AccesoDenegado etapa="Gestión Contable" />;
 
   async function alElegir(archivo: File | undefined) {
     if (!archivo) return;
     setNombre(archivo.name);
-    setResultado(procesarArchivo(await archivo.text(), perfil));
+    setTexto(await archivo.text());
   }
 
   const ayuda = AYUDA[perfil];
@@ -47,6 +55,7 @@ export default function ContableCarga() {
           setPerfil(p);
           setResultado(null);
           setNombre("");
+          setTexto("");
         }}
         opciones={[
           { clave: "extracto", etiqueta: "Extracto bancario" },

@@ -145,7 +145,7 @@ export interface ResultadoFacturas {
 }
 export type Resultado = ResultadoExtracto | ResultadoFacturas | { perfil: Perfil; error: string };
 
-export function procesarArchivo(texto: string, perfil: Perfil): Resultado {
+export function procesarArchivo(texto: string, perfil: Perfil, rango: { desde: string; hasta: string } = { desde: "", hasta: "" }): Resultado {
   const filas = parsearCSV(texto);
   if (filas.length < 2) return { perfil, error: "El archivo no tiene filas de datos." };
   const [encabezado, ...datos] = filas;
@@ -155,6 +155,8 @@ export function procesarArchivo(texto: string, perfil: Perfil): Resultado {
   if (faltan.length) return { perfil, error: `Faltan columnas obligatorias: ${faltan.join(", ")}. Encabezados encontrados: ${encabezado.map((h) => h.trim()).join(" | ")}` };
 
   const invalidas: { fila: number; motivo: string }[] = [];
+  /** true si la fecha cae dentro del filtro de fechas del módulo. */
+  const enRango = (iso: string) => (!rango.desde || iso >= rango.desde) && (!rango.hasta || iso <= rango.hasta);
 
   if (perfil === "extracto") {
     const porMes = new Map<string, { movimientos: number; debito: number; credito: number }>();
@@ -166,6 +168,7 @@ export function procesarArchivo(texto: string, perfil: Perfil): Resultado {
       const debito = parsearNumero(f[mapa.debito]) ?? 0;
       const credito = parsearNumero(f[mapa.credito]) ?? 0;
       if (!fecha) return void invalidas.push({ fila: i + 2, motivo: "Fecha inválida" });
+      if (!enRango(fecha)) return;
       validas++;
       const mes = fecha.slice(0, 7);
       const m = porMes.get(mes) ?? { movimientos: 0, debito: 0, credito: 0 };
@@ -208,6 +211,7 @@ export function procesarArchivo(texto: string, perfil: Perfil): Resultado {
     const fecha = parsearFecha(f[mapa.fecha]);
     const total = parsearNumero(f[mapa.total]);
     if (!fecha || total === null) return void invalidas.push({ fila: i + 2, motivo: !fecha ? "Fecha inválida" : "Total inválido" });
+    if (!enRango(fecha)) return;
     validas++;
     const mes = fecha.slice(0, 7);
     const m = porMes.get(mes) ?? { facturas: 0, total: 0, retefuente: 0, reteica: 0, reteiva: 0 };

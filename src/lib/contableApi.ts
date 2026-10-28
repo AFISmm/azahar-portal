@@ -118,14 +118,16 @@ export interface Catalogo {
   generado: string;
   archivo: string;
   productos: ProductoCatalogo[];
-  cambiosAplicados: { tipo: string; detalle: string }[];
+  cambiosAplicados: { fecha: string; tipo: string; detalle: string }[];
   sincronizacion: { programacion: string; sentido: string; reglas: string[] };
 }
 
-export type EstadoHito = "hecho" | "listo-no-subido" | "bloqueado";
+export type EstadoHito = "hecho" | "listo-no-subido" | "bloqueado" | "pendiente";
 export interface Bitacora {
   actualizado: string;
-  hitos: { id: string; area: string; titulo: string; estado: EstadoHito; detalle: string }[];
+  hitos: { id: string; fecha: string; area: string; titulo: string; estado: EstadoHito; detalle: string }[];
+  lineaTiempo: { fecha: string; area: string; titulo: string; estado: EstadoHito; detalle: string }[];
+  actividad: { mes: string; n: number; total: number; lineas: number; conTercero: number }[];
   decisiones: string[];
   pendientes: { responsable: string; tarea: string; bloquea: string }[];
   scripts: { archivo: string; uso: string }[];
@@ -139,8 +141,36 @@ export interface ResumenContable {
   nomina: { asientosPendientes: number; valorPendiente: number };
   terceros: { faltantesEnAlegra: number; cubiertos: number };
   catalogo: { productos: number; cambios: number };
-  hitos: { id: string; area: string; titulo: string; estado: EstadoHito }[];
+  hitos: { id: string; fecha: string; area: string; titulo: string; estado: EstadoHito }[];
   pendientes: number;
+}
+
+export interface ComprobanteFila {
+  id: string | null;
+  numero: string | null;
+  fecha: string;
+  obs: string;
+  total: number | null;
+  estado: string;
+  lineas: number;
+  conTercero: number;
+  origen: string;
+}
+export interface ParamsComprobantes {
+  desde: string;
+  hasta: string;
+  q: string;
+  estado: string;
+  pagina: number;
+}
+export interface RespuestaComprobantes {
+  totalGeneral: number;
+  filtrados: number;
+  pagina: number;
+  paginas: number;
+  filas: ComprobanteFila[];
+  resumen: { n: number; total: number; lineas: number; conTercero: number };
+  porMes: { mes: string; n: number; total: number; lineas: number; conTercero: number }[];
 }
 
 export class ContableError extends Error {
@@ -151,8 +181,9 @@ export class ContableError extends Error {
   }
 }
 
-async function llamar<T>(r: string): Promise<T> {
-  const respuesta = await fetch(`/api/trazabilidad?r=${r}`, { credentials: "include" });
+async function llamar<T>(r: string, params: Record<string, string> = {}): Promise<T> {
+  const query = new URLSearchParams({ r, ...params }).toString();
+  const respuesta = await fetch(`/api/trazabilidad?${query}`, { credentials: "include" });
   const payload = (await respuesta.json().catch(() => null)) as ({ ok: boolean; mensaje?: string } & T) | null;
   if (!respuesta.ok || !payload?.ok) {
     throw new ContableError(respuesta.status, payload?.mensaje ?? `Error ${respuesta.status} consultando Gestión Contable.`);
@@ -160,7 +191,34 @@ async function llamar<T>(r: string): Promise<T> {
   return payload;
 }
 
+function comprobantesDemo(p: ParamsComprobantes): RespuestaComprobantes {
+  const todos = CONTABLE_DEMO.comprobantes;
+  const filas = todos.filter((c) => (!p.desde || c.fecha >= p.desde) && (!p.hasta || c.fecha <= p.hasta) && (!p.estado || c.estado === p.estado) && (!p.q || `${c.numero ?? ""} ${c.obs}`.toLowerCase().includes(p.q.toLowerCase())));
+  const porMes = new Map<string, { n: number; total: number; lineas: number; conTercero: number }>();
+  for (const c of filas) {
+    const m = porMes.get(c.fecha.slice(0, 7)) ?? { n: 0, total: 0, lineas: 0, conTercero: 0 };
+    m.n++;
+    m.total += c.total ?? 0;
+    m.lineas += c.lineas;
+    m.conTercero += c.conTercero;
+    porMes.set(c.fecha.slice(0, 7), m);
+  }
+  return {
+    totalGeneral: todos.length,
+    filtrados: filas.length,
+    pagina: 1,
+    paginas: 1,
+    filas,
+    resumen: { n: filas.length, total: filas.reduce((s, c) => s + (c.total ?? 0), 0), lineas: filas.reduce((s, c) => s + c.lineas, 0), conTercero: filas.reduce((s, c) => s + c.conTercero, 0) },
+    porMes: [...porMes.entries()].sort(([a], [b]) => (a < b ? 1 : -1)).map(([mes, v]) => ({ mes, ...v })),
+  };
+}
+
 export const contableApi = {
+  comprobantes: (p: ParamsComprobantes) =>
+    IS_DEMO_MODE
+      ? Promise.resolve(comprobantesDemo(p))
+      : llamar<RespuestaComprobantes>("contable-comprobantes", { desde: p.desde, hasta: p.hasta, q: p.q, estado: p.estado, pagina: String(p.pagina) }),
   resumen: () => (IS_DEMO_MODE ? Promise.resolve(CONTABLE_DEMO.resumen) : llamar<{ resumen: ResumenContable }>("contable-resumen").then((d) => d.resumen)),
   conciliacion: () => (IS_DEMO_MODE ? Promise.resolve(CONTABLE_DEMO.conciliacion) : llamar<{ conciliacion: ConciliacionBancolombia }>("contable-conciliacion").then((d) => d.conciliacion)),
   nomina: () => (IS_DEMO_MODE ? Promise.resolve(CONTABLE_DEMO.nomina) : llamar<{ nomina: PagosNomina }>("contable-nomina").then((d) => d.nomina)),

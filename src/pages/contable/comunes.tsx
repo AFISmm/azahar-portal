@@ -31,6 +31,7 @@ const ESTADOS: Record<EstadoHito, { texto: string; clase: string }> = {
   hecho: { texto: "Hecho", clase: "bg-status-aprobada-bg text-status-aprobada" },
   "listo-no-subido": { texto: "Listo, sin subir", clase: "bg-status-pendiente-bg text-status-pendiente" },
   bloqueado: { texto: "Bloqueado", clase: "bg-status-rechazada-bg text-status-rechazada" },
+  pendiente: { texto: "Pendiente", clase: "bg-[var(--surface-muted)] text-[var(--text-secondary)]" },
 };
 
 export function EstadoPill({ estado }: { estado: EstadoHito }) {

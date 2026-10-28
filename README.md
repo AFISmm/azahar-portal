@@ -191,14 +191,17 @@ Administrador y Gerencia lo incluyen y las cuentas `@mercurymethods.com` lo tien
 | Pantalla | Ruta | Qué muestra |
 |---|---|---|
 | Resumen | `/contable` | Indicadores, hitos y estado (hecho / listo sin subir / bloqueado) |
+| Comprobantes contables | `/contable/comprobantes` | Comprobantes **destacados** de Alegra desde diciembre de 2016 (13 cierres contables y comprobantes de nómina; **no es el listado completo**) y los pendientes de subir como «vista previa». Filtro en el servidor: fechas, texto y estado, con paginación y resumen por mes. Para cargar todos: `descargar_comprobantes_alegra.py` y apuntar el exportador a su salida |
 | Conciliación bancaria | `/contable/conciliacion` | Bancolombia 0590 por mes, cuentas PUC por mes, monto unificado de 53051501 + 42100501 y cobros de la 13050501 contra facturas (con CSV) |
 | Cargue de archivos | `/contable/carga` | Sube un CSV de extracto o de facturas y resume por mes. Se procesa en el navegador; no se envía ni se guarda |
 | Pagos de nómina | `/contable/nomina` | Pagos del Banco de Bogotá y el asiento propuesto |
 | Terceros | `/contable/terceros` | Estado del balance 2025 y de los comprobantes de enero a marzo (solo conteos) |
 | Catálogo | `/contable/catalogo` | Productos, cambios aplicados y reglas de la actualización semanal |
-| Documentación | `/contable/documentacion` | Bitácora, decisiones, pendientes por responsable, scripts y limitaciones |
+| Documentación | `/contable/documentacion` | Línea de tiempo desde diciembre de 2016, actividad por mes en Alegra, trabajo de octubre de 2026, decisiones, pendientes por responsable, scripts y limitaciones |
 
-**De dónde salen los datos.** Son instantáneas generadas por
+**Filtro de fechas.** Todas las pantallas comparten una barra «Filtrar por fecha» (Desde / Hasta y atajos: todo el historial, cada año desde 2016, último trimestre). Se guarda en `sessionStorage` y se aplica a comprobantes, conciliación, nómina, terceros, catálogo, documentación y al archivo cargado. Lo que no tiene fechas propias (la lista de productos) se muestra completo.
+
+**De dónde salen los datos.** Son instantáneas generadas por `04_SCRIPTS_MIGRACION/descargar_comprobantes_alegra.py` (lee todos los comprobantes de Alegra) y por
 `04_SCRIPTS_MIGRACION/exportar_datos_portal_contable.py` (en la carpeta AzaharRetail, fuera de este repo) a
 `api/_lib/contableData/*.ts`. Se sirven únicamente por `GET /api/trazabilidad?r=contable-*` (misma función
 serverless que Trazabilidad y POS, por el límite de 12 de Vercel Hobby), con sesión y permiso `contable`.

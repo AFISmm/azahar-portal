@@ -5,6 +5,7 @@
 //
 //   GET ?r=contable-resumen | contable-conciliacion | contable-nomina | contable-terceros |
 //       contable-catalogo | contable-bitacora
+//   GET ?r=contable-comprobantes&desde=&hasta=&q=&estado=&pagina=   -> comprobantes contables (filtro en el servidor)
 //
 // PERMISOS: módulo 'contable' (ver api/_lib/acceso.ts), nivel 'ver'. Los datos son instantáneas
 // generadas por 04_SCRIPTS_MIGRACION/exportar_datos_portal_contable.py y viven SOLO aquí, en el
@@ -18,6 +19,7 @@ import { PAGOS_NOMINA } from "./contableData/pagosNomina.js";
 import { TERCEROS } from "./contableData/terceros.js";
 import { CATALOGO } from "./contableData/catalogo.js";
 import { BITACORA } from "./contableData/bitacora.js";
+import { COMPROBANTES, type Comprobante } from "./contableData/comprobantes.js";
 
 type Ruta = (req: VercelRequest, res: VercelResponse) => Promise<unknown>;
 
@@ -28,6 +30,77 @@ function consulta(datos: () => unknown): Ruta {
     res.setHeader("Cache-Control", "private, no-store");
     return res.status(200).json({ ok: true, ...(datos() as object) });
   };
+}
+
+function param(req: VercelRequest, nombre: string): string {
+  const v = req.query[nombre];
+  return (Array.isArray(v) ? v[0] : v) ?? "";
+}
+
+const FECHA = /^\d{4}-\d{2}-\d{2}$/;
+const TAMANO_PAGINA = 100;
+
+/** Comprobantes contables de Alegra (y los que están en vista previa), con filtro por fechas, texto y estado. */
+const comprobantes: Ruta = async (req, res) => {
+  await requireModulo(req, "contable", "ver");
+  const desde = FECHA.test(param(req, "desde")) ? param(req, "desde") : "";
+  const hasta = FECHA.test(param(req, "hasta")) ? param(req, "hasta") : "";
+  const q = param(req, "q").trim().toLowerCase().slice(0, 80);
+  const estado = param(req, "estado");
+  const pagina = Math.max(1, Number.parseInt(param(req, "pagina"), 10) || 1);
+
+  const filtrados: Comprobante[] = COMPROBANTES.filter(
+    (c) =>
+      (!desde || c.fecha >= desde) &&
+      (!hasta || c.fecha <= hasta) &&
+      (!estado || c.estado === estado) &&
+      (!q || `${c.numero ?? ""} ${c.obs}`.toLowerCase().includes(q)),
+  );
+  const porMes = new Map<string, { n: number; total: number; lineas: number; conTercero: number }>();
+  let total = 0;
+  let lineas = 0;
+  let conTercero = 0;
+  for (const c of filtrados) {
+    const mes = c.fecha.slice(0, 7);
+    const m = porMes.get(mes) ?? { n: 0, total: 0, lineas: 0, conTercero: 0 };
+    m.n++;
+    m.total += c.total ?? 0;
+    m.lineas += c.lineas;
+    m.conTercero += c.conTercero;
+    porMes.set(mes, m);
+    total += c.total ?? 0;
+    lineas += c.lineas;
+    conTercero += c.conTercero;
+  }
+  const paginas = Math.max(1, Math.ceil(filtrados.length / TAMANO_PAGINA));
+  const actual = Math.min(pagina, paginas);
+  res.setHeader("Cache-Control", "private, no-store");
+  return res.status(200).json({
+    ok: true,
+    totalGeneral: COMPROBANTES.length,
+    filtrados: filtrados.length,
+    pagina: actual,
+    paginas,
+    filas: filtrados.slice((actual - 1) * TAMANO_PAGINA, actual * TAMANO_PAGINA),
+    resumen: { n: filtrados.length, total, lineas, conTercero },
+    porMes: [...porMes.entries()].sort(([a], [b]) => (a < b ? 1 : -1)).map(([mes, v]) => ({ mes, ...v })),
+  });
+};
+
+/** Comprobantes de Alegra por mes (desde diciembre de 2016): demuestra qué hay contabilizado en cada período. */
+function actividadMensual() {
+  const meses = new Map<string, { n: number; total: number; lineas: number; conTercero: number }>();
+  for (const c of COMPROBANTES) {
+    if (c.origen !== "alegra") continue;
+    const mes = c.fecha.slice(0, 7);
+    const m = meses.get(mes) ?? { n: 0, total: 0, lineas: 0, conTercero: 0 };
+    m.n++;
+    m.total += c.total ?? 0;
+    m.lineas += c.lineas;
+    m.conTercero += c.conTercero;
+    meses.set(mes, m);
+  }
+  return [...meses.entries()].sort(([a], [b]) => (a < b ? -1 : 1)).map(([mes, v]) => ({ mes, ...v }));
 }
 
 function resumen() {
@@ -52,7 +125,7 @@ function resumen() {
       nomina: { asientosPendientes: nominaPendiente.length, valorPendiente: nominaPendiente.reduce((s, p) => s + p.valor, 0) },
       terceros: { faltantesEnAlegra: TERCEROS.balance2025.faltantesEnAlegra, cubiertos: TERCEROS.balance2025.cubiertosPorListadoConsuelo },
       catalogo: { productos: CATALOGO.productos.length, cambios: CATALOGO.cambiosAplicados.length },
-      hitos: BITACORA.hitos.map((h) => ({ id: h.id, area: h.area, titulo: h.titulo, estado: h.estado })),
+      hitos: BITACORA.hitos.map((h) => ({ id: h.id, fecha: h.fecha, area: h.area, titulo: h.titulo, estado: h.estado })),
       pendientes: BITACORA.pendientes.length,
     },
   };
@@ -64,5 +137,6 @@ export const CONTABLE_GET: Record<string, Ruta> = {
   "contable-nomina": consulta(() => ({ nomina: PAGOS_NOMINA })),
   "contable-terceros": consulta(() => ({ terceros: TERCEROS })),
   "contable-catalogo": consulta(() => ({ catalogo: CATALOGO })),
-  "contable-bitacora": consulta(() => ({ bitacora: BITACORA })),
+  "contable-bitacora": consulta(() => ({ bitacora: { ...BITACORA, actividad: actividadMensual() } })),
+  "contable-comprobantes": comprobantes,
 };

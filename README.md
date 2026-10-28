@@ -134,6 +134,45 @@ base de datos también refuerza la unicidad del correo a nivel de esquema
 (`empleados.correo` es `unique`, ver `db/schema.sql`) como respaldo ante una
 posible condición de carrera entre dos registros simultáneos.
 
+## Módulos de Trazabilidad y POS
+
+Además del portal de talento humano, el portal incluye dos módulos de negocio.
+Ambos exigen backend real (Postgres) y **no tienen modo demo**.
+
+- **Trazabilidad del café** (`/trazabilidad/*`): finca, certificaciones, lote
+  verde (beneficiado y trilla), ficha de cata, tueste con blend, empaque con QR
+  y auditoría de solo-anexado. La ficha pública que abre el QR de la bolsa es
+  `/lote/:id` y no requiere sesión.
+- **POS fase 1** (`/pos/*`): caja (catálogo con modificadores, cobro en efectivo
+  o tarjeta, descuentos, "86"), pantalla de cocina (KDS) e historial. Dinero en
+  pesos COP enteros. Fuera de esta fase: recetas/insumos/stock, turnos de caja
+  y cierre Z, combos, reportes y propinas.
+
+**Permisos.** Se asignan por persona en Administración > Usuarios (columna
+"Módulos"), no por rol del portal: ser admin del portal no da acceso a estos
+módulos. Trazabilidad: `ADMIN | FINCA | BENEFICIADO | TUESTE | EMPAQUE`
+(`empleados.permisos_trazabilidad`). POS: `ADMIN | CAJA | COCINA`
+(`empleados.permisos_pos`). La API valida los mismos permisos.
+
+**Funciones serverless.** El plan Hobby de Vercel permite 12; ya están todas en
+uso, así que trazabilidad y POS comparten `api/trazabilidad.ts` (se enruta con
+`?r=...`; el POS vive en `api/_lib/pos.ts`) y `/api/fincas` es un rewrite hacia
+esa misma función (ver `vercel.json`). No agregues funciones nuevas sin
+consolidar otra.
+
+**Base de datos.** `db/schema.sql` es el esquema base; `db/trazabilidad.sql`,
+`db/pos.sql` y `db/pos-catalogo.sql` agregan los módulos (idempotentes).
+`db/migrar-trazabilidad.mjs` los aplica en una sola transacción sobre una base
+existente y, opcionalmente, copia los datos de la antigua app de trazabilidad
+(`ORIGEN_URL`); con `PRUEBA=1` hace un ensayo que no deja cambios. Para una base
+nueva basta aplicar los cuatro `.sql` en ese orden y crear el primer admin
+(ver `db/schema.sql`, "Bootstrap").
+
+**Variables de entorno de producción:** `POSTGRES_URL`, `AUTH_SECRET`,
+`VITE_ENABLE_BACKEND=true`, `BLOB_READ_WRITE_TOKEN` (store **público**, lo usan
+las fotos y certificados), y opcionales `GEMINI_API_KEY`, `GOOGLE_CLIENT_ID` y
+`GOOGLE_CLIENT_SECRET`.
+
 ## Estructura del proyecto
 
 ```

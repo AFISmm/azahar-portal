@@ -20,11 +20,11 @@ export const DOMINIO_ACCESO_TOTAL = "@mercurymethods.com";
  * Un módulo por ítem del sidebar. "rrhh" es la administración de Nómina (solicitudes, incapacidades,
  * documentos, empleados y nómina); la Nómina personal, Inicio y Mi Perfil son para todos.
  */
-export type Modulo = "estrategica" | "comercial" | "operativa" | "informacion" | "pos" | "trazabilidad" | "rrhh" | "usuarios";
+export type Modulo = "estrategica" | "comercial" | "operativa" | "informacion" | "pos" | "trazabilidad" | "contable" | "rrhh" | "usuarios";
 export type Nivel = "ver" | "editar";
 export type PermisosModulos = Partial<Record<Modulo, Nivel>>;
 
-export const MODULOS: Modulo[] = ["estrategica", "comercial", "operativa", "informacion", "pos", "trazabilidad", "rrhh", "usuarios"];
+export const MODULOS: Modulo[] = ["estrategica", "comercial", "operativa", "informacion", "pos", "trazabilidad", "contable", "rrhh", "usuarios"];
 const MODULOS_ADMIN: Modulo[] = ["estrategica", "comercial", "operativa", "informacion", "rrhh", "usuarios"];
 /** Antes los cuatro primeros eran un solo módulo "negocio": si una fila aún lo trae, vale para los cuatro. */
 const GRUPO_NEGOCIO: Modulo[] = ["estrategica", "comercial", "operativa", "informacion"];

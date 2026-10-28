@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
-  Award, Banknote, CalendarClock, ClipboardList, Clock, Coffee, FileCheck2, Gauge, Hand, Rocket, Sprout, Store, Trophy, UserCog, Users,
+  Award, Banknote, CalendarClock, Calculator, ClipboardList, Clock, Coffee, FileCheck2, Gauge, Hand, Rocket, Sprout, Store, Trophy, UserCog, Users,
 } from "lucide-react";
 import { useAuth } from "../../auth/AuthContext";
 import { useAcceso } from "../../auth/acceso";
@@ -171,6 +171,7 @@ export function WidgetAccesosRapidos({ tam }: { tam: Tam }) {
     { to: "/nomina/certificados", etiqueta: "Certificados", Icon: Award, visible: true },
     { to: "/mi-perfil", etiqueta: "Mi perfil", Icon: UserCog, visible: true },
     { to: "/trazabilidad", etiqueta: "Trazabilidad", Icon: Coffee, visible: a.ver("trazabilidad") },
+    { to: "/contable", etiqueta: "Contable", Icon: Calculator, visible: a.ver("contable") },
     { to: "/gestion-comercial", etiqueta: "Tiendas", Icon: Store, visible: a.ver("comercial") },
     { to: "/gestion-operativa", etiqueta: "Fincas", Icon: Sprout, visible: a.ver("operativa") },
     { to: "/admin/usuarios", etiqueta: "Usuarios", Icon: Users, visible: a.ver("usuarios") },

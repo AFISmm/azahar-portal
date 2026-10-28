@@ -12,7 +12,7 @@ export type TipoCuenta = "empleado" | "desarrollador";
  * administrador en Gestión de usuarios. Inicio, Nómina personal y Mi perfil son
  * para todos y no aparecen aquí.
  */
-export type Modulo = "estrategica" | "comercial" | "operativa" | "informacion" | "pos" | "trazabilidad" | "rrhh" | "usuarios";
+export type Modulo = "estrategica" | "comercial" | "operativa" | "informacion" | "pos" | "trazabilidad" | "contable" | "rrhh" | "usuarios";
 export type NivelModulo = "ver" | "editar";
 export type PermisosModulos = Partial<Record<Modulo, NivelModulo>>;
 
@@ -24,6 +24,7 @@ export const MODULOS_INFO: { clave: Modulo; nombre: string; descripcion: string 
   { clave: "informacion", nombre: "Información General", descripcion: "Calendario tributario, indicadores y calculadoras del negocio" },
   { clave: "pos", nombre: "Sistema POS", descripcion: "Caja, cocina e historial de ventas" },
   { clave: "trazabilidad", nombre: "Trazabilidad", descripcion: "Finca, beneficiado, tueste, empaque y QR" },
+  { clave: "contable", nombre: "Gestión Contable", descripcion: "Conciliaciones bancarias, cargue de facturas, terceros, pagos de nómina, catálogo y documentación del trabajo contable en Alegra" },
   { clave: "rrhh", nombre: "Nómina", descripcion: "Administración de nómina: solicitudes, incapacidades, documentos, empleados y pagos (la Nómina personal es para todos)" },
   { clave: "usuarios", nombre: "Gestión de usuarios", descripcion: "Cuentas, roles y permisos por módulo" },
 ];

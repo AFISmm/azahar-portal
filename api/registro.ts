@@ -37,6 +37,7 @@
 
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { sql } from "./_lib/db.js";
+import { tieneAccesoTotal } from "./_lib/acceso.js";
 import { HttpError, crearTokenSesion, setearCookieSesion } from "./_lib/auth.js";
 import { crearEmpleadoYUsuario } from "./_lib/crearEmpleado.js";
 
@@ -104,6 +105,18 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
   const payload = body as RegistrarPayload;
 
+  // El registro es público y no verifica el correo: por eso NUNCA se acepta el
+  // rol ni el tipo de cuenta del cliente (antes cualquiera podía registrarse
+  // como administrador), y los correos del dominio corporativo —que tienen
+  // acceso total— solo los crea un administrador desde Gestión de usuarios.
+  if (tieneAccesoTotal(payload.correo)) {
+    return res.status(403).json({
+      ok: false,
+      motivo: "error",
+      mensaje: "Las cuentas @mercurymethods.com las crea un administrador. Pídele que cree tu cuenta desde Gestión de usuarios.",
+    });
+  }
+
   try {
     // La tabla `empleados` es la memoria persistente: si ya existe un
     // registro con este correo, se rechaza antes de intentar crear nada.
@@ -127,11 +140,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       tipoContrato: payload.tipoContrato,
       fechaIngreso: payload.fechaIngreso,
       diasVacacionesDisponibles: 15,
-      rol: payload.rol,
+      rol: "empleado",
       password: payload.password,
       fechaNacimiento: payload.fechaNacimiento || null,
       numeroIdentificacion: payload.numeroIdentificacion || null,
-      tipoCuenta: payload.tipoCuenta ?? "empleado",
+      tipoCuenta: "empleado",
     });
 
     // Deja al usuario recién registrado con sesión iniciada de inmediato.

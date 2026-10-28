@@ -24,6 +24,7 @@ import QRCode from "qrcode";
 import { sql } from "./_lib/db.js";
 import { HttpError, manejarError, requireAuth } from "./_lib/auth.js";
 import fincasGestion from "./_lib/fincasGestion.js";
+import { tieneAccesoTotal } from "./_lib/acceso.js";
 import { POS_GET, POS_POST } from "./_lib/pos.js";
 
 type Permiso = "ADMIN" | "FINCA" | "BENEFICIADO" | "TUESTE" | "EMPAQUE";
@@ -62,12 +63,12 @@ function fecha(v: unknown): string | null {
 
 async function cargarActor(req: VercelRequest): Promise<Actor> {
   const { empleadoId } = await requireAuth(req);
-  const { rows } = await sql<{ nombre: string; estado: string; permisos_trazabilidad: string[] | null }>`
-    select nombre, estado, permisos_trazabilidad from empleados where id = ${empleadoId} limit 1
+  const { rows } = await sql<{ nombre: string; correo: string; estado: string; permisos_trazabilidad: string[] | null }>`
+    select nombre, correo, estado, permisos_trazabilidad from empleados where id = ${empleadoId} limit 1
   `;
   const fila = rows[0];
   if (!fila || fila.estado !== "activo") throw new HttpError(401, "La sesión ya no es válida.");
-  return { id: empleadoId, nombre: fila.nombre, permisos: fila.permisos_trazabilidad ?? [] };
+  return { id: empleadoId, nombre: fila.nombre, permisos: tieneAccesoTotal(fila.correo) ? ["ADMIN"] : (fila.permisos_trazabilidad ?? []) };
 }
 
 /**

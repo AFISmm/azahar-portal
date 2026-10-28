@@ -43,6 +43,7 @@ import type { VercelRequest, VercelResponse } from "@vercel/node";
 import bcrypt from "bcryptjs";
 import { put } from "@vercel/blob";
 import { sql } from "../_lib/db.js";
+import { tieneAccesoTotal } from "../_lib/acceso.js";
 import { HttpError, leerEmpleadoIdDeSesion, manejarError, requireAuth } from "../_lib/auth.js";
 import { mapEmpleadoRow, mapPqrRow, type EmpleadoRow, type PqrEstado, type PqrRow } from "../_lib/mappers.js";
 
@@ -80,6 +81,11 @@ async function actualizarPerfilPropio(req: VercelRequest, res: VercelResponse) {
   if (!actual) throw new HttpError(401, "La sesión ya no es válida.");
 
   const correo = body.correo?.trim() || actual.correo;
+  // Sin verificación de correo, permitir esto sería una escalada de privilegios:
+  // cualquiera se pondría un @mercurymethods.com y obtendría acceso total.
+  if (tieneAccesoTotal(correo) && !tieneAccesoTotal(actual.correo)) {
+    throw new HttpError(403, "Ese dominio de correo está reservado. Pide a un administrador que cambie tu correo.");
+  }
   const username = body.username !== undefined ? body.username.trim() || null : actual.username;
   const passwordHash = body.password ? await bcrypt.hash(body.password, RONDAS_SAL) : actual.password_hash;
 

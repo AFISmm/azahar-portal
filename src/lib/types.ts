@@ -38,6 +38,8 @@ export interface Empleado {
   permisosTrazabilidad: PermisoTrazabilidad[];
   /** Funciones del POS habilitadas; vacío = sin acceso. Las asigna un admin en Admin > Usuarios. */
   permisosPos: PermisoPos[];
+  /** true = correo del dominio corporativo (@mercurymethods.com): acceso total fijo, no editable. */
+  accesoTotal?: boolean;
   createdAt: string;
 }
 

@@ -1,43 +1,23 @@
 import { type FormEvent, useState } from "react";
-import { Link, Navigate, useSearchParams } from "react-router-dom";
-import { Loader2, LogIn, Sparkles } from "lucide-react";
+import { Link, Navigate } from "react-router-dom";
+import { Loader2, LogIn, Sparkles, X } from "lucide-react";
 import { useAuth } from "../auth/AuthContext";
 import { useLanguage } from "../context/LanguageContext";
 import { IS_DEMO_MODE } from "../lib/dataSource";
 import { Button, Field, Input } from "../components/ui";
 import { LanguageSwitcher } from "../components/LanguageSwitcher";
+import { leerUsuariosRecordados, olvidarUsuario, recordarUsuario } from "../lib/usuariosRecordados";
 import logo from "../assets/azahar-logo.png";
 import sidebarBg from "../assets/sidebar-bg.jpg";
-
-function IconoGoogle() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 18 18" aria-hidden="true">
-      <path fill="#4285F4" d="M17.64 9.2c0-.64-.06-1.25-.16-1.84H9v3.48h4.84a4.14 4.14 0 0 1-1.8 2.72v2.26h2.9c1.7-1.57 2.7-3.87 2.7-6.62z" />
-      <path fill="#34A853" d="M9 18c2.43 0 4.47-.8 5.96-2.18l-2.9-2.26c-.8.54-1.84.86-3.06.86-2.35 0-4.34-1.59-5.05-3.72H.98v2.33A9 9 0 0 0 9 18z" />
-      <path fill="#FBBC05" d="M3.95 10.7A5.4 5.4 0 0 1 3.67 9c0-.59.1-1.17.28-1.7V4.97H.98A9 9 0 0 0 0 9c0 1.45.35 2.83.98 4.03z" />
-      <path fill="#EA4335" d="M9 3.58c1.32 0 2.51.45 3.44 1.35l2.58-2.58C13.46.89 11.43 0 9 0A9 9 0 0 0 .98 4.97l2.97 2.33C4.66 5.17 6.65 3.58 9 3.58z" />
-    </svg>
-  );
-}
-
-const MENSAJE_ERROR_GOOGLE: Record<string, string> = {
-  config_faltante: "El inicio de sesión con Google todavía no está configurado.",
-  estado_invalido: "La sesión de Google expiró o no es válida. Intenta de nuevo.",
-  token_fallido: "No se pudo confirmar tu cuenta de Google. Intenta de nuevo.",
-  token_invalido: "No se pudo confirmar tu cuenta de Google. Intenta de nuevo.",
-  sin_cuenta: "No existe una cuenta del portal con ese correo de Google. Pide a un administrador que te cree una cuenta primero.",
-  error_inesperado: "Ocurrió un error inesperado iniciando sesión con Google. Intenta de nuevo.",
-};
 
 export default function Login() {
   const { user, signIn, signInDemo } = useAuth();
   const { t } = useLanguage();
-  const [searchParams] = useSearchParams();
   const [correo, setCorreo] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState<string | null>(
-    searchParams.get("google_error") ? MENSAJE_ERROR_GOOGLE[searchParams.get("google_error") ?? ""] ?? null : null,
-  );
+  const [error, setError] = useState<string | null>(null);
+  const [recordados, setRecordados] = useState<string[]>(() => leerUsuariosRecordados());
+  const [recordarme, setRecordarme] = useState(true);
   const [cargando, setCargando] = useState(false);
   const [cargandoDemo, setCargandoDemo] = useState(false);
 
@@ -50,6 +30,7 @@ export default function Login() {
     const { error: errorIngreso } = await signIn(correo, password);
     setCargando(false);
     if (errorIngreso) setError(errorIngreso);
+    else if (recordarme) setRecordados(recordarUsuario(correo));
   }
 
   async function handleDemo() {
@@ -79,20 +60,30 @@ export default function Login() {
           <p className="mt-1 text-sm text-brand-600">{t("login.subtitulo")}</p>
         </div>
 
-        <a
-          href="/api/auth/login?google=start"
-          className="mb-5 flex w-full items-center justify-center gap-2.5 rounded-lg border border-[var(--border-subtle)] bg-white px-4 py-2.5 text-sm font-semibold text-brand-900 transition hover:bg-cream-100"
-        >
-          <IconoGoogle />
-          {t("login.continuarConGoogle")}
-        </a>
-        <div className="mb-5 flex items-center gap-3 text-xs uppercase tracking-wide text-brand-400">
-          <div className="h-px flex-1 bg-cream-200" />
-          {t("login.oConCorreo")}
-          <div className="h-px flex-1 bg-cream-200" />
-        </div>
-
         <form onSubmit={handleSubmit} className="space-y-4">
+          {recordados.length > 0 && (
+            <div>
+              <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-[var(--text-secondary)]">Usuarios recordados</p>
+              <div className="flex flex-wrap gap-2">
+                {recordados.map((c) => (
+                  <span key={c} className="inline-flex items-center overflow-hidden rounded-full border border-[var(--border-subtle)] bg-[var(--surface-muted)] text-xs">
+                    <button type="button" onClick={() => setCorreo(c)} className="px-3 py-1.5 font-medium text-brand-800 hover:bg-cream-200">
+                      {c}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setRecordados(olvidarUsuario(c))}
+                      className="border-l border-[var(--border-subtle)] px-2 py-1.5 text-brand-400 hover:bg-status-rechazada-bg hover:text-status-rechazada"
+                      aria-label={`Olvidar ${c}`}
+                      title="Olvidar este usuario"
+                    >
+                      <X className="h-3 w-3" strokeWidth={2} />
+                    </button>
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
           <Field label={t("login.correoLabel")}>
             <Input
               type="email"
@@ -113,6 +104,11 @@ export default function Login() {
               autoComplete="current-password"
             />
           </Field>
+
+          <label className="flex items-center gap-2 text-sm text-brand-600">
+            <input type="checkbox" className="h-4 w-4 accent-brand-800" checked={recordarme} onChange={(e) => setRecordarme(e.target.checked)} />
+            Recordar mi correo en este equipo
+          </label>
 
           {error && <p className="rounded-lg bg-status-rechazada-bg px-3 py-2 text-sm text-status-rechazada">{error}</p>}
 

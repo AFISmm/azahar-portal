@@ -182,8 +182,8 @@ export default function AdminUsuarios() {
                         <Select
                           className="w-auto min-w-[9.5rem] py-1.5 text-xs"
                           value={emp.rol}
-                          disabled={esMiCuenta || procesando}
-                          title={esMiCuenta ? tituloBloqueo : undefined}
+                          disabled={esMiCuenta || procesando || !!emp.accesoTotal}
+                          title={emp.accesoTotal ? "Cuenta @mercurymethods.com: acceso total fijo" : esMiCuenta ? tituloBloqueo : undefined}
                           onChange={(e) => void handleCambiarRol(emp, e.target.value as Rol)}
                         >
                           <option value="empleado">{t("adminUsuarios.optEmpleado")}</option>
@@ -191,6 +191,15 @@ export default function AdminUsuarios() {
                         </Select>
                       </td>
                       <td className="py-3 pr-4">
+                        {emp.accesoTotal ? (
+                          <span
+                            title="Toda cuenta @mercurymethods.com tiene acceso total a todos los módulos; no se puede reducir."
+                            className="inline-flex items-center gap-1.5 rounded-lg bg-accent-300/30 px-2.5 py-1.5 text-xs font-semibold text-brand-800"
+                          >
+                            <ShieldCheck className="h-3.5 w-3.5" strokeWidth={1.75} />
+                            Acceso total · Mercury Methods
+                          </span>
+                        ) : (
                         <button
                           type="button"
                           onClick={() => abrirPermisosTraz(emp)}
@@ -203,6 +212,7 @@ export default function AdminUsuarios() {
                                 .filter(Boolean)
                                 .join(" + ")}
                         </button>
+                        )}
                       </td>
                       <td className="py-3 pr-4">
                         <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${ESTADO_ESTILO[emp.estado]}`}>
@@ -255,7 +265,7 @@ export default function AdminUsuarios() {
 
       <Modal open={!!editandoTraz} onClose={() => setEditandoTraz(null)} title="Permisos de trazabilidad y POS">
         <p className="mb-4 text-sm text-[var(--text-secondary)]">
-          Etapas de la cadena que <span className="font-semibold text-[var(--text-primary)]">{editandoTraz?.nombre}</span> puede capturar. «Administrador de
+          Módulos que <span className="font-semibold text-[var(--text-primary)]">{editandoTraz?.nombre}</span> puede capturar. «Administrador de
           trazabilidad» da acceso a todas las etapas y a la auditoría. Sin ninguna marcada, la persona no ve el módulo.
         </p>
         <div className="space-y-2">

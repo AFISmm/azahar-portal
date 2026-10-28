@@ -8,6 +8,7 @@ import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { sql } from "../_lib/db.js";
 import { HttpError, manejarError, requireAdmin, requireAuth } from "../_lib/auth.js";
 import { mapEmpleadoRow, type EmpleadoRow } from "../_lib/mappers.js";
+import { esAdminEfectivo } from "../_lib/acceso.js";
 
 interface EmpleadoPatchPayload {
   nombre?: string;
@@ -49,7 +50,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       if (empleadoId !== id) {
         // No está consultando su propio perfil: solo un admin puede ver el de alguien más.
         const { rows: filasSolicitante } = await sql<EmpleadoRow>`select * from empleados where id = ${empleadoId} limit 1`;
-        if (filasSolicitante[0]?.rol !== "admin") {
+        if (!filasSolicitante[0] || !esAdminEfectivo(filasSolicitante[0])) {
           throw new HttpError(403, "No tienes permiso para consultar este empleado.");
         }
       }

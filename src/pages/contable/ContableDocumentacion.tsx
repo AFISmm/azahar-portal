@@ -51,7 +51,7 @@ export default function ContableDocumentacion() {
             )}
           </Card>
 
-          <Card title="Comprobantes destacados por mes (cierres y nómina; no es el listado completo)">
+          <Card title="Comprobantes por mes (detalle desde nov. 2025 y cierres destacados)">
             <div className="max-h-80 overflow-y-auto">
               <Tabla>
                 <thead>
@@ -83,7 +83,7 @@ export default function ContableDocumentacion() {
                 </tbody>
               </Tabla>
             </div>
-            <p className="mt-2 text-xs text-[var(--text-muted)]">Solo se muestran los comprobantes destacados cargados al portal; los demás meses pueden tener comprobantes en Alegra que aún no se listan aquí.</p>
+            <p className="mt-2 text-xs text-[var(--text-muted)]">Alegra tiene unos 114.000 comprobantes en total (Siigo se cargó asiento por asiento, entre 1.500 y 2.000 por mes en 2025). Aquí solo aparecen los cargados al portal; los meses anteriores a noviembre de 2025 tienen más comprobantes en Alegra que aún no se listan.</p>
           </Card>
 
           <Card title={`Trabajo de octubre de 2026 en detalle (${hitos.length})`}>

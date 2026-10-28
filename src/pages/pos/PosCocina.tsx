@@ -56,7 +56,7 @@ export default function PosCocina() {
 
   return (
     <div className="azahar-fade-in">
-      <PageHeader breadcrumb="POS" title="Cocina" description="Pedidos en curso. Se actualiza solo cada pocos segundos." />
+      <PageHeader breadcrumb="Sistema POS" title="Cocina" description="Pedidos en curso. Se actualiza solo cada pocos segundos." />
       {error && <div className="mb-4"><ErrorCaja mensaje={error} /></div>}
       {cargando && <div className="flex justify-center py-16"><Loader2 className="h-7 w-7 animate-spin text-brand-800" strokeWidth={1.75} /></div>}
       {!cargando && pedidos.length === 0 && <Card><p className="py-6 text-center text-sm text-[var(--text-muted)]">No hay pedidos en cocina.</p></Card>}

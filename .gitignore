@@ -28,3 +28,6 @@ dist-ssr
 
 .vercel
 .env*
+
+# Original de la imagen del chatbot (la versión optimizada está en src/assets/chatbot.png)
+/Chatbot.png

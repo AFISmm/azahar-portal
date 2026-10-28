@@ -8,17 +8,20 @@ import { IS_DEMO_MODE } from "../../lib/backendMode";
 export const DEPARTAMENTOS = ["Talento Humano", "Operaciones de Tienda", "Logística y Abastecimiento", "Finanzas", "Mercadeo", "Producción y Calidad", "Tecnología y Desarrollo"];
 export const TIPOS_CONTRATO = ["Término indefinido", "Término fijo", "Aprendizaje SENA", "Prestación de servicios"];
 
-// Las cuentas de @mercurymethods.com son del equipo externo de desarrollo,
-// no empleados reales de Azahar — no tiene sentido pedirles departamento,
-// tipo de contrato, fecha de ingreso, vacaciones o salario. Para esas
-// cuentas el formulario se reduce a nombre, correo, cargo y rol; el resto
-// se completa con valores fijos al enviar (ver handleSubmit).
+// Las cuentas de @mercurymethods.com son del equipo de desarrollo: no tiene
+// sentido pedirles cargo, departamento, tipo de contrato, vacaciones o salario.
+// Para esas cuentas el cargo es siempre DESARROLLADOR (sin nombre de empresa) y
+// el resto se completa con valores fijos al enviar (ver handleSubmit).
 function esCuentaExterna(correo: string): boolean {
   return correo.trim().toLowerCase().endsWith("@mercurymethods.com");
 }
 
-const DEPARTAMENTO_EXTERNO = "Externo — Mercury Methods";
-const TIPO_CONTRATO_EXTERNO = "Prestación de servicios (externo)";
+const CARGO_DESARROLLADOR = "DESARROLLADOR";
+const DEPARTAMENTO_DESARROLLO = "Tecnología y Desarrollo";
+const TIPO_CONTRATO_DESARROLLO = "Prestación de servicios";
+// Cuentas creadas desde Gestión de usuarios (sin datos de nómina): valores neutros, ajustables luego en RRHH.
+const DEPARTAMENTO_POR_DEFECTO = "Operaciones de Tienda";
+const TIPO_CONTRATO_POR_DEFECTO = "Término indefinido";
 
 export interface EmpleadoFormValues extends NuevoEmpleadoInput {
   estado: "activo" | "inactivo";
@@ -57,9 +60,9 @@ export function EmpleadoForm({ valoresIniciales, modo, enviando, onSubmit, onCan
     onSubmit({
       nombre,
       correo,
-      cargo,
-      departamento: ocultarCamposHR ? DEPARTAMENTO_EXTERNO : departamento,
-      tipoContrato: ocultarCamposHR ? TIPO_CONTRATO_EXTERNO : tipoContrato,
+      cargo: esExterna ? CARGO_DESARROLLADOR : cargo,
+      departamento: esExterna ? DEPARTAMENTO_DESARROLLO : ocultarCamposHR ? DEPARTAMENTO_POR_DEFECTO : departamento,
+      tipoContrato: esExterna ? TIPO_CONTRATO_DESARROLLO : ocultarCamposHR ? TIPO_CONTRATO_POR_DEFECTO : tipoContrato,
       fechaIngreso: ocultarCamposHR ? new Date().toISOString().slice(0, 10) : fechaIngreso,
       diasVacacionesDisponibles: ocultarCamposHR ? 0 : Number(diasVacaciones),
       rol,
@@ -79,9 +82,11 @@ export function EmpleadoForm({ valoresIniciales, modo, enviando, onSubmit, onCan
         <Field label={t("empleadoForm.correoCorporativo")}>
           <Input required type="email" value={correo} onChange={(e) => setCorreo(e.target.value)} placeholder={t("empleadoForm.correoPlaceholder")} />
         </Field>
-        <Field label={t("empleadoForm.cargo")}>
-          <Input required value={cargo} onChange={(e) => setCargo(e.target.value)} placeholder={t("empleadoForm.cargoPlaceholder")} />
-        </Field>
+        {!esExterna && (
+          <Field label={t("empleadoForm.cargo")}>
+            <Input required value={cargo} onChange={(e) => setCargo(e.target.value)} placeholder={t("empleadoForm.cargoPlaceholder")} />
+          </Field>
+        )}
         {!ocultarCamposHR && (
           <>
             <Field label={t("empleadoForm.departamento")}>
@@ -139,10 +144,10 @@ export function EmpleadoForm({ valoresIniciales, modo, enviando, onSubmit, onCan
         )}
       </div>
 
-      {esExterna && !soloAccesoPortal && (
+      {esExterna && (
         <p className="rounded-lg bg-accent-300/20 px-3 py-2 text-xs text-brand-800">
-          Correo de <strong>Mercury Methods</strong> detectado: esta cuenta se crea como externa, sin datos de nómina
-          (departamento, contrato, vacaciones, salario) — solo nombre, correo, cargo y rol.
+          Cuenta de desarrollo detectada: se crea con el cargo <strong>DESARROLLADOR</strong>, sin datos de nómina
+          (departamento, contrato, vacaciones, salario) — solo nombre y correo.
         </p>
       )}
 

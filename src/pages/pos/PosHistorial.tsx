@@ -24,7 +24,7 @@ export default function PosHistorial() {
 
   return (
     <div className="azahar-fade-in">
-      <PageHeader breadcrumb="POS" title="Historial de ventas" description="Los últimos 100 pedidos cobrados, entregados o cancelados." />
+      <PageHeader breadcrumb="Sistema POS" title="Historial de ventas" description="Los últimos 100 pedidos cobrados, entregados o cancelados." />
       {error && <ErrorCaja mensaje={error} />}
       {!pedidos && !error && <div className="flex justify-center py-16"><Loader2 className="h-7 w-7 animate-spin text-brand-800" strokeWidth={1.75} /></div>}
       {pedidos && (

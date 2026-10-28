@@ -1,5 +1,5 @@
 // ============================================================================
-// POS — Fase 1 (núcleo de venta): catálogo, pedidos con modificadores, cobro y
+// Sistema POS — Fase 1 (núcleo de venta): catálogo, pedidos con modificadores, cobro y
 // cocina (KDS). Lo enruta api/trazabilidad.ts cuando `?r=pos-...` (vive en la
 // misma función para no superar el límite de 12 funciones serverless de Hobby).
 //

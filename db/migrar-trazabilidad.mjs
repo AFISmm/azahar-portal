@@ -75,7 +75,7 @@ const TABLAS = [
 ];
 
 // Esquema de trazabilidad + esquema y catálogo inicial del POS (todo idempotente).
-const ddl = ["trazabilidad.sql", "pos.sql", "pos-catalogo.sql", "modulos.sql"]
+const ddl = ["trazabilidad.sql", "pos.sql", "pos-catalogo.sql", "modulos.sql", "negocio.sql"]
   .map((archivo) => readFileSync(new URL(`./${archivo}`, import.meta.url), "utf8"))
   .join("\n")
   .replace(/--.*$/gm, "") // fuera comentarios

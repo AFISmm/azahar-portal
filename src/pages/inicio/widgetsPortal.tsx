@@ -181,7 +181,7 @@ export function WidgetAccesosRapidos({ tam }: { tam: Tam }) {
       <div className={`grid gap-2 ${tam === "L" ? "grid-cols-2" : "grid-cols-4"}`}>
         {visibles.map(({ to, etiqueta, Icon }) => (
           <Link key={to} to={to} className="flex flex-col items-center gap-1 rounded-xl bg-[var(--surface-muted)] px-2 py-2.5 text-center transition hover:bg-cream-200">
-            <Icon className="h-5 w-5 text-brand-800" strokeWidth={1.75} />
+            <Icon className="h-5 w-5 text-accent-500" strokeWidth={1.75} />
             <span className="w-full truncate text-[11px] font-semibold text-[var(--text-primary)]">{etiqueta}</span>
           </Link>
         ))}
@@ -357,7 +357,7 @@ export function WidgetTrazabilidad({ tam }: { tam: Tam }) {
               {(datos?.ultimosEmpaques ?? []).slice(0, 4).map((l) => (
                 <li key={l.id} className="flex items-center justify-between gap-2 border-b border-[var(--border-subtle)] py-1.5 text-xs last:border-0">
                   <span className="truncate text-[var(--text-primary)]">{l.loteComercial ?? l.id} · {l.presentacion ?? "—"}</span>
-                  <Link to={`/lote/${l.id}`} target="_blank" onClick={(e) => e.stopPropagation()} className="shrink-0 font-semibold text-brand-800 underline">
+                  <Link to={`/lote/${l.id}`} target="_blank" onClick={(e) => e.stopPropagation()} className="shrink-0 font-semibold text-accent-500 underline">
                     Ficha
                   </Link>
                 </li>

@@ -48,6 +48,9 @@
   --text-primary: var(--color-brand-900);
   --text-secondary: #6f5a52;
   --text-muted: #9a8b83;
+  /* modo edición de widgets: marco fino y agarre de la esquina */
+  --marco-edicion: rgba(107, 58, 50, 0.32);
+  --marco-agarre: rgba(107, 58, 50, 0.75);
 }
 
 html[data-theme="dark"] {
@@ -59,6 +62,8 @@ html[data-theme="dark"] {
   --text-primary: #f5ece4;
   --text-secondary: #cbb4a8;
   --text-muted: #9c8177;
+  --marco-edicion: rgba(245, 236, 228, 0.42);
+  --marco-agarre: rgba(245, 236, 228, 0.85);
 }
 
 * {

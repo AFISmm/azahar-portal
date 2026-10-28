@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, type FormEvent, type PointerEvent as ReactPointerEvent } from "react";
 import { AudioLines, Loader2, LocateFixed, Mic, MicOff, Send, Settings2, Volume2, VolumeX, X } from "lucide-react";
-import chatbotImg from "../assets/chatbot.png";
+import { MascotaChatbot } from "./MascotaChatbot";
 
 // ============================================================================
 // Asistente del portal: se puede ARRASTRAR a cualquier parte de la pantalla (y
@@ -718,7 +718,7 @@ export function ChatbotWidget() {
             title={esMovil ? undefined : "Arrastra para mover el asistente"}
           >
             <div className="flex min-w-0 items-center gap-2 text-cream-100">
-              <img src={chatbotImg} alt="" draggable={false} className="h-8 w-8 shrink-0 rounded-full object-cover ring-1 ring-accent-300/70" />
+              <MascotaChatbot hablando={hablando} escuchando={escuchando} className="h-9 w-9 shrink-0 overflow-hidden rounded-full bg-cream-100 ring-1 ring-accent-300/70" />
               <div className="min-w-0 leading-tight">
                 <p className="truncate font-heading text-sm font-semibold">{nombre}</p>
                 <p className="truncate text-[11px] text-cream-200/80" aria-live="polite">
@@ -912,13 +912,13 @@ export function ChatbotWidget() {
           onClick={(e) => {
             if (e.detail === 0) alternarChat(); // activación con teclado (Enter / Espacio)
           }}
-          className={`relative flex h-full w-full touch-none select-none items-center justify-center overflow-hidden rounded-full bg-brand-800 text-cream-100 shadow-card transition hover:scale-105 active:cursor-grabbing ${
+          className={`relative flex h-full w-full touch-none select-none items-center justify-center overflow-hidden rounded-full bg-cream-100 text-brand-800 shadow-card transition hover:scale-105 active:cursor-grabbing ${
             escuchando ? "ring-4 ring-red-500/70" : hablando ? "ring-4 ring-accent-500/80" : conversando ? "ring-4 ring-accent-300/80" : "cursor-grab"
           }`}
           aria-label={abierto ? `Cerrar a ${nombre}` : `Abrir a ${nombre}`}
           title={`${nombre} — asistente del Portal Azahar (arrástrame a donde quieras)`}
         >
-          {abierto ? <X className="h-5 w-5" strokeWidth={1.75} /> : <img src={chatbotImg} alt="" draggable={false} className="pointer-events-none h-full w-full object-cover" />}
+          {abierto ? <X className="h-5 w-5" strokeWidth={1.75} /> : <MascotaChatbot hablando={hablando} escuchando={escuchando} className="h-full w-full" />}
         </button>
       </div>
     </>

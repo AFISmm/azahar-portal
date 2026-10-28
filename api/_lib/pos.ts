@@ -7,7 +7,8 @@
 //   POST pos-pedido-crear | pos-linea-agregar | pos-linea-cambiar | pos-para-llevar | pos-descuento |
 //        pos-enviar-cocina | pos-cocina-estado | pos-pagar | pos-cancelar | pos-producto-disponible
 //
-// PERMISOS (empleados.permisos_pos): 'ADMIN' todo; 'CAJA' vende y cobra; 'COCINA' ve y mueve el KDS.
+// PERMISOS (módulo 'pos', ver api/_lib/acceso.ts): 'ver' consulta; 'editar' vende, cobra y mueve la cocina.
+// Descuentos, productos agotados (86) y cancelar pedidos cobrados exigen además ser supervisor.
 //
 // DINERO: pesos COP ENTEROS. Las fórmulas (subtotal, descuento prorrateado, impuesto
 // sobre lo gravable, saldo) son las del motor original de azahar-pos (lib/sales/engine.ts).
@@ -18,18 +19,19 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { sql } from "./db.js";
 import { HttpError, requireAuth } from "./auth.js";
-import { tieneAccesoTotal } from "./acceso.js";
+import { cumple, permisosEfectivos, type Nivel, type PermisosModulos } from "./acceso.js";
 
 type Fila = Record<string, unknown>;
 type Body = Record<string, unknown>;
-type PermisoPos = "ADMIN" | "CAJA" | "COCINA";
 
 const PRODUCTO_EMPAQUE_ID = "prod-empaque-para-llevar";
 
 interface Actor {
   id: string;
   nombre: string;
-  permisos: string[];
+  permisos: PermisosModulos;
+  /** Supervisor: puede editar alguno de los módulos de administración (descuentos, 86, cancelar cobros). */
+  supervisor: boolean;
 }
 
 function primero(v: string | string[] | undefined): string | undefined {
@@ -44,19 +46,23 @@ function entero(v: unknown): number | null {
   return Number.isFinite(n) ? Math.round(n) : null;
 }
 
-async function exigir(req: VercelRequest, roles: PermisoPos[]): Promise<Actor> {
+/** 'ver' consulta (catálogo, pedidos, cocina, historial); 'editar' vende, cobra y mueve la cocina. */
+async function exigir(req: VercelRequest, nivel: Nivel): Promise<Actor> {
   const { empleadoId } = await requireAuth(req);
-  const { rows } = await sql<{ nombre: string; correo: string; estado: string; permisos_pos: string[] | null }>`
-    select nombre, correo, estado, permisos_pos from empleados where id = ${empleadoId} limit 1
+  const { rows } = await sql<{ nombre: string; correo: string; estado: string; permisos_modulos: unknown }>`
+    select nombre, correo, estado, permisos_modulos from empleados where id = ${empleadoId} limit 1
   `;
   const fila = rows[0];
   if (!fila || fila.estado !== "activo") throw new HttpError(401, "La sesión ya no es válida.");
-  const permisos = tieneAccesoTotal(fila.correo) ? ["ADMIN"] : (fila.permisos_pos ?? []);
-  if (permisos.length === 0) throw new HttpError(403, "No tienes acceso al POS.");
-  if (!permisos.includes("ADMIN") && !roles.some((r) => permisos.includes(r))) {
-    throw new HttpError(403, "Tu permiso no incluye esta función del POS.");
+  const permisos = permisosEfectivos(fila);
+  if (!cumple(permisos, "pos", nivel)) {
+    throw new HttpError(403, nivel === "editar" ? "No tienes permiso de edición en el POS." : "No tienes acceso al POS.");
   }
-  return { id: empleadoId, nombre: fila.nombre, permisos };
+  return { id: empleadoId, nombre: fila.nombre, permisos, supervisor: cumple(permisos, ["negocio", "rrhh", "usuarios"], "editar") };
+}
+
+function exigirSupervisor(actor: Actor, mensaje: string) {
+  if (!actor.supervisor) throw new HttpError(403, mensaje);
 }
 
 async function auditar(actor: Actor, tipo: string, referencia: string | null, detalle: string) {
@@ -173,7 +179,7 @@ async function pedidoModificable(id: string): Promise<Fila> {
 // ---------------------------------------------------------------------------
 
 async function catalogo(req: VercelRequest, res: VercelResponse) {
-  await exigir(req, ["CAJA"]);
+  await exigir(req, "ver");
   const { rows: categorias } = await sql`select id, nombre, orden from pos_categorias where activo order by orden`;
   const { rows: productos } = await sql`
     select id, categoria_id, nombre, descripcion, precio_base, gravable, disponible
@@ -212,8 +218,7 @@ async function catalogo(req: VercelRequest, res: VercelResponse) {
 
 async function pedidos(req: VercelRequest, res: VercelResponse) {
   const scope = primero(req.query.scope) ?? "abiertos";
-  const actor = await exigir(req, scope === "cocina" ? ["COCINA", "CAJA"] : ["CAJA"]);
-  void actor;
+  await exigir(req, "ver");
   const { rows } =
     scope === "cocina"
       ? await sql`select id from pos_pedidos where estado in ('enviadoCocina', 'enPreparacion', 'listo') order by enviado_cocina_en`
@@ -224,7 +229,7 @@ async function pedidos(req: VercelRequest, res: VercelResponse) {
 }
 
 async function pedido(req: VercelRequest, res: VercelResponse) {
-  await exigir(req, ["CAJA", "COCINA"]);
+  await exigir(req, "ver");
   const id = primero(req.query.id);
   if (!id) throw new HttpError(400, "Falta el id del pedido.");
   return res.status(200).json({ ok: true, pedido: await cargarPedido(id) });
@@ -235,7 +240,7 @@ async function pedido(req: VercelRequest, res: VercelResponse) {
 // ---------------------------------------------------------------------------
 
 async function pedidoCrear(req: VercelRequest, res: VercelResponse) {
-  const actor = await exigir(req, ["CAJA"]);
+  const actor = await exigir(req, "editar");
   const b = req.body as Body;
   const canal = ["mostrador", "kiosco", "online", "delivery", "catering"].includes(String(b.canal)) ? String(b.canal) : "mostrador";
   const { rows: cfg } = await sql`select tasa_impuesto from pos_config where id = 1`;
@@ -248,7 +253,7 @@ async function pedidoCrear(req: VercelRequest, res: VercelResponse) {
 }
 
 async function lineaAgregar(req: VercelRequest, res: VercelResponse) {
-  await exigir(req, ["CAJA"]);
+  await exigir(req, "editar");
   const b = req.body as Body;
   const pedidoId = texto(b.pedidoId);
   const productoId = texto(b.productoId);
@@ -295,7 +300,7 @@ async function lineaAgregar(req: VercelRequest, res: VercelResponse) {
 }
 
 async function lineaCambiar(req: VercelRequest, res: VercelResponse) {
-  await exigir(req, ["CAJA"]);
+  await exigir(req, "editar");
   const b = req.body as Body;
   const pedidoId = texto(b.pedidoId);
   const lineaId = texto(b.lineaId);
@@ -313,7 +318,7 @@ async function lineaCambiar(req: VercelRequest, res: VercelResponse) {
 
 /** Al marcar "para llevar" se agrega solo la línea de empaque (precio 0); al desmarcar se quita. */
 async function paraLlevar(req: VercelRequest, res: VercelResponse) {
-  await exigir(req, ["CAJA"]);
+  await exigir(req, "editar");
   const b = req.body as Body;
   const pedidoId = texto(b.pedidoId);
   if (!pedidoId) throw new HttpError(400, "Falta el pedido.");
@@ -331,7 +336,8 @@ async function paraLlevar(req: VercelRequest, res: VercelResponse) {
 }
 
 async function descuento(req: VercelRequest, res: VercelResponse) {
-  const actor = await exigir(req, ["ADMIN"]);
+  const actor = await exigir(req, "editar");
+  exigirSupervisor(actor, "Aplicar descuentos requiere un supervisor (edición en un módulo de administración).");
   const b = req.body as Body;
   const pedidoId = texto(b.pedidoId);
   const tipo = b.tipo === "porcentaje" ? "porcentaje" : b.tipo === "monto" ? "monto" : null;
@@ -350,7 +356,7 @@ async function descuento(req: VercelRequest, res: VercelResponse) {
 }
 
 async function enviarCocina(req: VercelRequest, res: VercelResponse) {
-  await exigir(req, ["CAJA"]);
+  await exigir(req, "editar");
   const b = req.body as Body;
   const pedidoId = texto(b.pedidoId);
   if (!pedidoId) throw new HttpError(400, "Falta el pedido.");
@@ -369,7 +375,7 @@ async function enviarCocina(req: VercelRequest, res: VercelResponse) {
 
 /** KDS: mueve el estado de una línea (recibido → preparando → listo) y deriva el del pedido. */
 async function cocinaEstado(req: VercelRequest, res: VercelResponse) {
-  await exigir(req, ["COCINA"]);
+  await exigir(req, "editar");
   const b = req.body as Body;
   const pedidoId = texto(b.pedidoId);
   const estado = texto(b.estado);
@@ -398,7 +404,7 @@ async function cocinaEstado(req: VercelRequest, res: VercelResponse) {
 }
 
 async function pagar(req: VercelRequest, res: VercelResponse) {
-  const actor = await exigir(req, ["CAJA"]);
+  const actor = await exigir(req, "editar");
   const b = req.body as Body;
   const pedidoId = texto(b.pedidoId);
   const metodo = texto(b.metodo);
@@ -441,7 +447,7 @@ async function pagar(req: VercelRequest, res: VercelResponse) {
 }
 
 async function cancelar(req: VercelRequest, res: VercelResponse) {
-  const actor = await exigir(req, ["CAJA"]);
+  const actor = await exigir(req, "editar");
   const b = req.body as Body;
   const pedidoId = texto(b.pedidoId);
   const motivo = texto(b.motivo);
@@ -450,9 +456,7 @@ async function cancelar(req: VercelRequest, res: VercelResponse) {
   const actual = await cargarPedido(pedidoId);
   if (actual.estado === "cancelado" || actual.estado === "entregado") throw new HttpError(409, "El pedido ya está cerrado.");
   // Cancelar un pedido ya cobrado equivale a un reembolso: solo un administrador.
-  if (actual.totales.pagado > 0 && !actor.permisos.includes("ADMIN")) {
-    throw new HttpError(403, "Cancelar un pedido ya cobrado requiere un administrador del POS.");
-  }
+  if (actual.totales.pagado > 0) exigirSupervisor(actor, "Cancelar un pedido ya cobrado requiere un supervisor.");
   await sql`update pos_pedidos set estado = 'cancelado' where id = ${pedidoId}`;
   if (actual.totales.pagado > 0) await sql`update pos_pagos set estado = 'reembolsado' where pedido_id = ${pedidoId} and estado = 'aprobado'`;
   await auditar(actor, "cancelacion", `#${actual.numero}`, `Pedido cancelado${actual.totales.pagado > 0 ? ` (reembolsado $${actual.totales.pagado})` : ""}: ${motivo}`);
@@ -461,7 +465,8 @@ async function cancelar(req: VercelRequest, res: VercelResponse) {
 
 /** "86": marca un producto como agotado/disponible. */
 async function productoDisponible(req: VercelRequest, res: VercelResponse) {
-  const actor = await exigir(req, ["ADMIN"]);
+  const actor = await exigir(req, "editar");
+  exigirSupervisor(actor, "Marcar productos como agotados requiere un supervisor.");
   const b = req.body as Body;
   const productoId = texto(b.productoId);
   if (!productoId || typeof b.disponible !== "boolean") throw new HttpError(400, "Datos inválidos.");

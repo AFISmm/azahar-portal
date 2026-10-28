@@ -216,7 +216,7 @@ function ModalCobro({ pedido, onCerrar, onPagado }: { pedido: PedidoPos | null; 
 // ---------------------------------------------------------------------------
 
 export default function PosVenta() {
-  const { puede, esAdmin } = usePermisosPos();
+  const { editar, supervisor } = usePermisosPos();
   const [catalogo, setCatalogo] = useState<CatalogoPos | null>(null);
   const [abiertos, setAbiertos] = useState<PedidoPos[]>([]);
   const [actualId, setActualId] = useState<string | null>(null);
@@ -264,7 +264,7 @@ export default function PosVenta() {
 
   const productos = useMemo(() => catalogo?.productos.filter((p) => p.categoriaId === categoria) ?? [], [catalogo, categoria]);
 
-  if (!puede("CAJA")) return <SinAccesoPos funcion="la caja del POS" />;
+  if (!editar) return <SinAccesoPos funcion="la caja del POS" />;
   if (cargando) return <div className="flex justify-center py-16"><Loader2 className="h-7 w-7 animate-spin text-brand-800" strokeWidth={1.75} /></div>;
   if (!catalogo) return <ErrorCaja mensaje={error ?? "No se pudo cargar el POS."} />;
 
@@ -340,7 +340,7 @@ export default function PosVenta() {
                   <span className="mt-auto pt-2 font-mono text-sm font-bold text-brand-800">{formatCOP(p.precioBase)}</span>
                   {!p.disponible && <span className="text-[11px] font-semibold text-status-rechazada">AGOTADO</span>}
                 </button>
-                {esAdmin && (
+                {supervisor && (
                   <button
                     title={p.disponible ? "Marcar agotado (86)" : "Marcar disponible"}
                     onClick={() =>
@@ -422,7 +422,7 @@ export default function PosVenta() {
                     <ChefHat className="h-4 w-4" strokeWidth={1.75} /> Enviar a cocina
                   </Button>
                 )}
-                {esAdmin && puedeEditar && !sinProductos && (
+                {supervisor && puedeEditar && !sinProductos && (
                   <Button
                     variant="outline"
                     onClick={() => {

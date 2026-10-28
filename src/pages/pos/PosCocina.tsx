@@ -19,7 +19,7 @@ function minutosDesde(iso: string | null): number {
 
 /** Pantalla de cocina (KDS): se actualiza sola cada 8 segundos. */
 export default function PosCocina() {
-  const { puede } = usePermisosPos();
+  const { ver, editar } = usePermisosPos();
   const [pedidos, setPedidos] = useState<PedidoPos[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [cargando, setCargando] = useState(true);
@@ -35,7 +35,7 @@ export default function PosCocina() {
     }
   }, []);
 
-  const permitido = puede("COCINA");
+  const permitido = ver;
   useEffect(() => {
     if (!permitido) return;
     void cargar();
@@ -79,7 +79,7 @@ export default function PosCocina() {
                     ))}
                     {l.notas && <p className="text-xs font-semibold text-status-rechazada">“{l.notas}”</p>}
                   </div>
-                  {l.estadoCocina !== "listo" && (
+                  {editar && l.estadoCocina !== "listo" && (
                     <button
                       title="Marcar esta línea como lista"
                       onClick={() => void mover(p.id, "listo", l.id)}
@@ -91,6 +91,7 @@ export default function PosCocina() {
                 </li>
               ))}
             </ul>
+            {editar && (
             <div className="mt-3 flex flex-wrap gap-2">
               {p.estado === "enviadoCocina" && (
                 <Button variant="secondary" className="flex-1" onClick={() => void mover(p.id, "preparando")}>
@@ -108,6 +109,7 @@ export default function PosCocina() {
                 </Button>
               )}
             </div>
+            )}
           </div>
         ))}
       </div>

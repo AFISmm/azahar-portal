@@ -6,9 +6,9 @@
 
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { sql } from "../_lib/db.js";
-import { HttpError, manejarError, requireAdmin, requireAuth } from "../_lib/auth.js";
+import { HttpError, manejarError, requireAuth, requireModulo } from "../_lib/auth.js";
 import { mapEmpleadoRow, type EmpleadoRow } from "../_lib/mappers.js";
-import { esAdminEfectivo } from "../_lib/acceso.js";
+import { cumple, permisosEfectivos, sanearPermisos } from "../_lib/acceso.js";
 
 interface EmpleadoPatchPayload {
   nombre?: string;
@@ -23,12 +23,8 @@ interface EmpleadoPatchPayload {
   estado?: "activo" | "inactivo";
   avatarUrl?: string | null;
   telefono?: string | null;
-  permisosTrazabilidad?: string[];
-  permisosPos?: string[];
+  permisosModulos?: unknown;
 }
-
-const PERMISOS_TRAZABILIDAD = ["ADMIN", "FINCA", "BENEFICIADO", "TUESTE", "EMPAQUE"];
-const PERMISOS_POS = ["ADMIN", "CAJA", "COCINA"];
 
 function obtenerId(req: VercelRequest): string {
   const { id } = req.query;
@@ -50,7 +46,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       if (empleadoId !== id) {
         // No está consultando su propio perfil: solo un admin puede ver el de alguien más.
         const { rows: filasSolicitante } = await sql<EmpleadoRow>`select * from empleados where id = ${empleadoId} limit 1`;
-        if (!filasSolicitante[0] || !esAdminEfectivo(filasSolicitante[0])) {
+        if (!filasSolicitante[0] || !cumple(permisosEfectivos(filasSolicitante[0]), ["usuarios", "rrhh"], "ver")) {
           throw new HttpError(403, "No tienes permiso para consultar este empleado.");
         }
       }
@@ -62,7 +58,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     if (req.method === "PATCH") {
-      await requireAdmin(req);
+      const { empleadoId: quienEdita } = await requireModulo(req, ["usuarios", "rrhh"], "editar");
 
       const { rows: filasActuales } = await sql<EmpleadoRow>`select * from empleados where id = ${id} limit 1`;
       const actual = filasActuales[0];
@@ -85,15 +81,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const estado = body.estado ?? actual.estado;
       const avatarUrl = body.avatarUrl !== undefined ? body.avatarUrl : actual.avatar_url;
       const telefono = body.telefono !== undefined ? body.telefono : actual.telefono;
-      if (body.permisosTrazabilidad !== undefined) {
-        if (!Array.isArray(body.permisosTrazabilidad) || body.permisosTrazabilidad.some((p) => !PERMISOS_TRAZABILIDAD.includes(p))) {
-          throw new HttpError(400, "Permisos de trazabilidad inválidos.");
-        }
-      }
-      if (body.permisosPos !== undefined) {
-        if (!Array.isArray(body.permisosPos) || body.permisosPos.some((p) => !PERMISOS_POS.includes(p))) {
-          throw new HttpError(400, "Permisos de POS inválidos.");
-        }
+      // Dar o quitar permisos de módulos es el corazón de Gestión de usuarios: exige 'editar'
+      // en ese módulo (no basta RRHH), y nadie puede cambiarse los suyos (evita quedarse sin acceso).
+      if (body.permisosModulos !== undefined) {
+        await requireModulo(req, "usuarios", "editar");
+        if (quienEdita === id) throw new HttpError(403, "No puedes cambiar tus propios permisos: pídeselo a otro administrador.");
       }
 
       try {
@@ -114,19 +106,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           where id = ${id}
           returning *
         `;
-        // Los permisos de módulos van en un UPDATE aparte y SOLO si vienen en la
-        // petición: así editar un empleado sigue funcionando aunque la migración
-        // db/migrar-trazabilidad.mjs (que crea esas columnas) aún no se haya corrido.
+        // Los permisos van en un UPDATE aparte y SOLO si vienen en la petición.
         let fila = rows[0];
-        if (body.permisosTrazabilidad !== undefined || body.permisosPos !== undefined) {
-          const trazabilidad = body.permisosTrazabilidad ?? fila.permisos_trazabilidad ?? [];
-          const pos = body.permisosPos ?? fila.permisos_pos ?? [];
+        if (body.permisosModulos !== undefined) {
+          const permisos = JSON.stringify(sanearPermisos(body.permisosModulos));
           const { rows: conPermisos } = await sql<EmpleadoRow>`
-            update empleados set
-              permisos_trazabilidad = ${trazabilidad as unknown as string},
-              permisos_pos = ${pos as unknown as string}
-            where id = ${id}
-            returning *
+            update empleados set permisos_modulos = ${permisos}::jsonb where id = ${id} returning *
           `;
           fila = conPermisos[0];
         }
@@ -140,7 +125,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     if (req.method === "DELETE") {
-      await requireAdmin(req);
+      await requireModulo(req, ["usuarios", "rrhh"], "editar");
 
       const { rows: filasActuales } = await sql<EmpleadoRow>`select * from empleados where id = ${id} limit 1`;
       if (!filasActuales[0]) throw new HttpError(404, "Empleado no encontrado.");

@@ -1,6 +1,6 @@
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { AuthProvider } from "./auth/AuthContext";
-import { ProtectedRoute, AdminRoute } from "./auth/ProtectedRoute";
+import { ProtectedRoute, ModuloRoute } from "./auth/ProtectedRoute";
 import { ThemeProvider } from "./context/ThemeContext";
 import { ToastProvider } from "./context/ToastContext";
 import { LanguageProvider } from "./context/LanguageContext";
@@ -81,7 +81,7 @@ export default function App() {
 
                   <Route path="/mi-perfil" element={<MiPerfil />} />
 
-                  {/* Trazabilidad: el acceso por etapa lo decide empleado.permisosTrazabilidad (cada página lo valida; la API también). */}
+                  {/* Trazabilidad: el acceso lo decide empleado.permisosModulos.trazabilidad (ver / editar; cada página lo valida y la API también). */}
                   <Route path="/trazabilidad" element={<TrazInicio />} />
                   <Route path="/trazabilidad/finca" element={<TrazFinca />} />
                   <Route path="/trazabilidad/finca/:id" element={<TrazFincaDetalle />} />
@@ -94,21 +94,29 @@ export default function App() {
                   <Route path="/trazabilidad/lote-empaque/:id" element={<TrazLoteEmpaqueDetalle />} />
                   <Route path="/trazabilidad/auditoria" element={<TrazAuditoria />} />
 
-                  {/* POS: el acceso lo decide empleado.permisosPos (cada pagina lo valida; la API tambien). */}
+                  {/* POS: el acceso lo decide empleado.permisosModulos.pos (ver / editar; cada pagina lo valida y la API tambien). */}
                   <Route path="/pos" element={<PosVenta />} />
                   <Route path="/pos/cocina" element={<PosCocina />} />
                   <Route path="/pos/historial" element={<PosHistorial />} />
 
-                  <Route element={<AdminRoute />}>
+                  {/* RRHH y nómina */}
+                  <Route element={<ModuloRoute modulos="rrhh" />}>
                     <Route path="/admin/solicitudes" element={<AdminSolicitudes />} />
                     <Route path="/admin/incapacidades" element={<AdminIncapacidades />} />
                     <Route path="/admin/documentos" element={<AdminDocumentos />} />
                     <Route path="/admin/empleados" element={<AdminEmpleados />} />
                     <Route path="/admin/empleados/:id" element={<EmpleadoDetalle />} />
-                    <Route path="/admin/usuarios" element={<AdminUsuarios />} />
                     <Route path="/admin/nomina" element={<AdminNomina />} />
-                    <Route path="/admin/pqr" element={<GestionPqr />} />
+                  </Route>
 
+                  {/* Gestión de usuarios (y PQR, que la atienden las cuentas de desarrollador o quien gestiona usuarios) */}
+                  <Route element={<ModuloRoute modulos="usuarios" />}>
+                    <Route path="/admin/usuarios" element={<AdminUsuarios />} />
+                  </Route>
+                  <Route path="/admin/pqr" element={<GestionPqr />} />
+
+                  {/* Gestión del negocio */}
+                  <Route element={<ModuloRoute modulos="negocio" />}>
                     <Route path="/gestion-estrategica" element={<GestionEstrategica />} />
                     <Route path="/gestion-comercial" element={<GestionComercial />} />
                     <Route path="/gestion-operativa" element={<GestionOperativa />} />

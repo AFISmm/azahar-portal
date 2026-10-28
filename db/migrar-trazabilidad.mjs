@@ -4,7 +4,8 @@
 // sola transacción: o queda completo, o no cambia nada.
 //
 //   1. Aplica db/trazabilidad.sql (tablas traz_* + empleados.permisos_trazabilidad) y el POS
-//      (db/pos.sql + db/pos-catalogo.sql: tablas pos_*, empleados.permisos_pos y catálogo inicial).
+//      (db/pos.sql + db/pos-catalogo.sql: tablas pos_*, empleados.permisos_pos y catálogo inicial) y
+//      db/modulos.sql (permisos por módulo ver/editar; migra los permisos antiguos).
 //   2. Copia los datos de la base vieja (si se pasa ORIGEN_URL), conservando los
 //      ids: los QR ya impresos apuntan a /lote/<id> y no pueden cambiar.
 //   3. Da permiso 'ADMIN' de trazabilidad a los correos de ADMINS_TRAZABILIDAD
@@ -74,7 +75,7 @@ const TABLAS = [
 ];
 
 // Esquema de trazabilidad + esquema y catálogo inicial del POS (todo idempotente).
-const ddl = ["trazabilidad.sql", "pos.sql", "pos-catalogo.sql"]
+const ddl = ["trazabilidad.sql", "pos.sql", "pos-catalogo.sql", "modulos.sql"]
   .map((archivo) => readFileSync(new URL(`./${archivo}`, import.meta.url), "utf8"))
   .join("\n")
   .replace(/--.*$/gm, "") // fuera comentarios

@@ -11,7 +11,7 @@
 
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { sql } from "../_lib/db.js";
-import { HttpError, manejarError, requireAdmin } from "../_lib/auth.js";
+import { HttpError, manejarError, requireModulo } from "../_lib/auth.js";
 import { mapCertificadoFincaRow, type CertificadoFincaRow } from "../_lib/mappers.js";
 
 interface CertificadoPostPayload {
@@ -33,7 +33,7 @@ function esErrorFincaInexistente(err: unknown): boolean {
 }
 
 async function listar(req: VercelRequest, res: VercelResponse) {
-  await requireAdmin(req);
+  await requireModulo(req, "negocio", "ver");
   const fincaId = primerValor(req.query.fincaId);
 
   const { rows } = fincaId
@@ -44,7 +44,7 @@ async function listar(req: VercelRequest, res: VercelResponse) {
 }
 
 async function crear(req: VercelRequest, res: VercelResponse) {
-  const { empleadoId } = await requireAdmin(req);
+  const { empleadoId } = await requireModulo(req, "negocio", "editar");
 
   const body = req.body as Partial<CertificadoPostPayload>;
   const camposRequeridos: (keyof CertificadoPostPayload)[] = ["fincaId", "nombre", "entidadCertificadora", "fechaEmision"];

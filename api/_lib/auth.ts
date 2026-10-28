@@ -8,7 +8,7 @@ import type { VercelRequest, VercelResponse } from "@vercel/node";
 import jwt from "jsonwebtoken";
 import { sql } from "./db.js";
 import { mapEmpleadoRow, type EmpleadoRow } from "./mappers.js";
-import { esAdminEfectivo } from "./acceso.js";
+import { cumple, permisosEfectivos, type Modulo, type Nivel } from "./acceso.js";
 
 export const SESSION_COOKIE_NAME = "azahar_session";
 
@@ -104,16 +104,23 @@ export async function requireAuth(req: VercelRequest): Promise<{ empleadoId: str
   return { empleadoId };
 }
 
-/** Exige una sesión válida Y que el empleado tenga rol 'admin'. Lanza HttpError 401/403. */
-export async function requireAdmin(req: VercelRequest): Promise<{ empleadoId: string; empleado: EmpleadoRow }> {
+/**
+ * Exige una sesión válida Y el nivel pedido ('ver' | 'editar') en alguno de los
+ * módulos indicados (ver api/_lib/acceso.ts). Lanza HttpError 401/403.
+ */
+export async function requireModulo(
+  req: VercelRequest,
+  modulos: Modulo | Modulo[],
+  nivel: Nivel,
+): Promise<{ empleadoId: string; empleado: EmpleadoRow }> {
   const { empleadoId } = await requireAuth(req);
   const { rows } = await sql<EmpleadoRow>`select * from empleados where id = ${empleadoId} limit 1`;
   const empleado = rows[0];
   if (!empleado) {
     throw new HttpError(401, "La sesión ya no es válida.");
   }
-  if (!esAdminEfectivo(empleado)) {
-    throw new HttpError(403, "Esta acción requiere rol de administrador.");
+  if (!cumple(permisosEfectivos(empleado), modulos, nivel)) {
+    throw new HttpError(403, nivel === "editar" ? "No tienes permiso de edición en este módulo." : "No tienes acceso a este módulo.");
   }
   return { empleadoId, empleado };
 }

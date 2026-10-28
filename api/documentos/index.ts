@@ -15,12 +15,12 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { sql } from "../_lib/db.js";
 import { HttpError, manejarError, requireAuth } from "../_lib/auth.js";
-import { esAdminEfectivo } from "../_lib/acceso.js";
+import { cumple, permisosEfectivos } from "../_lib/acceso.js";
 import { mapDocumentoRow, type DocumentoRow } from "../_lib/mappers.js";
 
 interface EmpleadoRolRow {
-  rol: "empleado" | "admin";
   correo: string;
+  permisos_modulos: unknown;
 }
 
 interface DocumentoPostPayload {
@@ -30,9 +30,10 @@ interface DocumentoPostPayload {
   url?: string | null;
 }
 
-async function esAdmin(empleadoId: string): Promise<boolean> {
-  const { rows } = await sql<EmpleadoRolRow>`select rol, correo from empleados where id = ${empleadoId} limit 1`;
-  return rows[0] ? esAdminEfectivo(rows[0]) : false;
+async function nivelRrhh(empleadoId: string): Promise<{ ver: boolean; editar: boolean }> {
+  const { rows } = await sql<EmpleadoRolRow>`select correo, permisos_modulos from empleados where id = ${empleadoId} limit 1`;
+  const permisos = rows[0] ? permisosEfectivos(rows[0]) : {};
+  return { ver: cumple(permisos, "rrhh", "ver"), editar: cumple(permisos, "rrhh", "editar") };
 }
 
 function primerValor(v: string | string[] | undefined): string | undefined {
@@ -42,11 +43,11 @@ function primerValor(v: string | string[] | undefined): string | undefined {
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
     const { empleadoId } = await requireAuth(req);
-    const admin = await esAdmin(empleadoId);
+    const nivel = await nivelRrhh(empleadoId);
 
     if (req.method === "GET") {
       const filtro = primerValor(req.query.empleadoId);
-      const empleadoObjetivo = admin ? filtro || null : empleadoId;
+      const empleadoObjetivo = nivel.ver ? filtro || null : empleadoId;
 
       const { rows } = empleadoObjetivo
         ? await sql<DocumentoRow>`select * from documentos where empleado_id = ${empleadoObjetivo} order by subido_en desc`
@@ -61,7 +62,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
       // Un empleado normal solo puede escribir en su propio expediente; un
       // admin puede especificar cualquier empleadoId.
-      const empleadoObjetivo = admin && body.empleadoId ? body.empleadoId : empleadoId;
+      const empleadoObjetivo = nivel.editar && body.empleadoId ? body.empleadoId : empleadoId;
 
       const { rows } = await sql<DocumentoRow>`
         insert into documentos (empleado_id, nombre, tipo, url, subido_por)

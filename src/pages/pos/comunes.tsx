@@ -1,17 +1,17 @@
-import { useAuth } from "../../auth/AuthContext";
+import { useAcceso } from "../../auth/acceso";
 import { Card } from "../../components/Card";
-import type { PermisoPos } from "../../lib/types";
 
-/** Permisos del usuario actual sobre el POS ('ADMIN' lo puede todo). */
+/**
+ * Permisos del usuario actual sobre el POS: 'ver' consulta (cocina, historial);
+ * 'editar' vende, cobra y mueve la cocina. `supervisor` (edición en algún módulo
+ * de administración) además aplica descuentos, marca agotados y cancela cobros.
+ */
 export function usePermisosPos() {
-  const { empleado } = useAuth();
-  const permisos = empleado?.permisosPos ?? [];
-  const esAdmin = permisos.includes("ADMIN");
+  const acceso = useAcceso();
   return {
-    permisos,
-    tieneAcceso: permisos.length > 0,
-    esAdmin,
-    puede: (funcion: PermisoPos) => esAdmin || permisos.includes(funcion),
+    ver: acceso.ver("pos"),
+    editar: acceso.editar("pos"),
+    supervisor: acceso.editar(["negocio", "rrhh", "usuarios"]),
   };
 }
 
@@ -25,8 +25,3 @@ export function SinAccesoPos({ funcion }: { funcion: string }) {
   );
 }
 
-export const ETIQUETA_PERMISO_POS: Record<PermisoPos, string> = {
-  ADMIN: "Administrador del POS",
-  CAJA: "Caja (vende y cobra)",
-  COCINA: "Cocina (pantalla KDS)",
-};

@@ -9,7 +9,7 @@ import {
 } from "./comunes";
 
 export default function TrazLoteTostado() {
-  const { puede } = usePermisosTraz();
+  const { ver, editar } = usePermisosTraz();
   const { datos, cargando, recargar } = useCarga(async () => ({
     verdes: await trazabilidadApi.lotesVerdes(),
     tostados: await trazabilidadApi.lotesTostados(),
@@ -18,7 +18,7 @@ export default function TrazLoteTostado() {
   // loteVerdeId -> kilogramos (string). Estar en el objeto = seleccionado.
   const [seleccion, setSeleccion] = useState<Record<string, string>>({});
 
-  if (!puede("TUESTE")) return <AccesoDenegado etapa="tueste" />;
+  if (!ver) return <AccesoDenegado etapa="tueste" />;
   if (cargando) return <Cargando />;
   if (!datos) return <ErrorCaja mensaje="No se pudo cargar la información." />;
   if (datos.verdes.length === 0) return <RequiereAntes que="un" to="/trazabilidad/lote-verde" enlace="lote verde" />;
@@ -27,6 +27,7 @@ export default function TrazLoteTostado() {
     <div className="azahar-fade-in">
       <PageHeader breadcrumb="Trazabilidad" title="Etapa 3 — Tueste" />
       <div className="grid gap-6 lg:grid-cols-2">
+        {editar && (
         <Card>
           <h2 className={TITULO_FORM}>Registrar lote tostado</h2>
           <p className="mb-4 text-xs text-[var(--text-secondary)]">
@@ -110,6 +111,7 @@ export default function TrazLoteTostado() {
             </Button>
           </form>
         </Card>
+        )}
 
         <Card title={`Lotes tostados registrados (${datos.tostados.length})`}>
           <ul className={LISTA}>

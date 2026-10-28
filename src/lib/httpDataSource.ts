@@ -95,8 +95,7 @@ function empleadoSentinela(correo: string): Empleado {
     username: null,
     tipoCuenta: "empleado",
     debeCambiarPassword: false,
-    permisosTrazabilidad: [],
-    permisosPos: [],
+    permisosModulos: {},
     createdAt: "",
   };
 }

@@ -9,14 +9,14 @@ import {
 } from "./comunes";
 
 export default function TrazFichaCata() {
-  const { puede } = usePermisosTraz();
+  const { ver, editar } = usePermisosTraz();
   const { datos, cargando, recargar } = useCarga(async () => ({
     lotes: await trazabilidadApi.lotesVerdes(),
     fichas: await trazabilidadApi.fichasCata(),
   }));
   const { enviando, error, exito, enviar } = useEnvio();
 
-  if (!puede("BENEFICIADO")) return <AccesoDenegado etapa="fichas de cata" />;
+  if (!ver) return <AccesoDenegado etapa="fichas de cata" />;
   if (cargando) return <Cargando />;
   if (!datos) return <ErrorCaja mensaje="No se pudo cargar la información." />;
   if (datos.lotes.length === 0) return <RequiereAntes que="un" to="/trazabilidad/lote-verde" enlace="lote verde" />;
@@ -25,6 +25,7 @@ export default function TrazFichaCata() {
     <div className="azahar-fade-in">
       <PageHeader breadcrumb="Trazabilidad" title="Ficha de cata" description="Notas sensoriales de un lote verde, normalmente antes de decidir en qué blend de tueste entra." />
       <div className="grid gap-6 lg:grid-cols-2">
+        {editar && (
         <Card>
           <h2 className={TITULO_FORM}>Registrar ficha de cata</h2>
           <p className={SUBTITULO_FORM}>Las notas aparecen en la ficha pública del lote.</p>
@@ -75,6 +76,7 @@ export default function TrazFichaCata() {
             <Button type="submit" disabled={enviando} className="w-full">Registrar ficha de cata</Button>
           </form>
         </Card>
+        )}
 
         <Card title={`Fichas registradas (${datos.fichas.length})`}>
           <ul className={LISTA}>

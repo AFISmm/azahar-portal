@@ -9,16 +9,17 @@ import {
 } from "./comunes";
 
 export default function TrazFinca() {
-  const { puede } = usePermisosTraz();
+  const { ver, editar } = usePermisosTraz();
   const { datos: fincas, cargando, recargar } = useCarga(() => trazabilidadApi.fincas());
   const { enviando, error, exito, enviar } = useEnvio();
 
-  if (!puede("FINCA")) return <AccesoDenegado etapa="fincas" />;
+  if (!ver) return <AccesoDenegado etapa="fincas" />;
 
   return (
     <div className="azahar-fade-in">
       <PageHeader breadcrumb="Trazabilidad" title="Etapa 1 — Finca / Origen" description="Datos capturados por el productor o el responsable de campo." />
       <div className="grid gap-6 lg:grid-cols-2">
+        {editar && (
         <Card>
           <h2 className={TITULO_FORM}>Registrar finca</h2>
           <p className={SUBTITULO_FORM}>Las fincas con coordenadas aparecen en el mapa de la ficha pública.</p>
@@ -82,6 +83,7 @@ export default function TrazFinca() {
             </Button>
           </form>
         </Card>
+        )}
 
         <Card title={`Fincas registradas (${fincas?.length ?? 0})`}>
           {cargando && <Cargando />}

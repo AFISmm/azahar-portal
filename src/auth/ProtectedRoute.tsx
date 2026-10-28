@@ -1,5 +1,7 @@
 import { Navigate, Outlet } from "react-router-dom";
 import { useAuth } from "./AuthContext";
+import { cumpleNivel } from "./acceso";
+import type { Modulo } from "../lib/types";
 import { Loader2 } from "lucide-react";
 import CambiarPasswordObligatorio from "../pages/CambiarPasswordObligatorio";
 
@@ -27,10 +29,13 @@ export function ProtectedRoute() {
   return <Outlet />;
 }
 
-/** Envuelve rutas exclusivas del rol 'admin'; redirige al resto a /inicio. */
-export function AdminRoute() {
-  const { role, loading } = useAuth();
+/**
+ * Envuelve rutas de un módulo con permiso: exige al menos 'ver' en alguno de los
+ * módulos indicados; si no, redirige a /inicio. (La API valida de nuevo.)
+ */
+export function ModuloRoute({ modulos }: { modulos: Modulo | Modulo[] }) {
+  const { empleado, loading } = useAuth();
   if (loading) return <PantallaCarga />;
-  if (role !== "admin") return <Navigate to="/inicio" replace />;
+  if (!cumpleNivel(empleado, modulos, "ver")) return <Navigate to="/inicio" replace />;
   return <Outlet />;
 }

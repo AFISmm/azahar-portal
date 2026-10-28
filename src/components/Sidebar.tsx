@@ -31,7 +31,7 @@ import {
   History,
   Package,
 } from "lucide-react";
-import type { PermisoPos, PermisoTrazabilidad } from "../lib/types";
+import { useAcceso } from "../auth/acceso";
 import { useAuth } from "../auth/AuthContext";
 import { useLanguage } from "../context/LanguageContext";
 import { IS_DEMO_MODE } from "../lib/dataSource";
@@ -66,24 +66,23 @@ const GESTION_NEGOCIO: { to: string; claveLabel: ClaveTraduccion; Icon: typeof H
   { to: "/informacion-general", claveLabel: "sidebar.informacionGeneral", Icon: Info },
 ];
 
-// Módulo de Trazabilidad: cada ítem se muestra solo si el empleado tiene el
-// permiso de esa etapa (o 'ADMIN'); los permisos se asignan en Admin > Usuarios.
-const TRAZABILIDAD_ITEMS: { to: string; label: string; Icon: typeof Home; permiso: PermisoTrazabilidad | null }[] = [
-  { to: "/trazabilidad", label: "Resumen", Icon: Home, permiso: null },
-  { to: "/trazabilidad/finca", label: "Finca / Origen", Icon: Sprout, permiso: "FINCA" },
-  { to: "/trazabilidad/certificacion", label: "Certificaciones", Icon: BadgeCheck, permiso: "FINCA" },
-  { to: "/trazabilidad/lote-verde", label: "Beneficiado y trilla", Icon: Coffee, permiso: "BENEFICIADO" },
-  { to: "/trazabilidad/ficha-cata", label: "Ficha de cata", Icon: ClipboardList, permiso: "BENEFICIADO" },
-  { to: "/trazabilidad/lote-tostado", label: "Tueste", Icon: Flame, permiso: "TUESTE" },
-  { to: "/trazabilidad/lote-empaque", label: "Empaque y QR", Icon: Package, permiso: "EMPAQUE" },
-  { to: "/trazabilidad/auditoria", label: "Auditoría", Icon: History, permiso: "ADMIN" },
+// Trazabilidad y POS: cada ítem pide un nivel mínimo en su módulo ('ver' | 'editar'),
+// que se asigna en Gestión de usuarios. La API valida lo mismo.
+const TRAZABILIDAD_ITEMS: { to: string; label: string; Icon: typeof Home; nivel: "ver" | "editar" }[] = [
+  { to: "/trazabilidad", label: "Resumen", Icon: Home, nivel: "ver" },
+  { to: "/trazabilidad/finca", label: "Finca / Origen", Icon: Sprout, nivel: "ver" },
+  { to: "/trazabilidad/certificacion", label: "Certificaciones", Icon: BadgeCheck, nivel: "ver" },
+  { to: "/trazabilidad/lote-verde", label: "Beneficiado y trilla", Icon: Coffee, nivel: "ver" },
+  { to: "/trazabilidad/ficha-cata", label: "Ficha de cata", Icon: ClipboardList, nivel: "ver" },
+  { to: "/trazabilidad/lote-tostado", label: "Tueste", Icon: Flame, nivel: "ver" },
+  { to: "/trazabilidad/lote-empaque", label: "Empaque y QR", Icon: Package, nivel: "ver" },
+  { to: "/trazabilidad/auditoria", label: "Auditoría", Icon: History, nivel: "editar" },
 ];
 
-// POS: igual que trazabilidad, cada item depende de empleado.permisosPos.
-const POS_ITEMS: { to: string; label: string; Icon: typeof Home; permiso: PermisoPos }[] = [
-  { to: "/pos", label: "Caja", Icon: ShoppingCart, permiso: "CAJA" },
-  { to: "/pos/cocina", label: "Cocina", Icon: ChefHat, permiso: "COCINA" },
-  { to: "/pos/historial", label: "Historial", Icon: ClipboardList, permiso: "CAJA" },
+const POS_ITEMS: { to: string; label: string; Icon: typeof Home; nivel: "ver" | "editar" }[] = [
+  { to: "/pos", label: "Caja", Icon: ShoppingCart, nivel: "editar" },
+  { to: "/pos/cocina", label: "Cocina", Icon: ChefHat, nivel: "ver" },
+  { to: "/pos/historial", label: "Historial", Icon: ClipboardList, nivel: "ver" },
 ];
 
 // El sidebar ahora lleva una foto de fondo fija (finca cafetera) con un velo
@@ -92,7 +91,7 @@ const POS_ITEMS: { to: string; label: string; Icon: typeof Home; permiso: Permis
 // para que siempre se lea bien sobre la fotografía sin importar el tema
 // general de la app.
 function itemClase(activo: boolean) {
-  return `flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition ${
+  return `flex items-center gap-2.5 rounded-lg px-3 py-1.5 text-[13px] font-medium transition pointer-coarse:py-2.5 ${
     activo ? "bg-accent-500 text-brand-900 shadow-card" : "text-cream-200/80 hover:bg-white/10 hover:text-cream-100"
   }`;
 }
@@ -110,11 +109,10 @@ export function Sidebar({ abierto = false, onCerrar }: SidebarProps) {
   // Rutas que, aunque empiecen con "/admin", son ítems sueltos del sidebar
   // principal (no parte del sub-sidebar de Administración de NÓMINA).
   const enPaginaIndependiente = location.pathname.startsWith("/admin/usuarios") || location.pathname.startsWith("/admin/pqr");
-  const permisosTraz = empleado?.permisosTrazabilidad ?? [];
-  const tieneTraz = permisosTraz.length > 0;
+  const acceso = useAcceso();
+  const tieneTraz = acceso.ver("trazabilidad");
   const enTraz = location.pathname.startsWith("/trazabilidad");
-  const permisosPos = empleado?.permisosPos ?? [];
-  const tienePos = permisosPos.length > 0;
+  const tienePos = acceso.ver("pos");
   const enPos = location.pathname.startsWith("/pos");
   const enNomina = !enTraz && !enPos && !enPaginaIndependiente && (location.pathname.startsWith("/nomina") || location.pathname.startsWith("/admin"));
 
@@ -131,7 +129,7 @@ export function Sidebar({ abierto = false, onCerrar }: SidebarProps) {
       />
       <div className="absolute inset-0 -z-10 bg-gradient-to-b from-brand-900/90 via-brand-900/85 to-brand-900/95" aria-hidden="true" />
 
-      <div className="relative flex flex-col items-center gap-2.5 px-5 py-6">
+      <div className="relative flex flex-col items-center gap-1.5 px-5 py-3">
         <button
           onClick={onCerrar}
           className="absolute right-3 top-3 rounded-lg p-2.5 text-cream-200/70 transition hover:bg-white/10 hover:text-cream-100 md:hidden"
@@ -139,24 +137,24 @@ export function Sidebar({ abierto = false, onCerrar }: SidebarProps) {
         >
           <X className="h-4 w-4" strokeWidth={1.75} />
         </button>
-        <div className="flex items-center justify-center rounded-xl bg-white px-3 py-2 ring-1 ring-white/20">
-          <img src={logo} alt="Azahar Coffee Company" className="h-9 w-auto object-contain" />
+        <div className="flex items-center justify-center rounded-xl bg-white px-3 py-1.5 ring-1 ring-white/20">
+          <img src={logo} alt="Azahar Coffee Company" className="h-7 w-auto object-contain" />
         </div>
         <p className="text-[11px] font-bold uppercase tracking-wider text-cream-200/80">{t("sidebar.azaharCoffeeCompany")}</p>
       </div>
 
-      <nav onClick={() => onCerrar?.()} className="flex-1 space-y-6 overflow-y-auto px-3 pb-4">
+      <nav onClick={() => onCerrar?.()} className="flex-1 space-y-2 overflow-y-auto px-3 pb-2">
         {enPos ? (
           <div>
             <button
               onClick={() => navigate("/inicio")}
-              className="mb-3 flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold text-cream-200/80 transition hover:bg-white/10 hover:text-cream-100"
+              className="mb-2 flex w-full items-center gap-2 rounded-lg px-3 py-1.5 text-[13px] font-semibold text-cream-200/80 transition hover:bg-white/10 hover:text-cream-100"
             >
               <ChevronLeft className="h-4 w-4 shrink-0" strokeWidth={1.75} />
               {t("sidebar.pos")}
             </button>
-            <div className="space-y-1">
-              {POS_ITEMS.filter(({ permiso }) => permisosPos.includes("ADMIN") || permisosPos.includes(permiso)).map(({ to, label, Icon }) => (
+            <div className="space-y-0.5">
+              {POS_ITEMS.filter(({ nivel }) => (nivel === "editar" ? acceso.editar("pos") : acceso.ver("pos"))).map(({ to, label, Icon }) => (
                 <NavLink key={to} to={to} end className={({ isActive }) => itemClase(isActive)}>
                   <Icon className="h-4 w-4 shrink-0" strokeWidth={1.75} />
                   {label}
@@ -168,13 +166,13 @@ export function Sidebar({ abierto = false, onCerrar }: SidebarProps) {
           <div>
             <button
               onClick={() => navigate("/inicio")}
-              className="mb-3 flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold text-cream-200/80 transition hover:bg-white/10 hover:text-cream-100"
+              className="mb-2 flex w-full items-center gap-2 rounded-lg px-3 py-1.5 text-[13px] font-semibold text-cream-200/80 transition hover:bg-white/10 hover:text-cream-100"
             >
               <ChevronLeft className="h-4 w-4 shrink-0" strokeWidth={1.75} />
               {t("sidebar.trazabilidad")}
             </button>
-            <div className="space-y-1">
-              {TRAZABILIDAD_ITEMS.filter(({ permiso }) => permiso === null || permisosTraz.includes("ADMIN") || permisosTraz.includes(permiso)).map(({ to, label, Icon }) => (
+            <div className="space-y-0.5">
+              {TRAZABILIDAD_ITEMS.filter(({ nivel }) => (nivel === "editar" ? acceso.editar("trazabilidad") : acceso.ver("trazabilidad"))).map(({ to, label, Icon }) => (
                 <NavLink key={to} to={to} end={to === "/trazabilidad"} className={({ isActive }) => itemClase(isActive)}>
                   <Icon className="h-4 w-4 shrink-0" strokeWidth={1.75} />
                   {label}
@@ -186,14 +184,14 @@ export function Sidebar({ abierto = false, onCerrar }: SidebarProps) {
           <div>
             <button
               onClick={() => navigate("/inicio")}
-              className="mb-3 flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold text-cream-200/80 transition hover:bg-white/10 hover:text-cream-100"
+              className="mb-2 flex w-full items-center gap-2 rounded-lg px-3 py-1.5 text-[13px] font-semibold text-cream-200/80 transition hover:bg-white/10 hover:text-cream-100"
             >
               <ChevronLeft className="h-4 w-4 shrink-0" strokeWidth={1.75} />
               {t("sidebar.nomina")}
             </button>
             <div>
-              <p className="mb-2 px-3 text-[11px] font-bold uppercase tracking-wider text-cream-200/60">{t("sidebar.miPortal")}</p>
-              <div className="space-y-1">
+              <p className="mb-1 px-3 text-[10px] font-bold uppercase tracking-wider text-cream-200/60">{t("sidebar.miPortal")}</p>
+              <div className="space-y-0.5">
                 {NOMINA_ITEMS.map(({ to, claveLabel, Icon }) => (
                   <NavLink key={to} to={to} className={({ isActive }) => itemClase(isActive)}>
                     <Icon className="h-4 w-4 shrink-0" strokeWidth={1.75} />
@@ -203,10 +201,10 @@ export function Sidebar({ abierto = false, onCerrar }: SidebarProps) {
               </div>
             </div>
 
-            {empleado?.rol === "admin" && (
-              <div className="mt-6">
-                <p className="mb-2 px-3 text-[11px] font-bold uppercase tracking-wider text-cream-200/60">{t("sidebar.administracion")}</p>
-                <div className="space-y-1">
+            {acceso.ver("rrhh") && (
+              <div className="mt-3">
+                <p className="mb-1 px-3 text-[10px] font-bold uppercase tracking-wider text-cream-200/60">{t("sidebar.administracion")}</p>
+                <div className="space-y-0.5">
                   {ADMINISTRACION.map(({ to, claveLabel, Icon }) => (
                     <NavLink key={to} to={to} className={({ isActive }) => itemClase(isActive)}>
                       <Icon className="h-4 w-4 shrink-0" strokeWidth={1.75} />
@@ -219,17 +217,17 @@ export function Sidebar({ abierto = false, onCerrar }: SidebarProps) {
           </div>
         ) : (
           <>
-            <div className="space-y-1">
+            <div className="space-y-0.5">
               <NavLink to="/inicio" className={({ isActive }) => itemClase(isActive)}>
                 <Home className="h-4 w-4 shrink-0" strokeWidth={1.75} />
                 {t("sidebar.inicio")}
               </NavLink>
             </div>
 
-            {empleado?.rol === "admin" && (
+            {acceso.ver("negocio") && (
               <div>
-                <p className="mb-2 px-3 text-[11px] font-bold uppercase tracking-wider text-cream-200/60">{t("sidebar.gestionNegocio")}</p>
-                <div className="space-y-1">
+                <p className="mb-1 px-3 text-[10px] font-bold uppercase tracking-wider text-cream-200/60">{t("sidebar.gestionNegocio")}</p>
+                <div className="space-y-0.5">
                   {GESTION_NEGOCIO.map(({ to, claveLabel, Icon }) => (
                     <NavLink key={to} to={to} className={({ isActive }) => itemClase(isActive)}>
                       <Icon className="h-4 w-4 shrink-0" strokeWidth={1.75} />
@@ -241,8 +239,8 @@ export function Sidebar({ abierto = false, onCerrar }: SidebarProps) {
             )}
 
             {tienePos && (
-              <div className="space-y-1">
-                <NavLink to={permisosPos.includes("ADMIN") || permisosPos.includes("CAJA") ? "/pos" : "/pos/cocina"} className={({ isActive }) => itemClase(isActive)}>
+              <div className="space-y-0.5">
+                <NavLink to={acceso.editar("pos") ? "/pos" : "/pos/cocina"} className={({ isActive }) => itemClase(isActive)}>
                   <ShoppingCart className="h-4 w-4 shrink-0" strokeWidth={1.75} />
                   {t("sidebar.pos")}
                 </NavLink>
@@ -250,7 +248,7 @@ export function Sidebar({ abierto = false, onCerrar }: SidebarProps) {
             )}
 
             {tieneTraz && (
-              <div className="space-y-1">
+              <div className="space-y-0.5">
                 <NavLink to="/trazabilidad" className={({ isActive }) => itemClase(isActive)}>
                   <Coffee className="h-4 w-4 shrink-0" strokeWidth={1.75} />
                   {t("sidebar.trazabilidad")}
@@ -258,22 +256,22 @@ export function Sidebar({ abierto = false, onCerrar }: SidebarProps) {
               </div>
             )}
 
-            <div className="space-y-1">
+            <div className="space-y-0.5">
               <NavLink to="/nomina/inicio" className={({ isActive }) => itemClase(isActive)}>
                 <Banknote className="h-4 w-4 shrink-0" strokeWidth={1.75} />
                 {t("sidebar.nomina")}
               </NavLink>
             </div>
 
-            <div className="space-y-1">
+            <div className="space-y-0.5">
               <NavLink to="/mi-perfil" className={({ isActive }) => itemClase(isActive)}>
                 <IdCard className="h-4 w-4 shrink-0" strokeWidth={1.75} />
                 {t("sidebar.miPerfil")}
               </NavLink>
             </div>
 
-            {empleado?.rol === "admin" && (
-              <div className="space-y-1">
+            {acceso.ver("usuarios") && (
+              <div className="space-y-0.5">
                 <NavLink to="/admin/usuarios" className={({ isActive }) => itemClase(isActive)}>
                   <UserCog className="h-4 w-4 shrink-0" strokeWidth={1.75} />
                   {t("sidebar.gestionUsuarios")}
@@ -282,7 +280,7 @@ export function Sidebar({ abierto = false, onCerrar }: SidebarProps) {
             )}
 
             {empleado?.tipoCuenta === "desarrollador" && (
-              <div className="space-y-1">
+              <div className="space-y-0.5">
                 <NavLink to="/admin/pqr" className={({ isActive }) => itemClase(isActive)}>
                   <MessageSquareWarning className="h-4 w-4 shrink-0" strokeWidth={1.75} />
                   {t("sidebar.gestionPqr")}
@@ -293,7 +291,7 @@ export function Sidebar({ abierto = false, onCerrar }: SidebarProps) {
         )}
       </nav>
 
-      <div className="border-t border-white/10 p-3">
+      <div className="border-t border-white/10 p-2">
         {IS_DEMO_MODE && (
           <div className="mb-3 flex items-center gap-1.5 rounded-lg bg-accent-300/30 px-3 py-1.5 text-[11px] font-semibold text-accent-300">
             <Sparkles className="h-3.5 w-3.5" strokeWidth={1.75} />
@@ -301,8 +299,8 @@ export function Sidebar({ abierto = false, onCerrar }: SidebarProps) {
           </div>
         )}
         {empleado && (
-          <div className="flex items-center gap-3 rounded-lg px-2 py-2">
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-accent-500 font-heading text-xs font-bold text-brand-900">
+          <div className="flex items-center gap-2.5 rounded-lg px-2 py-1">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-accent-500 font-heading text-xs font-bold text-brand-900">
               {iniciales(empleado.nombre)}
             </div>
             <div className="min-w-0 flex-1 leading-tight">

@@ -22,7 +22,12 @@ interface EmpleadoPatchPayload {
   estado?: "activo" | "inactivo";
   avatarUrl?: string | null;
   telefono?: string | null;
+  permisosTrazabilidad?: string[];
+  permisosPos?: string[];
 }
+
+const PERMISOS_TRAZABILIDAD = ["ADMIN", "FINCA", "BENEFICIADO", "TUESTE", "EMPAQUE"];
+const PERMISOS_POS = ["ADMIN", "CAJA", "COCINA"];
 
 function obtenerId(req: VercelRequest): string {
   const { id } = req.query;
@@ -79,6 +84,18 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const estado = body.estado ?? actual.estado;
       const avatarUrl = body.avatarUrl !== undefined ? body.avatarUrl : actual.avatar_url;
       const telefono = body.telefono !== undefined ? body.telefono : actual.telefono;
+      if (body.permisosTrazabilidad !== undefined) {
+        if (!Array.isArray(body.permisosTrazabilidad) || body.permisosTrazabilidad.some((p) => !PERMISOS_TRAZABILIDAD.includes(p))) {
+          throw new HttpError(400, "Permisos de trazabilidad inválidos.");
+        }
+      }
+      const permisosTrazabilidad = body.permisosTrazabilidad ?? actual.permisos_trazabilidad ?? [];
+      if (body.permisosPos !== undefined) {
+        if (!Array.isArray(body.permisosPos) || body.permisosPos.some((p) => !PERMISOS_POS.includes(p))) {
+          throw new HttpError(400, "Permisos de POS inválidos.");
+        }
+      }
+      const permisosPos = body.permisosPos ?? actual.permisos_pos ?? [];
 
       try {
         const { rows } = await sql<EmpleadoRow>`
@@ -94,7 +111,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             rol = ${rol},
             estado = ${estado},
             avatar_url = ${avatarUrl},
-            telefono = ${telefono}
+            telefono = ${telefono},
+            permisos_trazabilidad = ${permisosTrazabilidad as unknown as string},
+            permisos_pos = ${permisosPos as unknown as string}
           where id = ${id}
           returning *
         `;

@@ -32,6 +32,8 @@ export interface CrearEmpleadoInput {
   fechaNacimiento?: string | null;
   numeroIdentificacion?: string | null;
   tipoCuenta?: "empleado" | "desarrollador";
+  /** true cuando la contraseña la eligió un admin, no el propio usuario — fuerza cambiarla en el primer ingreso. */
+  debeCambiarPassword?: boolean;
 }
 
 function esErrorCorreoDuplicado(err: unknown): boolean {
@@ -53,7 +55,7 @@ export async function crearEmpleadoYUsuario(input: CrearEmpleadoInput): Promise<
       insert into empleados (
         nombre, correo, password_hash, cargo, departamento, tipo_contrato,
         fecha_ingreso, dias_vacaciones_disponibles, salario, rol, estado, telefono,
-        fecha_nacimiento, numero_identificacion, tipo_cuenta
+        fecha_nacimiento, numero_identificacion, tipo_cuenta, debe_cambiar_password
       ) values (
         ${input.nombre},
         ${input.correo},
@@ -69,7 +71,8 @@ export async function crearEmpleadoYUsuario(input: CrearEmpleadoInput): Promise<
         ${input.telefono ?? null},
         ${input.fechaNacimiento ?? null},
         ${input.numeroIdentificacion ?? null},
-        ${input.tipoCuenta ?? "empleado"}
+        ${input.tipoCuenta ?? "empleado"},
+        ${input.debeCambiarPassword ?? false}
       )
       returning *
     `;

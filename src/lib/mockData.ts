@@ -27,6 +27,9 @@ export const empleadosSeed: Empleado[] = [
     numeroIdentificacion: "43215678",
     username: "mariacamila.restrepo",
     tipoCuenta: "empleado",
+    debeCambiarPassword: false,
+    permisosTrazabilidad: [],
+    permisosPos: [],
     createdAt: "2019-03-11T13:00:00.000Z",
   },
   {
@@ -47,6 +50,9 @@ export const empleadosSeed: Empleado[] = [
     numeroIdentificacion: "1035678234",
     username: "juanesteban.gomez",
     tipoCuenta: "empleado",
+    debeCambiarPassword: false,
+    permisosTrazabilidad: [],
+    permisosPos: [],
     createdAt: "2022-06-01T13:00:00.000Z",
   },
   {
@@ -67,6 +73,9 @@ export const empleadosSeed: Empleado[] = [
     numeroIdentificacion: "1020456789",
     username: "lauravalentina.torres",
     tipoCuenta: "empleado",
+    debeCambiarPassword: false,
+    permisosTrazabilidad: [],
+    permisosPos: [],
     createdAt: "2020-09-15T13:00:00.000Z",
   },
   {
@@ -87,6 +96,9 @@ export const empleadosSeed: Empleado[] = [
     numeroIdentificacion: "1017345678",
     username: "andresfelipe.munoz",
     tipoCuenta: "empleado",
+    debeCambiarPassword: false,
+    permisosTrazabilidad: [],
+    permisosPos: [],
     createdAt: "2021-01-20T13:00:00.000Z",
   },
   {
@@ -107,6 +119,9 @@ export const empleadosSeed: Empleado[] = [
     numeroIdentificacion: "1029876543",
     username: "danielasofia.ramirez",
     tipoCuenta: "empleado",
+    debeCambiarPassword: false,
+    permisosTrazabilidad: [],
+    permisosPos: [],
     createdAt: "2023-02-06T13:00:00.000Z",
   },
   {
@@ -127,6 +142,9 @@ export const empleadosSeed: Empleado[] = [
     numeroIdentificacion: "1042198765",
     username: "santiago.zuluaga",
     tipoCuenta: "empleado",
+    debeCambiarPassword: false,
+    permisosTrazabilidad: [],
+    permisosPos: [],
     createdAt: "2025-11-03T13:00:00.000Z",
   },
 ];

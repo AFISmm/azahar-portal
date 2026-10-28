@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
-import { ShieldCheck, Trash2 } from "lucide-react";
+import { Coffee, ShieldCheck, Trash2, UserPlus } from "lucide-react";
 import { dataSource } from "../../lib/dataSource";
-import type { Empleado, Rol } from "../../lib/types";
+import { PERMISOS_POS, PERMISOS_TRAZABILIDAD, type Empleado, type PermisoPos, type PermisoTrazabilidad, type Rol } from "../../lib/types";
 import { formatDate, iniciales } from "../../lib/format";
 import { useToast } from "../../context/ToastContext";
 import { useLanguage } from "../../context/LanguageContext";
@@ -10,6 +10,9 @@ import { PageHeader } from "../../components/PageHeader";
 import { Card } from "../../components/Card";
 import { Modal } from "../../components/Modal";
 import { Button, Select } from "../../components/ui";
+import { ETIQUETA_PERMISO } from "../trazabilidad/comunes";
+import { ETIQUETA_PERMISO_POS } from "../pos/comunes";
+import { EmpleadoForm, type EmpleadoFormValues } from "../../components/admin/EmpleadoForm";
 
 const ESTADO_ESTILO: Record<Empleado["estado"], string> = {
   activo: "bg-status-aprobada-bg text-status-aprobada",
@@ -25,6 +28,12 @@ export default function AdminUsuarios() {
   const [procesandoId, setProcesandoId] = useState<string | null>(null);
   const [porEliminar, setPorEliminar] = useState<Empleado | null>(null);
   const [eliminando, setEliminando] = useState(false);
+  const [modalCrearOpen, setModalCrearOpen] = useState(false);
+  const [creando, setCreando] = useState(false);
+  const [editandoTraz, setEditandoTraz] = useState<Empleado | null>(null);
+  const [permisosElegidos, setPermisosElegidos] = useState<PermisoTrazabilidad[]>([]);
+  const [permisosPosElegidos, setPermisosPosElegidos] = useState<PermisoPos[]>([]);
+  const [guardandoTraz, setGuardandoTraz] = useState(false);
 
   const cargar = useCallback(async () => {
     setCargando(true);
@@ -70,6 +79,41 @@ export default function AdminUsuarios() {
     }
   }
 
+  function abrirPermisosTraz(emp: Empleado) {
+    setEditandoTraz(emp);
+    setPermisosElegidos(emp.permisosTrazabilidad);
+    setPermisosPosElegidos(emp.permisosPos);
+  }
+
+  async function handleGuardarPermisosTraz() {
+    if (!editandoTraz) return;
+    setGuardandoTraz(true);
+    try {
+      const actualizado = await dataSource.updateEmpleado(editandoTraz.id, { permisosTrazabilidad: permisosElegidos, permisosPos: permisosPosElegidos });
+      setEmpleados((actuales) => actuales.map((e) => (e.id === editandoTraz.id ? actualizado : e)));
+      showToast(`Permisos de ${editandoTraz.nombre} actualizados.`, "success");
+      setEditandoTraz(null);
+    } catch {
+      showToast("No se pudieron actualizar los permisos.", "error");
+    } finally {
+      setGuardandoTraz(false);
+    }
+  }
+
+  async function handleCrear(valores: EmpleadoFormValues) {
+    setCreando(true);
+    try {
+      await dataSource.createEmpleado(valores);
+      showToast(`${t("adminUsuarios.toastCreadoPrefijo")}${valores.nombre}${t("adminUsuarios.toastCreadoSufijo")}`, "success");
+      setModalCrearOpen(false);
+      await cargar();
+    } catch {
+      showToast(t("adminUsuarios.toastError"), "error");
+    } finally {
+      setCreando(false);
+    }
+  }
+
   async function handleEliminar() {
     if (!porEliminar) return;
     setEliminando(true);
@@ -91,7 +135,12 @@ export default function AdminUsuarios() {
         breadcrumb={t("adminUsuarios.breadcrumb")}
         title={t("adminUsuarios.titulo")}
         description={t("adminUsuarios.descripcion")}
-      />
+      >
+        <Button onClick={() => setModalCrearOpen(true)}>
+          <UserPlus className="h-4 w-4" strokeWidth={1.75} />
+          {t("adminUsuarios.botonNuevo")}
+        </Button>
+      </PageHeader>
 
       <Card>
         {cargando ? (
@@ -100,11 +149,12 @@ export default function AdminUsuarios() {
           <p className="py-6 text-center text-sm text-[var(--text-muted)]">{t("adminUsuarios.sinCuentas")}</p>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[860px] text-left text-sm">
+            <table className="w-full min-w-[960px] text-left text-sm">
               <thead>
                 <tr className="border-b border-[var(--border-subtle)] text-xs uppercase tracking-wide text-[var(--text-muted)]">
                   <th className="py-2 pr-4 font-semibold">{t("adminUsuarios.colUsuario")}</th>
                   <th className="py-2 pr-4 font-semibold">{t("adminUsuarios.colRol")}</th>
+                  <th className="py-2 pr-4 font-semibold">Módulos</th>
                   <th className="py-2 pr-4 font-semibold">{t("adminUsuarios.colEstado")}</th>
                   <th className="py-2 pr-4 font-semibold">{t("adminUsuarios.colRegistrado")}</th>
                   <th className="py-2 pr-4 font-semibold">{t("adminUsuarios.colAcciones")}</th>
@@ -139,6 +189,20 @@ export default function AdminUsuarios() {
                           <option value="empleado">{t("adminUsuarios.optEmpleado")}</option>
                           <option value="admin">{t("adminUsuarios.optAdministrador")}</option>
                         </Select>
+                      </td>
+                      <td className="py-3 pr-4">
+                        <button
+                          type="button"
+                          onClick={() => abrirPermisosTraz(emp)}
+                          className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--border-subtle)] px-2.5 py-1.5 text-xs font-semibold text-[var(--text-secondary)] transition hover:bg-[var(--surface-muted)]"
+                        >
+                          <Coffee className="h-3.5 w-3.5" strokeWidth={1.75} />
+                          {emp.permisosTrazabilidad.length === 0 && emp.permisosPos.length === 0
+                            ? "Sin acceso"
+                            : [emp.permisosTrazabilidad.length > 0 ? "Trazabilidad" : null, emp.permisosPos.length > 0 ? "POS" : null]
+                                .filter(Boolean)
+                                .join(" + ")}
+                        </button>
                       </td>
                       <td className="py-3 pr-4">
                         <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${ESTADO_ESTILO[emp.estado]}`}>
@@ -178,6 +242,60 @@ export default function AdminUsuarios() {
           </div>
         )}
       </Card>
+
+      <Modal open={modalCrearOpen} onClose={() => setModalCrearOpen(false)} title={t("adminUsuarios.botonNuevo")} fullScreen>
+        <EmpleadoForm
+          modo="crear"
+          soloAccesoPortal
+          enviando={creando}
+          onSubmit={(v) => void handleCrear(v)}
+          onCancel={() => setModalCrearOpen(false)}
+        />
+      </Modal>
+
+      <Modal open={!!editandoTraz} onClose={() => setEditandoTraz(null)} title="Permisos de trazabilidad y POS">
+        <p className="mb-4 text-sm text-[var(--text-secondary)]">
+          Etapas de la cadena que <span className="font-semibold text-[var(--text-primary)]">{editandoTraz?.nombre}</span> puede capturar. «Administrador de
+          trazabilidad» da acceso a todas las etapas y a la auditoría. Sin ninguna marcada, la persona no ve el módulo.
+        </p>
+        <div className="space-y-2">
+          {PERMISOS_TRAZABILIDAD.map((permiso) => (
+            <label key={permiso} className="flex items-center gap-2.5 text-sm text-[var(--text-primary)]">
+              <input
+                type="checkbox"
+                className="h-4 w-4 accent-brand-800"
+                checked={permisosElegidos.includes(permiso)}
+                onChange={(e) =>
+                  setPermisosElegidos((actuales) => (e.target.checked ? [...actuales, permiso] : actuales.filter((p) => p !== permiso)))
+                }
+              />
+              {ETIQUETA_PERMISO[permiso]}
+            </label>
+          ))}
+        </div>
+        <p className="mb-2 mt-5 text-sm font-semibold text-[var(--text-primary)]">Punto de venta (POS)</p>
+        <div className="space-y-2">
+          {PERMISOS_POS.map((permiso) => (
+            <label key={permiso} className="flex items-center gap-2.5 text-sm text-[var(--text-primary)]">
+              <input
+                type="checkbox"
+                className="h-4 w-4 accent-brand-800"
+                checked={permisosPosElegidos.includes(permiso)}
+                onChange={(e) => setPermisosPosElegidos((actuales) => (e.target.checked ? [...actuales, permiso] : actuales.filter((p) => p !== permiso)))}
+              />
+              {ETIQUETA_PERMISO_POS[permiso]}
+            </label>
+          ))}
+        </div>
+        <div className="mt-5 flex justify-end gap-3">
+          <Button type="button" variant="ghost" onClick={() => setEditandoTraz(null)} disabled={guardandoTraz}>
+            {t("adminUsuarios.cancelar")}
+          </Button>
+          <Button type="button" onClick={() => void handleGuardarPermisosTraz()} disabled={guardandoTraz}>
+            Guardar permisos
+          </Button>
+        </div>
+      </Modal>
 
       <Modal open={!!porEliminar} onClose={() => setPorEliminar(null)} title={t("adminUsuarios.modalEliminarTitulo")}>
         <p className="text-sm text-[var(--text-secondary)]">

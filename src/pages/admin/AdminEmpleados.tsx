@@ -155,7 +155,7 @@ export default function AdminEmpleados() {
         )}
       </Card>
 
-      <Modal open={modalOpen} onClose={() => setModalOpen(false)} title={t("adminEmpleados.botonNuevo")} widthClassName="max-w-2xl">
+      <Modal open={modalOpen} onClose={() => setModalOpen(false)} title={t("adminEmpleados.botonNuevo")} fullScreen>
         <EmpleadoForm modo="crear" enviando={enviando} onSubmit={(v) => void handleCrear(v)} onCancel={() => setModalOpen(false)} />
       </Modal>
     </div>

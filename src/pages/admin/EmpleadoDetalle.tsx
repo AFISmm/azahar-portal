@@ -204,7 +204,7 @@ export default function EmpleadoDetalle() {
         </Card>
       )}
 
-      <Modal open={modalEditar} onClose={() => setModalEditar(false)} title={t("empleadoDetalle.modalEditarTitulo")} widthClassName="max-w-2xl">
+      <Modal open={modalEditar} onClose={() => setModalEditar(false)} title={t("empleadoDetalle.modalEditarTitulo")} fullScreen>
         <EmpleadoForm modo="editar" valoresIniciales={empleado} enviando={enviando} onSubmit={(v) => void handleEditar(v)} onCancel={() => setModalEditar(false)} />
       </Modal>
     </div>

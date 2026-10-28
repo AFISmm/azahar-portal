@@ -6,6 +6,14 @@ export type Rol = "empleado" | "admin";
 export type EstadoEmpleado = "activo" | "inactivo";
 export type TipoCuenta = "empleado" | "desarrollador";
 
+/** Permiso de trazabilidad: una etapa de la cadena, o 'ADMIN' (todas las etapas + auditoría). */
+export type PermisoTrazabilidad = "ADMIN" | "FINCA" | "BENEFICIADO" | "TUESTE" | "EMPAQUE";
+export const PERMISOS_TRAZABILIDAD: PermisoTrazabilidad[] = ["ADMIN", "FINCA", "BENEFICIADO", "TUESTE", "EMPAQUE"];
+
+/** Permiso del POS: 'ADMIN' (todo), 'CAJA' (vende y cobra) o 'COCINA' (pantalla KDS). */
+export type PermisoPos = "ADMIN" | "CAJA" | "COCINA";
+export const PERMISOS_POS: PermisoPos[] = ["ADMIN", "CAJA", "COCINA"];
+
 export interface Empleado {
   id: string;
   nombre: string;
@@ -24,14 +32,35 @@ export interface Empleado {
   numeroIdentificacion: string | null;
   username: string | null;
   tipoCuenta: TipoCuenta;
+  /** true cuando la contraseña la eligió un admin: fuerza cambiarla en el primer ingreso antes de usar el resto del portal. */
+  debeCambiarPassword: boolean;
+  /** Etapas de trazabilidad habilitadas para la cuenta; vacío = sin acceso al módulo. Las asigna un admin en Admin > Usuarios. */
+  permisosTrazabilidad: PermisoTrazabilidad[];
+  /** Funciones del POS habilitadas; vacío = sin acceso. Las asigna un admin en Admin > Usuarios. */
+  permisosPos: PermisoPos[];
   createdAt: string;
 }
 
 export type NuevoEmpleadoInput = Omit<
   Empleado,
-  "id" | "createdAt" | "estado" | "avatarUrl" | "telefono" | "salario" | "fechaNacimiento" | "numeroIdentificacion" | "username" | "tipoCuenta"
+  | "id"
+  | "createdAt"
+  | "estado"
+  | "avatarUrl"
+  | "telefono"
+  | "salario"
+  | "fechaNacimiento"
+  | "numeroIdentificacion"
+  | "username"
+  | "tipoCuenta"
+  | "debeCambiarPassword"
+  | "permisosTrazabilidad"
+  | "permisosPos"
 > &
-  Partial<Pick<Empleado, "estado" | "avatarUrl" | "telefono" | "salario" | "fechaNacimiento" | "numeroIdentificacion" | "username" | "tipoCuenta">>;
+  Partial<Pick<Empleado, "estado" | "avatarUrl" | "telefono" | "salario" | "fechaNacimiento" | "numeroIdentificacion" | "username" | "tipoCuenta" | "permisosTrazabilidad" | "permisosPos">> & {
+    /** Contraseña inicial elegida por el admin al crear la cuenta (alta manual). Si no se manda, el servidor genera una aleatoria. */
+    passwordTemporal?: string;
+  };
 
 export interface PerfilPropioInput {
   correo?: string;

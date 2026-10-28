@@ -2,15 +2,15 @@
 // GET  /api/fincas  -> listado completo de fincas cafeteras. Solo admin.
 // POST /api/fincas  -> registra una nueva finca. Solo admin.
 // ----------------------------------------------------------------------------
-// `codigo` (p. ej. "FIN-0001") se genera siempre en el servidor a partir del
-// conteo actual de filas: nunca se acepta un valor de cliente para esta
-// columna, así se evitan duplicados o códigos inconsistentes.
+// Vive en api/_lib (y se expone vía api/trazabilidad.ts + un rewrite en
+// vercel.json) para no superar el límite de 12 funciones serverless del plan
+// Hobby de Vercel. `codigo` (p. ej. "FIN-0001") se genera siempre en el
+// servidor: nunca se acepta un valor de cliente para esta columna.
 // ============================================================================
-
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { sql } from "../_lib/db.js";
-import { HttpError, manejarError, requireAdmin } from "../_lib/auth.js";
-import { mapFincaRow, type FincaRow } from "../_lib/mappers.js";
+import { sql } from "./db.js";
+import { HttpError, manejarError, requireAdmin } from "./auth.js";
+import { mapFincaRow, type FincaRow } from "./mappers.js";
 
 interface FincaPostPayload {
   nombre: string;
@@ -85,7 +85,7 @@ async function crear(req: VercelRequest, res: VercelResponse) {
   return res.status(201).json({ ok: true, finca: mapFincaRow(rows[0]) });
 }
 
-export default async function handler(req: VercelRequest, res: VercelResponse) {
+export default async function fincasGestion(req: VercelRequest, res: VercelResponse) {
   try {
     if (req.method === "GET") return await listar(req, res);
     if (req.method === "POST") return await crear(req, res);

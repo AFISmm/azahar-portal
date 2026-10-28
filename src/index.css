@@ -71,6 +71,30 @@ body,
   height: 100%;
 }
 
+/*
+ * Escala universal: todo el portal está dimensionado en rem (Tailwind), así que
+ * subir el font-size de <html> agranda proporcionalmente textos, espacios,
+ * sidebar y contenedores. Así la interfaz se ve del mismo "tamaño relativo"
+ * en celular (16px), tablet, laptop, monitores de 27-32" (QHD/4K) y
+ * televisores (1080p/4K). Los media queries de Tailwind usan rem sobre el
+ * tamaño por defecto del navegador, por lo que los breakpoints no se alteran.
+ */
+html {
+  font-size: 16px;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+@media (min-width: 1920px) { html { font-size: 18px; } }  /* Full HD grande / TV 1080p */
+@media (min-width: 2560px) { html { font-size: 24px; } }  /* QHD, monitores 27-32" */
+@media (min-width: 3200px) { html { font-size: 28px; } }  /* 4K nativo escalado */
+@media (min-width: 3840px) { html { font-size: 32px; } }  /* TV / monitor 4K */
+@media (min-width: 5120px) { html { font-size: 44px; } }  /* 5K / 8K */
+
+/* Móviles: inputs a 16px para que iOS no haga zoom automático al enfocar. */
+@media (max-width: 767px) {
+  input, select, textarea { font-size: 16px; }
+}
+
 body {
   margin: 0;
   background: var(--surface-app);
@@ -138,4 +162,16 @@ h1, h2, h3, h4, h5, h6 {
 }
 :root[data-theme="dark"] .azahar-mosaic-bg {
   background-image: url(./assets/mosaic-dark.png);
+}
+
+/* La tarjeta del login es siempre blanca: fija la paleta clara aunque el tema
+   global sea oscuro, para que títulos, etiquetas e inputs no pierdan contraste. */
+.azahar-login-light {
+  --surface-app: var(--color-cream-100);
+  --surface-card: #ffffff;
+  --surface-muted: var(--color-cream-200);
+  --border-subtle: #e7dccd;
+  --text-primary: var(--color-brand-900);
+  --text-secondary: #6f5a52;
+  --text-muted: #9a8b83;
 }

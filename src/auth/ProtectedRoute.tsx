@@ -1,6 +1,7 @@
 import { Navigate, Outlet } from "react-router-dom";
 import { useAuth } from "./AuthContext";
 import { Loader2 } from "lucide-react";
+import CambiarPasswordObligatorio from "../pages/CambiarPasswordObligatorio";
 
 function PantallaCarga() {
   return (
@@ -10,11 +11,19 @@ function PantallaCarga() {
   );
 }
 
-/** Envuelve rutas que requieren una sesión iniciada (cualquier rol). */
+/**
+ * Envuelve rutas que requieren una sesión iniciada (cualquier rol).
+ *
+ * Si `empleado.debeCambiarPassword` es true (cuenta creada por un admin, que
+ * le puso la contraseña), se bloquea el resto del portal y se muestra
+ * únicamente la pantalla de cambio de contraseña obligatorio hasta que la
+ * actualice — ni siquiera el sidebar/AppShell se renderiza.
+ */
 export function ProtectedRoute() {
-  const { user, loading } = useAuth();
+  const { user, empleado, loading } = useAuth();
   if (loading) return <PantallaCarga />;
   if (!user) return <Navigate to="/login" replace />;
+  if (empleado?.debeCambiarPassword) return <CambiarPasswordObligatorio />;
   return <Outlet />;
 }
 

@@ -24,7 +24,14 @@ import {
   X,
   IdCard,
   MessageSquareWarning,
+  Coffee,
+  ChefHat,
+  ShoppingCart,
+  Flame,
+  History,
+  Package,
 } from "lucide-react";
+import type { PermisoPos, PermisoTrazabilidad } from "../lib/types";
 import { useAuth } from "../auth/AuthContext";
 import { useLanguage } from "../context/LanguageContext";
 import { IS_DEMO_MODE } from "../lib/dataSource";
@@ -59,6 +66,26 @@ const GESTION_NEGOCIO: { to: string; claveLabel: ClaveTraduccion; Icon: typeof H
   { to: "/informacion-general", claveLabel: "sidebar.informacionGeneral", Icon: Info },
 ];
 
+// Módulo de Trazabilidad: cada ítem se muestra solo si el empleado tiene el
+// permiso de esa etapa (o 'ADMIN'); los permisos se asignan en Admin > Usuarios.
+const TRAZABILIDAD_ITEMS: { to: string; label: string; Icon: typeof Home; permiso: PermisoTrazabilidad | null }[] = [
+  { to: "/trazabilidad", label: "Resumen", Icon: Home, permiso: null },
+  { to: "/trazabilidad/finca", label: "Finca / Origen", Icon: Sprout, permiso: "FINCA" },
+  { to: "/trazabilidad/certificacion", label: "Certificaciones", Icon: BadgeCheck, permiso: "FINCA" },
+  { to: "/trazabilidad/lote-verde", label: "Beneficiado y trilla", Icon: Coffee, permiso: "BENEFICIADO" },
+  { to: "/trazabilidad/ficha-cata", label: "Ficha de cata", Icon: ClipboardList, permiso: "BENEFICIADO" },
+  { to: "/trazabilidad/lote-tostado", label: "Tueste", Icon: Flame, permiso: "TUESTE" },
+  { to: "/trazabilidad/lote-empaque", label: "Empaque y QR", Icon: Package, permiso: "EMPAQUE" },
+  { to: "/trazabilidad/auditoria", label: "Auditoría", Icon: History, permiso: "ADMIN" },
+];
+
+// POS: igual que trazabilidad, cada item depende de empleado.permisosPos.
+const POS_ITEMS: { to: string; label: string; Icon: typeof Home; permiso: PermisoPos }[] = [
+  { to: "/pos", label: "Caja", Icon: ShoppingCart, permiso: "CAJA" },
+  { to: "/pos/cocina", label: "Cocina", Icon: ChefHat, permiso: "COCINA" },
+  { to: "/pos/historial", label: "Historial", Icon: ClipboardList, permiso: "CAJA" },
+];
+
 // El sidebar ahora lleva una foto de fondo fija (finca cafetera) con un velo
 // oscuro encima, por lo que su paleta de texto deja de depender de las
 // variables de tema claro/oscuro (--text-*) y usa tonos crema/claros fijos,
@@ -83,7 +110,13 @@ export function Sidebar({ abierto = false, onCerrar }: SidebarProps) {
   // Rutas que, aunque empiecen con "/admin", son ítems sueltos del sidebar
   // principal (no parte del sub-sidebar de Administración de NÓMINA).
   const enPaginaIndependiente = location.pathname.startsWith("/admin/usuarios") || location.pathname.startsWith("/admin/pqr");
-  const enNomina = !enPaginaIndependiente && (location.pathname.startsWith("/nomina") || location.pathname.startsWith("/admin"));
+  const permisosTraz = empleado?.permisosTrazabilidad ?? [];
+  const tieneTraz = permisosTraz.length > 0;
+  const enTraz = location.pathname.startsWith("/trazabilidad");
+  const permisosPos = empleado?.permisosPos ?? [];
+  const tienePos = permisosPos.length > 0;
+  const enPos = location.pathname.startsWith("/pos");
+  const enNomina = !enTraz && !enPos && !enPaginaIndependiente && (location.pathname.startsWith("/nomina") || location.pathname.startsWith("/admin"));
 
   return (
     <aside
@@ -113,7 +146,43 @@ export function Sidebar({ abierto = false, onCerrar }: SidebarProps) {
       </div>
 
       <nav onClick={() => onCerrar?.()} className="flex-1 space-y-6 overflow-y-auto px-3 pb-4">
-        {enNomina ? (
+        {enPos ? (
+          <div>
+            <button
+              onClick={() => navigate("/inicio")}
+              className="mb-3 flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold text-cream-200/80 transition hover:bg-white/10 hover:text-cream-100"
+            >
+              <ChevronLeft className="h-4 w-4 shrink-0" strokeWidth={1.75} />
+              {t("sidebar.pos")}
+            </button>
+            <div className="space-y-1">
+              {POS_ITEMS.filter(({ permiso }) => permisosPos.includes("ADMIN") || permisosPos.includes(permiso)).map(({ to, label, Icon }) => (
+                <NavLink key={to} to={to} end className={({ isActive }) => itemClase(isActive)}>
+                  <Icon className="h-4 w-4 shrink-0" strokeWidth={1.75} />
+                  {label}
+                </NavLink>
+              ))}
+            </div>
+          </div>
+        ) : enTraz ? (
+          <div>
+            <button
+              onClick={() => navigate("/inicio")}
+              className="mb-3 flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold text-cream-200/80 transition hover:bg-white/10 hover:text-cream-100"
+            >
+              <ChevronLeft className="h-4 w-4 shrink-0" strokeWidth={1.75} />
+              {t("sidebar.trazabilidad")}
+            </button>
+            <div className="space-y-1">
+              {TRAZABILIDAD_ITEMS.filter(({ permiso }) => permiso === null || permisosTraz.includes("ADMIN") || permisosTraz.includes(permiso)).map(({ to, label, Icon }) => (
+                <NavLink key={to} to={to} end={to === "/trazabilidad"} className={({ isActive }) => itemClase(isActive)}>
+                  <Icon className="h-4 w-4 shrink-0" strokeWidth={1.75} />
+                  {label}
+                </NavLink>
+              ))}
+            </div>
+          </div>
+        ) : enNomina ? (
           <div>
             <button
               onClick={() => navigate("/inicio")}
@@ -168,6 +237,24 @@ export function Sidebar({ abierto = false, onCerrar }: SidebarProps) {
                     </NavLink>
                   ))}
                 </div>
+              </div>
+            )}
+
+            {tienePos && (
+              <div className="space-y-1">
+                <NavLink to={permisosPos.includes("ADMIN") || permisosPos.includes("CAJA") ? "/pos" : "/pos/cocina"} className={({ isActive }) => itemClase(isActive)}>
+                  <ShoppingCart className="h-4 w-4 shrink-0" strokeWidth={1.75} />
+                  {t("sidebar.pos")}
+                </NavLink>
+              </div>
+            )}
+
+            {tieneTraz && (
+              <div className="space-y-1">
+                <NavLink to="/trazabilidad" className={({ isActive }) => itemClase(isActive)}>
+                  <Coffee className="h-4 w-4 shrink-0" strokeWidth={1.75} />
+                  {t("sidebar.trazabilidad")}
+                </NavLink>
               </div>
             )}
 

@@ -54,7 +54,7 @@ export function AppShell() {
       <Sidebar abierto={sidebarAbierto} onCerrar={() => setSidebarAbierto(false)} />
 
       <main className="relative min-h-screen px-6 pb-8 pt-14 sm:px-10 md:ml-64 md:pt-8">
-        <div className="mx-auto w-full max-w-[1180px]">
+        <div className="mx-auto w-full max-w-[73.75rem]">
           <Outlet />
         </div>
       </main>

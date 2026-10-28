@@ -83,9 +83,15 @@ async function actualizarPerfilPropio(req: VercelRequest, res: VercelResponse) {
   const username = body.username !== undefined ? body.username.trim() || null : actual.username;
   const passwordHash = body.password ? await bcrypt.hash(body.password, RONDAS_SAL) : actual.password_hash;
 
+  // Cambiar la contraseña (sea la obligatoria del primer ingreso o una
+  // voluntaria desde Mi Perfil) siempre apaga debe_cambiar_password: ya
+  // eligió una contraseña propia, no la del admin.
+  const debeCambiarPassword = body.password ? false : actual.debe_cambiar_password;
+
   try {
     const { rows: actualizadas } = await sql<EmpleadoRow>`
-      update empleados set correo = ${correo}, username = ${username}, password_hash = ${passwordHash}
+      update empleados set correo = ${correo}, username = ${username}, password_hash = ${passwordHash},
+        debe_cambiar_password = ${debeCambiarPassword}
       where id = ${empleadoId}
       returning *
     `;

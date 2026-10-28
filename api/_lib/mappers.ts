@@ -37,6 +37,9 @@ export interface EmpleadoRow {
   numero_identificacion: string | null;
   username: string | null;
   tipo_cuenta: TipoCuenta;
+  debe_cambiar_password: boolean;
+  permisos_trazabilidad: string[] | null;
+  permisos_pos: string[] | null;
   created_at: string;
 }
 
@@ -59,6 +62,11 @@ export interface EmpleadoPublico {
   numeroIdentificacion: string | null;
   username: string | null;
   tipoCuenta: TipoCuenta;
+  debeCambiarPassword: boolean;
+  /** Etapas de trazabilidad que puede usar: 'ADMIN' | 'FINCA' | 'BENEFICIADO' | 'TUESTE' | 'EMPAQUE'. Vacío = sin acceso al módulo. */
+  permisosTrazabilidad: string[];
+  /** Funciones del POS habilitadas: 'ADMIN' | 'CAJA' | 'COCINA'. Vacío = sin acceso. */
+  permisosPos: string[];
   createdAt: string;
 }
 
@@ -81,6 +89,9 @@ export function mapEmpleadoRow(row: EmpleadoRow): EmpleadoPublico {
     numeroIdentificacion: row.numero_identificacion,
     username: row.username,
     tipoCuenta: row.tipo_cuenta,
+    debeCambiarPassword: row.debe_cambiar_password,
+    permisosTrazabilidad: row.permisos_trazabilidad ?? [],
+    permisosPos: row.permisos_pos ?? [],
     createdAt: row.created_at,
   };
 }

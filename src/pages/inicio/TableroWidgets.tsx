@@ -5,9 +5,7 @@ import { useAcceso } from "../../auth/acceso";
 import { Modal } from "../../components/Modal";
 import { Button } from "../../components/ui";
 import { DIM, type Tam } from "./widgetsBase";
-import {
-  CATALOGO, LAYOUT_POR_DEFECTO, POR_ID, REM_FILA, borrarLayout, dimsIniciales, guardarLayout, leerLayout, type ItemLibre, type WidgetDef, type WidgetId,
-} from "./widgetsCatalogo";
+import { CONFIG_INICIO, REM_FILA, dimsIniciales, type ConfigTablero, type ItemLibre, type WidgetDef, type WidgetId } from "./widgetsCatalogo";
 
 // ============================================================================
 // Tablero del Inicio con widgets de posición y tamaño LIBRES (sin casillas):
@@ -23,7 +21,6 @@ const PULSACION_LARGA_MS = 650;
 const SNAP_PX = 8; // los movimientos se acomodan a múltiplos de 8 px para que quede ordenado
 const GAP_REM = 1;
 const ANCHO_APILADO = 640; // por debajo de este ancho del tablero los widgets se apilan en una columna
-const CLAVE_GUIA = "azahar-inicio-guia-vista";
 const TRANSICION =
   "left 240ms cubic-bezier(0.22,0.8,0.24,1), top 240ms cubic-bezier(0.22,0.8,0.24,1), width 200ms ease, height 200ms ease, box-shadow 200ms ease, transform 200ms ease";
 
@@ -297,7 +294,9 @@ function ItemWidget({
   );
 }
 
-export function TableroWidgets() {
+export function TableroWidgets({ config = CONFIG_INICIO }: { config?: ConfigTablero }) {
+  const { catalogo: CATALOGO, porId: POR_ID, porDefecto: LAYOUT_POR_DEFECTO, leer: leerLayout, guardar: guardarLayout, borrar: borrarLayout } = config;
+  const CLAVE_GUIA = config.claveGuia;
   const { empleado } = useAuth();
   const acceso = useAcceso();
   const usuarioId = empleado?.id ?? "";
@@ -484,7 +483,7 @@ export function TableroWidgets() {
             <Hand className="h-5 w-5" strokeWidth={1.75} />
           </span>
           <p className="min-w-0 flex-1 text-sm text-[var(--text-primary)]">
-            <strong>Tu inicio es tuyo.</strong> Pulsa <em>Personalizar</em> para mover los widgets a donde quieras, cambiar su tamaño desde la esquina inferior derecha de cada uno y agregar los que
+            <strong>{config.nombre.charAt(0).toUpperCase() + config.nombre.slice(1)} es tuyo.</strong> Pulsa <em>Personalizar</em> para mover los widgets a donde quieras, cambiar su tamaño desde la esquina inferior derecha de cada uno y agregar los que
             necesites.
           </p>
           <Button className="px-3 py-1.5 text-xs" onClick={() => alternarEdicion(true)}>
@@ -508,7 +507,7 @@ export function TableroWidgets() {
             <span className="font-semibold">−</span> de la esquina superior izquierda. Se guarda solo.
           </p>
         ) : (
-          <p className="text-xs text-[var(--text-muted)]">Personaliza tu inicio: mueve, cambia el tamaño o agrega widgets. También puedes mantener pulsado uno.</p>
+          <p className="text-xs text-[var(--text-muted)]">Personaliza {config.nombre}: mueve, cambia el tamaño o agrega widgets. También puedes mantener pulsado uno.</p>
         )}
         <div className="flex items-center gap-2">
           {editando && (
@@ -564,7 +563,7 @@ export function TableroWidgets() {
 
       {visibles.length === 0 && (
         <div className="rounded-2xl border border-dashed border-[var(--border-subtle)] p-10 text-center">
-          <p className="text-sm text-[var(--text-secondary)]">Tu inicio está vacío.</p>
+          <p className="text-sm text-[var(--text-secondary)]">{config.nombre.charAt(0).toUpperCase() + config.nombre.slice(1)} está vacío.</p>
           <Button
             className="mt-3"
             onClick={() => {
@@ -579,7 +578,7 @@ export function TableroWidgets() {
 
       <Modal open={galeria} onClose={() => setGaleria(false)} title="Agregar un widget" widthClassName="max-w-3xl">
         {disponibles.length === 0 ? (
-          <p className="text-sm text-[var(--text-secondary)]">Ya tienes en tu inicio todos los widgets disponibles para ti.</p>
+          <p className="text-sm text-[var(--text-secondary)]">Ya tienes en {config.nombre} todos los widgets disponibles para ti.</p>
         ) : (
           <div className="grid max-h-[65vh] grid-cols-1 gap-3 overflow-y-auto sm:grid-cols-2">
             {disponibles.map((d) => (

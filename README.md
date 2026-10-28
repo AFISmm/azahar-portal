@@ -188,16 +188,23 @@ facturas, terceros, pagos de nómina, catálogo de productos y la documentación
 `/contable` y se activa con el permiso **Gestión Contable** (Ver) en Gestión de usuarios; los roles
 Administrador y Gerencia lo incluyen y las cuentas `@mercurymethods.com` lo tienen siempre.
 
-| Pantalla | Ruta | Qué muestra |
+| Pantalla (en el orden del menú) | Ruta | Qué muestra |
 |---|---|---|
-| Resumen | `/contable` | Indicadores, hitos y estado (hecho / listo sin subir / bloqueado) |
-| Comprobantes contables | `/contable/comprobantes` | Comprobantes de Alegra: **detalle desde noviembre de 2025** (≈5.100) y 13 **destacados** desde diciembre de 2016 (cierres y nómina). Alegra tiene ≈114.000 en total, así que **no es el listado completo**. Incluye los pendientes de subir como «vista previa». Filtro en el servidor: fechas, texto y estado, con paginación y resumen por mes. Para cargar todos: `descargar_comprobantes_alegra.py` y apuntar el exportador a su salida |
-| Conciliación bancaria | `/contable/conciliacion` | Bancolombia 0590 por mes, cuentas PUC por mes, monto unificado de 53051501 + 42100501 y cobros de la 13050501 contra facturas (con CSV) |
-| Cargue de archivos | `/contable/carga` | Sube un CSV de extracto o de facturas y resume por mes. Se procesa en el navegador; no se envía ni se guarda |
-| Pagos de nómina | `/contable/nomina` | Pagos del Banco de Bogotá y el asiento propuesto |
-| Terceros | `/contable/terceros` | Estado del balance 2025 y de los comprobantes de enero a marzo (solo conteos) |
-| Catálogo | `/contable/catalogo` | Productos, cambios aplicados y reglas de la actualización semanal |
-| Documentación | `/contable/documentacion` | Línea de tiempo desde diciembre de 2016, actividad por mes en Alegra, trabajo de octubre de 2026, decisiones, pendientes por responsable, scripts y limitaciones |
+| Tablero | `/contable` | **Widgets personalizables** (mover, cambiar tamaño, agregar y quitar), con el mismo tablero del Inicio (`TableroWidgets` recibe una configuración; el catálogo contable vive en `src/pages/contable/widgetsContable.tsx`) |
+| 1. Comprobantes contables | `/contable/comprobantes` | Comprobantes de Alegra (detalle desde nov-2025 + 13 cierres destacados; no es el listado completo, Alegra tiene ≈114.000), los pendientes de subir («vista previa») y pestañas con lo **importado**: comprobantes, facturas de compra y facturas de venta |
+| 2. Terceros | `/contable/terceros` | Terceros importados y estado del balance 2025 y de enero–marzo |
+| 3. Catálogo de productos | `/contable/catalogo` | Catálogo importado, cambios aplicados y reglas de la actualización de los martes |
+| 4. Conciliación bancaria | `/contable/conciliacion` | **Conciliar (cuentas y terceros)** al estilo de Alegra: cuenta contable y tercero por movimiento, conciliado, guardado al instante; más las vistas por mes, cuentas PUC, 53051501 + 42100501, cobros 13050501 y extractos importados |
+| 5. Importación de archivos | `/contable/importacion` | Se sube **cualquier archivo** (Excel, CSV, Word, JSON, PDF, imagen); la **IA sugiere** a qué módulo va (Extractos bancarios, Facturas de compra, Facturas de venta, Comprobantes contables, Terceros, Catálogo) y la persona confirma o elige a mano; se mapean las columnas y se importa |
+| 6. Documentación | `/contable/documentacion` | Línea de tiempo desde diciembre de 2016, actividad por mes, trabajo de octubre de 2026, decisiones, pendientes, scripts y limitaciones |
+| (sin menú) Pagos de nómina | `/contable/nomina` | Pagos del Banco de Bogotá y el asiento propuesto; se llega desde el widget «Pagos de nómina» |
+
+**Importación de archivos y conciliación (qué hay detrás).**
+- Lectura en el navegador (`src/lib/leerArchivo.ts`, con `fflate` para .xlsx y .docx): detecta hoja y fila de encabezados. Al servidor solo viaja una **muestra** (15 filas) para la sugerencia y, al importar, las filas.
+- Sugerencia: `api/_lib/contableIA.ts`. Con `GEMINI_API_KEY` (la misma del chatbot) la da Gemini y, si el archivo es PDF o imagen, también lo lee y extrae la tabla (hay que revisarla). **Sin la llave, o si la IA falla, usa reglas por palabras clave**: la importación nunca queda bloqueada.
+- Datos en Postgres: tablas `contable_importaciones` y `contable_conciliacion` (se crean solas la primera vez; referencia en `db/contable.sql`). Las rutas están en `api/_lib/contableImportar.ts`.
+- Los **terceros** que se ofrecen al conciliar salen de lo importado en el destino «Terceros» (no hay datos personales en el repositorio); las **cuentas** salen del plan de cuentas de Alegra (`api/_lib/contableData/planCuentas.ts`).
+- Conciliar en el portal guarda la asociación cuenta/tercero; **no crea comprobantes en Alegra**.
 
 **Filtro de fechas.** Todas las pantallas comparten una barra «Filtrar por fecha» (Desde / Hasta y atajos: todo el historial, cada año desde 2016, último trimestre). Se guarda en `sessionStorage` y se aplica a comprobantes, conciliación, nómina, terceros, catálogo, documentación y al archivo cargado. Lo que no tiene fechas propias (la lista de productos) se muestra completo.
 

@@ -20,7 +20,10 @@ import {
 export type WidgetId =
   | "saludo" | "proximo-pago" | "mis-solicitudes" | "reloj" | "indicadores" | "accesos-rapidos"
   | "base-mundial" | "valor-bolsa" | "variacion-industrial" | "produccion-agricola" | "cadena-produccion"
-  | "por-aprobar" | "equipo" | "tiendas" | "certificados-fincas" | "producto-top" | "trazabilidad";
+  | "por-aprobar" | "equipo" | "tiendas" | "certificados-fincas" | "producto-top" | "trazabilidad"
+  // Gestión Contable (ver src/pages/contable/widgetsContable.tsx)
+  | "c-comprobantes" | "c-terceros" | "c-catalogo" | "c-conciliacion" | "c-cobros" | "c-nomina" | "c-hitos" | "c-pendientes"
+  | "c-ultimos" | "c-importaciones" | "c-sync" | "c-accesos";
 
 export interface WidgetDef {
   id: WidgetId;
@@ -124,12 +127,12 @@ export const LAYOUT_POR_DEFECTO: ItemLibre[] = empaquetar([
 const claveV1 = (usuarioId: string) => `azahar-inicio-widgets-v1:${usuarioId}`;
 const clave = (usuarioId: string) => `azahar-inicio-widgets-v2:${usuarioId}`;
 
-function limpiarLibre(lista: unknown): ItemLibre[] | null {
+function limpiarLibre(lista: unknown, porId: Record<string, WidgetDef> = POR_ID): ItemLibre[] | null {
   if (!Array.isArray(lista)) return null;
   const vistos = new Set<string>();
   const limpio: ItemLibre[] = [];
   for (const x of lista as Partial<ItemLibre>[]) {
-    const def = x?.id ? POR_ID[x.id] : undefined;
+    const def = x?.id ? porId[x.id] : undefined;
     if (!def || vistos.has(def.id)) continue;
     const ok = [x.x, x.y, x.w, x.h].every((n) => typeof n === "number" && Number.isFinite(n));
     if (!ok) continue;
@@ -172,3 +175,61 @@ export function borrarLayout(usuarioId: string) {
     // nada que borrar
   }
 }
+
+// ============================================================================
+// Configuración del tablero: el mismo tablero (TableroWidgets) sirve para el Inicio y para otros módulos
+// (p. ej. Gestión Contable) pasándole su catálogo, su disposición inicial y dónde guardar la de cada persona.
+// ============================================================================
+
+export interface ConfigTablero {
+  catalogo: WidgetDef[];
+  porId: Record<string, WidgetDef>;
+  porDefecto: ItemLibre[];
+  leer: (usuarioId: string) => ItemLibre[] | null;
+  guardar: (usuarioId: string, items: ItemLibre[]) => void;
+  borrar: (usuarioId: string) => void;
+  /** Clave de localStorage para recordar que ya se mostró el aviso de bienvenida. */
+  claveGuia: string;
+  /** Cómo se llama el tablero en los textos: "tu inicio", "tu tablero contable". */
+  nombre: string;
+}
+
+/** Guarda la disposición de cada persona en este navegador, con la clave indicada. */
+export function crearAlmacenLayout(prefijo: string, porId: Record<string, WidgetDef>) {
+  const k = (usuarioId: string) => `${prefijo}:${usuarioId}`;
+  return {
+    leer(usuarioId: string): ItemLibre[] | null {
+      try {
+        const crudo = window.localStorage.getItem(k(usuarioId));
+        return crudo ? limpiarLibre(JSON.parse(crudo), porId) : null;
+      } catch {
+        return null;
+      }
+    },
+    guardar(usuarioId: string, items: ItemLibre[]) {
+      try {
+        window.localStorage.setItem(k(usuarioId), JSON.stringify(items));
+      } catch {
+        // sin almacenamiento: el tablero funciona igual, solo no recuerda
+      }
+    },
+    borrar(usuarioId: string) {
+      try {
+        window.localStorage.removeItem(k(usuarioId));
+      } catch {
+        // nada que borrar
+      }
+    },
+  };
+}
+
+export const CONFIG_INICIO: ConfigTablero = {
+  catalogo: CATALOGO,
+  porId: POR_ID,
+  porDefecto: LAYOUT_POR_DEFECTO,
+  leer: leerLayout,
+  guardar: guardarLayout,
+  borrar: borrarLayout,
+  claveGuia: "azahar-inicio-guia-vista",
+  nombre: "tu inicio",
+};

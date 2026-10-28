@@ -95,13 +95,12 @@ const POS_ITEMS: { to: string; label: string; Icon: typeof Home; nivel: "ver" | 
 
 // Gestión Contable: todo el módulo es de consulta ('ver'); el cargue de archivos se procesa en el navegador.
 const CONTABLE_ITEMS: { to: string; label: string; Icon: typeof Home }[] = [
-  { to: "/contable", label: "Resumen", Icon: Home },
+  { to: "/contable", label: "Tablero", Icon: Home },
   { to: "/contable/comprobantes", label: "Comprobantes contables", Icon: Receipt },
-  { to: "/contable/conciliacion", label: "Conciliación bancaria", Icon: Landmark },
-  { to: "/contable/carga", label: "Cargue de archivos", Icon: Upload },
-  { to: "/contable/nomina", label: "Pagos de nómina", Icon: Banknote },
   { to: "/contable/terceros", label: "Terceros", Icon: UsersRound },
   { to: "/contable/catalogo", label: "Catálogo de productos", Icon: Boxes },
+  { to: "/contable/conciliacion", label: "Conciliación bancaria", Icon: Landmark },
+  { to: "/contable/importacion", label: "Importación de archivos", Icon: Upload },
   { to: "/contable/documentacion", label: "Documentación", Icon: BookOpen },
 ];
 

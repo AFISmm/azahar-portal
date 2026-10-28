@@ -26,6 +26,7 @@ import { cumple, permisosEfectivos, type Nivel, type PermisosModulos } from "./_
 import { POS_GET, POS_POST } from "./_lib/pos.js";
 import { TIENDAS_GET, TIENDAS_POST } from "./_lib/tiendas.js";
 import { CONTABLE_GET } from "./_lib/contable.js";
+import { IMPORTAR_GET, IMPORTAR_POST } from "./_lib/contableImportar.js";
 
 type Fila = Record<string, unknown>;
 type Body = Record<string, unknown>;
@@ -529,6 +530,7 @@ const GET_RUTAS: Record<string, Ruta> = {
   ...POS_GET,
   ...TIENDAS_GET,
   ...CONTABLE_GET,
+  ...IMPORTAR_GET,
 };
 
 const POST_RUTAS: Record<string, Ruta> = {
@@ -541,6 +543,7 @@ const POST_RUTAS: Record<string, Ruta> = {
   "gestion-fincas": fincasGestion,
   ...POS_POST,
   ...TIENDAS_POST,
+  ...IMPORTAR_POST,
 };
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {

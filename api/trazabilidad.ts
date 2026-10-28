@@ -25,6 +25,7 @@ import fincasGestion from "./_lib/fincasGestion.js";
 import { cumple, permisosEfectivos, type Nivel, type PermisosModulos } from "./_lib/acceso.js";
 import { POS_GET, POS_POST } from "./_lib/pos.js";
 import { TIENDAS_GET, TIENDAS_POST } from "./_lib/tiendas.js";
+import { CONTABLE_GET } from "./_lib/contable.js";
 
 type Fila = Record<string, unknown>;
 type Body = Record<string, unknown>;
@@ -527,6 +528,7 @@ const GET_RUTAS: Record<string, Ruta> = {
   "gestion-fincas": fincasGestion,
   ...POS_GET,
   ...TIENDAS_GET,
+  ...CONTABLE_GET,
 };
 
 const POST_RUTAS: Record<string, Ruta> = {

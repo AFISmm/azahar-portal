@@ -46,6 +46,13 @@ import TrazLoteTostado from "./pages/trazabilidad/TrazLoteTostado";
 import TrazLoteEmpaque from "./pages/trazabilidad/TrazLoteEmpaque";
 import TrazLoteEmpaqueDetalle from "./pages/trazabilidad/TrazLoteEmpaqueDetalle";
 import TrazAuditoria from "./pages/trazabilidad/TrazAuditoria";
+import ContableInicio from "./pages/contable/ContableInicio";
+import ContableConciliacion from "./pages/contable/ContableConciliacion";
+import ContableCarga from "./pages/contable/ContableCarga";
+import ContableNomina from "./pages/contable/ContableNomina";
+import ContableTerceros from "./pages/contable/ContableTerceros";
+import ContableCatalogo from "./pages/contable/ContableCatalogo";
+import ContableDocumentacion from "./pages/contable/ContableDocumentacion";
 import PosVenta from "./pages/pos/PosVenta";
 import PosCocina from "./pages/pos/PosCocina";
 import PosHistorial from "./pages/pos/PosHistorial";
@@ -98,6 +105,17 @@ export default function App() {
                   <Route path="/pos" element={<PosVenta />} />
                   <Route path="/pos/cocina" element={<PosCocina />} />
                   <Route path="/pos/historial" element={<PosHistorial />} />
+
+                  {/* Gestión Contable: conciliaciones, cargue de archivos, terceros, nómina y catálogo (el acceso lo decide empleado.permisosModulos.contable). */}
+                  <Route element={<ModuloRoute modulos="contable" />}>
+                    <Route path="/contable" element={<ContableInicio />} />
+                    <Route path="/contable/conciliacion" element={<ContableConciliacion />} />
+                    <Route path="/contable/carga" element={<ContableCarga />} />
+                    <Route path="/contable/nomina" element={<ContableNomina />} />
+                    <Route path="/contable/terceros" element={<ContableTerceros />} />
+                    <Route path="/contable/catalogo" element={<ContableCatalogo />} />
+                    <Route path="/contable/documentacion" element={<ContableDocumentacion />} />
+                  </Route>
 
                   {/* RRHH y nómina */}
                   <Route element={<ModuloRoute modulos="rrhh" />}>

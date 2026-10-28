@@ -30,6 +30,12 @@ import {
   Flame,
   History,
   Package,
+  Calculator,
+  Landmark,
+  Upload,
+  UsersRound,
+  Boxes,
+  BookOpen,
 } from "lucide-react";
 import { useAcceso } from "../auth/acceso";
 import type { Modulo } from "../lib/types";
@@ -86,6 +92,17 @@ const POS_ITEMS: { to: string; label: string; Icon: typeof Home; nivel: "ver" | 
   { to: "/pos/historial", label: "Historial", Icon: ClipboardList, nivel: "ver" },
 ];
 
+// Gestión Contable: todo el módulo es de consulta ('ver'); el cargue de archivos se procesa en el navegador.
+const CONTABLE_ITEMS: { to: string; label: string; Icon: typeof Home }[] = [
+  { to: "/contable", label: "Resumen", Icon: Home },
+  { to: "/contable/conciliacion", label: "Conciliación bancaria", Icon: Landmark },
+  { to: "/contable/carga", label: "Cargue de archivos", Icon: Upload },
+  { to: "/contable/nomina", label: "Pagos de nómina", Icon: Banknote },
+  { to: "/contable/terceros", label: "Terceros", Icon: UsersRound },
+  { to: "/contable/catalogo", label: "Catálogo de productos", Icon: Boxes },
+  { to: "/contable/documentacion", label: "Documentación", Icon: BookOpen },
+];
+
 // El sidebar ahora lleva una foto de fondo fija (finca cafetera) con un velo
 // oscuro encima, por lo que su paleta de texto deja de depender de las
 // variables de tema claro/oscuro (--text-*) y usa tonos crema/claros fijos,
@@ -115,7 +132,9 @@ export function Sidebar({ abierto = false, onCerrar }: SidebarProps) {
   const enTraz = location.pathname.startsWith("/trazabilidad");
   const tienePos = acceso.ver("pos");
   const enPos = location.pathname.startsWith("/pos");
-  const enNomina = !enTraz && !enPos && !enPaginaIndependiente && (location.pathname.startsWith("/nomina") || location.pathname.startsWith("/admin"));
+  const tieneContable = acceso.ver("contable");
+  const enContable = location.pathname.startsWith("/contable");
+  const enNomina = !enTraz && !enPos && !enContable && !enPaginaIndependiente && (location.pathname.startsWith("/nomina") || location.pathname.startsWith("/admin"));
 
   return (
     <aside
@@ -145,7 +164,25 @@ export function Sidebar({ abierto = false, onCerrar }: SidebarProps) {
       </div>
 
       <nav onClick={() => onCerrar?.()} className="flex-1 space-y-2 overflow-y-auto px-3 pb-2">
-        {enPos ? (
+        {enContable ? (
+          <div>
+            <button
+              onClick={() => navigate("/inicio")}
+              className="mb-2 flex w-full items-center gap-2 rounded-lg px-3 py-1.5 text-[13px] font-semibold text-cream-200/80 transition hover:bg-white/10 hover:text-cream-100"
+            >
+              <ChevronLeft className="h-4 w-4 shrink-0" strokeWidth={1.75} />
+              {t("sidebar.gestionContable")}
+            </button>
+            <div className="space-y-0.5">
+              {CONTABLE_ITEMS.map(({ to, label, Icon }) => (
+                <NavLink key={to} to={to} end={to === "/contable"} className={({ isActive }) => itemClase(isActive)}>
+                  <Icon className="h-4 w-4 shrink-0" strokeWidth={1.75} />
+                  {label}
+                </NavLink>
+              ))}
+            </div>
+          </div>
+        ) : enPos ? (
           <div>
             <button
               onClick={() => navigate("/inicio")}
@@ -244,6 +281,15 @@ export function Sidebar({ abierto = false, onCerrar }: SidebarProps) {
                 <NavLink to={acceso.editar("pos") ? "/pos" : "/pos/cocina"} className={({ isActive }) => itemClase(isActive)}>
                   <ShoppingCart className="h-4 w-4 shrink-0" strokeWidth={1.75} />
                   {t("sidebar.pos")}
+                </NavLink>
+              </div>
+            )}
+
+            {tieneContable && (
+              <div className="space-y-0.5">
+                <NavLink to="/contable" className={({ isActive }) => itemClase(isActive)}>
+                  <Calculator className="h-4 w-4 shrink-0" strokeWidth={1.75} />
+                  {t("sidebar.gestionContable")}
                 </NavLink>
               </div>
             )}

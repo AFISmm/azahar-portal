@@ -181,6 +181,36 @@ nueva basta aplicar los cinco `.sql` en ese orden y crear el primer admin
 las fotos y certificados), y opcionales `GEMINI_API_KEY`, `GOOGLE_CLIENT_ID` y
 `GOOGLE_CLIENT_SECRET`.
 
+## Módulo Gestión Contable
+
+Reúne el trabajo contable hecho en Alegra (migración desde Siigo): conciliaciones bancarias, cargue de
+facturas, terceros, pagos de nómina, catálogo de productos y la documentación de lo realizado. Está en
+`/contable` y se activa con el permiso **Gestión Contable** (Ver) en Gestión de usuarios; los roles
+Administrador y Gerencia lo incluyen y las cuentas `@mercurymethods.com` lo tienen siempre.
+
+| Pantalla | Ruta | Qué muestra |
+|---|---|---|
+| Resumen | `/contable` | Indicadores, hitos y estado (hecho / listo sin subir / bloqueado) |
+| Conciliación bancaria | `/contable/conciliacion` | Bancolombia 0590 por mes, cuentas PUC por mes, monto unificado de 53051501 + 42100501 y cobros de la 13050501 contra facturas (con CSV) |
+| Cargue de archivos | `/contable/carga` | Sube un CSV de extracto o de facturas y resume por mes. Se procesa en el navegador; no se envía ni se guarda |
+| Pagos de nómina | `/contable/nomina` | Pagos del Banco de Bogotá y el asiento propuesto |
+| Terceros | `/contable/terceros` | Estado del balance 2025 y de los comprobantes de enero a marzo (solo conteos) |
+| Catálogo | `/contable/catalogo` | Productos, cambios aplicados y reglas de la actualización semanal |
+| Documentación | `/contable/documentacion` | Bitácora, decisiones, pendientes por responsable, scripts y limitaciones |
+
+**De dónde salen los datos.** Son instantáneas generadas por
+`04_SCRIPTS_MIGRACION/exportar_datos_portal_contable.py` (en la carpeta AzaharRetail, fuera de este repo) a
+`api/_lib/contableData/*.ts`. Se sirven únicamente por `GET /api/trazabilidad?r=contable-*` (misma función
+serverless que Trazabilidad y POS, por el límite de 12 de Vercel Hobby), con sesión y permiso `contable`.
+**No se importan desde `src/`**: todo lo que está en `src/` termina en el código público que descarga el
+navegador. En modo demo se usan datos de ejemplo inventados (`src/lib/contableDemo.ts`).
+
+Para actualizar los datos: correr el script exportador y desplegar. `bitacora.ts` se edita a mano.
+
+**Límites actuales:** el módulo es de consulta; no escribe en Alegra ni se conecta a Alegra en vivo (las
+credenciales de Alegra no están en este proyecto). Las escrituras en Alegra las hacen los scripts de
+`04_SCRIPTS_MIGRACION`.
+
 ## Estructura del proyecto
 
 ```

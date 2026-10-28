@@ -71,6 +71,7 @@ const GESTION_NEGOCIO: { to: string; claveLabel: ClaveTraduccion; Icon: typeof H
   { to: "/gestion-comercial", claveLabel: "sidebar.gestionComercial", Icon: Store, modulo: "comercial" },
   { to: "/gestion-operativa", claveLabel: "sidebar.gestionOperativa", Icon: Sprout, modulo: "operativa" },
   { to: "/informacion-general", claveLabel: "sidebar.informacionGeneral", Icon: Info, modulo: "informacion" },
+  { to: "/contable", claveLabel: "sidebar.gestionContable", Icon: Calculator, modulo: "contable" },
 ];
 
 // Trazabilidad y POS: cada ítem pide un nivel mínimo en su módulo ('ver' | 'editar'),
@@ -132,7 +133,6 @@ export function Sidebar({ abierto = false, onCerrar }: SidebarProps) {
   const enTraz = location.pathname.startsWith("/trazabilidad");
   const tienePos = acceso.ver("pos");
   const enPos = location.pathname.startsWith("/pos");
-  const tieneContable = acceso.ver("contable");
   const enContable = location.pathname.startsWith("/contable");
   const enNomina = !enTraz && !enPos && !enContable && !enPaginaIndependiente && (location.pathname.startsWith("/nomina") || location.pathname.startsWith("/admin"));
 
@@ -281,15 +281,6 @@ export function Sidebar({ abierto = false, onCerrar }: SidebarProps) {
                 <NavLink to={acceso.editar("pos") ? "/pos" : "/pos/cocina"} className={({ isActive }) => itemClase(isActive)}>
                   <ShoppingCart className="h-4 w-4 shrink-0" strokeWidth={1.75} />
                   {t("sidebar.pos")}
-                </NavLink>
-              </div>
-            )}
-
-            {tieneContable && (
-              <div className="space-y-0.5">
-                <NavLink to="/contable" className={({ isActive }) => itemClase(isActive)}>
-                  <Calculator className="h-4 w-4 shrink-0" strokeWidth={1.75} />
-                  {t("sidebar.gestionContable")}
                 </NavLink>
               </div>
             )}

@@ -4,6 +4,7 @@ import { dataSource } from "../../lib/dataSource";
 import { MODULOS_INFO, type Empleado, type Modulo, type NivelModulo, type PermisosModulos } from "../../lib/types";
 import { ROLES_PREDEFINIDOS, ROL_ACCESO_TOTAL, ROL_PERSONALIZADO, compararPorPermisos, igualPermisos, normalizar, rolDe } from "../../lib/roles";
 import { formatDate, iniciales } from "../../lib/format";
+
 import { useToast } from "../../context/ToastContext";
 import { useLanguage } from "../../context/LanguageContext";
 import { useAuth } from "../../auth/AuthContext";
@@ -12,6 +13,16 @@ import { Card } from "../../components/Card";
 import { Modal } from "../../components/Modal";
 import { Button } from "../../components/ui";
 import { EmpleadoForm, type EmpleadoFormValues } from "../../components/admin/EmpleadoForm";
+
+/** Nombre y primer apellido pegados, cada uno con inicial mayúscula: "felipe serna" → "FelipeSerna". */
+function apodo(nombre: string): string {
+  return nombre
+    .trim()
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((p) => p.charAt(0).toLocaleUpperCase() + p.slice(1).toLocaleLowerCase())
+    .join("");
+}
 
 const ESTADO_ESTILO: Record<Empleado["estado"], string> = {
   activo: "bg-status-aprobada-bg text-status-aprobada",
@@ -258,10 +269,9 @@ export default function AdminUsuarios() {
                           <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brand-800 font-heading text-[11px] font-bold text-cream-100">
                             {iniciales(emp.nombre)}
                           </div>
-                          <div className="min-w-0 max-w-[13rem]" title={`${emp.nombre} — ${emp.cargo}`}>
-                            <p className="truncate font-medium text-[var(--text-primary)]">{emp.nombre}</p>
-                            <p className="truncate text-xs text-[var(--text-muted)]">{emp.correo}</p>
-                          </div>
+                          <p className="min-w-0 max-w-[9rem] truncate font-medium text-[var(--text-primary)]" title={`${emp.nombre} — ${emp.correo}`}>
+                            {apodo(emp.nombre)}
+                          </p>
                         </div>
                       </td>
 

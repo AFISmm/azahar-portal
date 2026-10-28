@@ -175,16 +175,3 @@ h1, h2, h3, h4, h5, h6 {
   --text-secondary: #6f5a52;
   --text-muted: #9a8b83;
 }
-
-/* Modo edición del Inicio (estilo iOS): los widgets "tiemblan" apenas. Se desactiva si la persona pidió menos movimiento. */
-@keyframes azahar-wiggle {
-  0%, 100% { transform: rotate(-0.55deg); }
-  50% { transform: rotate(0.55deg); }
-}
-.azahar-wiggle > div:first-child {
-  animation: azahar-wiggle 0.28s ease-in-out infinite;
-  transform-origin: 50% 50%;
-}
-@media (prefers-reduced-motion: reduce) {
-  .azahar-wiggle > div:first-child { animation: none; }
-}

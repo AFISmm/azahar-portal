@@ -61,13 +61,56 @@ export const CATALOGO: WidgetDef[] = [
 
 export const POR_ID: Record<string, WidgetDef> = Object.fromEntries(CATALOGO.map((w) => [w.id, w]));
 
-export interface ItemLayout {
+/**
+ * Posición y tamaño libres de un widget. `x` y `w` son FRACCIONES del ancho del tablero (así se adaptan a
+ * cualquier pantalla); `y` y `h` están en rem (así escalan con el tamaño de letra del portal).
+ */
+export interface ItemLibre {
   id: WidgetId;
-  tam: Tam;
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+}
+
+/** Tamaños de referencia (columnas × filas de una cuadrícula imaginaria de 4 columnas) para disposiciones iniciales. */
+export const REM_FILA = 10; // una "fila" lógica = 9rem de alto + 1rem de separación
+const SEP_X = 0.012; // separación horizontal entre widgets (fracción del ancho)
+
+/**
+ * Convierte una lista ordenada de {id, tamaño} en posiciones libres, repartiéndolos como lo haría una
+ * cuadrícula de 4 columnas. Se usa para la disposición inicial y para migrar la versión anterior.
+ */
+export function empaquetar(lista: { id: WidgetId; tam: Tam }[]): ItemLibre[] {
+  const COLS = 4;
+  const ocupado: boolean[][] = [];
+  const libre = (f: number, c: number, nc: number, nf: number) => {
+    for (let i = f; i < f + nf; i++) for (let j = c; j < c + nc; j++) if (ocupado[i]?.[j]) return false;
+    return true;
+  };
+  const dims: Record<Tam, [number, number]> = { S: [1, 1], M: [2, 1], W: [4, 1], L: [2, 2], XL: [4, 2] };
+  return lista.map(({ id, tam }) => {
+    const [nc, nf] = dims[tam];
+    let fila = 0;
+    let col = 0;
+    search: for (; ; fila++) {
+      for (col = 0; col + nc <= COLS; col++) {
+        if (libre(fila, col, nc, nf)) break search;
+      }
+    }
+    for (let i = fila; i < fila + nf; i++) for (let j = col; j < col + nc; j++) (ocupado[i] ??= [])[j] = true;
+    return { id, x: col / COLS + SEP_X / 2, y: fila * REM_FILA, w: nc / COLS - SEP_X, h: nf * REM_FILA - 1 };
+  });
+}
+
+/** Tamaño inicial (en fracción y rem) de un widget recién agregado. */
+export function dimsIniciales(tam: Tam): { w: number; h: number } {
+  const [nc, nf] = ({ S: [1, 1], M: [2, 1], W: [4, 1], L: [2, 2], XL: [4, 2] } as Record<Tam, [number, number]>)[tam];
+  return { w: nc / 4 - SEP_X, h: nf * REM_FILA - 1 };
 }
 
 /** Disposición inicial: saludo + pago + solicitudes arriba y, debajo, los cinco widgets de mercado originales. */
-export const LAYOUT_POR_DEFECTO: ItemLayout[] = [
+export const LAYOUT_POR_DEFECTO: ItemLibre[] = empaquetar([
   { id: "saludo", tam: "M" },
   { id: "proximo-pago", tam: "S" },
   { id: "mis-solicitudes", tam: "S" },
@@ -76,32 +119,44 @@ export const LAYOUT_POR_DEFECTO: ItemLayout[] = [
   { id: "variacion-industrial", tam: "L" },
   { id: "produccion-agricola", tam: "L" },
   { id: "cadena-produccion", tam: "W" },
-];
+]);
 
-const clave = (usuarioId: string) => `azahar-inicio-widgets-v1:${usuarioId}`;
+const claveV1 = (usuarioId: string) => `azahar-inicio-widgets-v1:${usuarioId}`;
+const clave = (usuarioId: string) => `azahar-inicio-widgets-v2:${usuarioId}`;
 
-/** Lee la disposición guardada de esta persona (descarta widgets o tamaños que ya no existen). */
-export function leerLayout(usuarioId: string): ItemLayout[] | null {
+function limpiarLibre(lista: unknown): ItemLibre[] | null {
+  if (!Array.isArray(lista)) return null;
+  const vistos = new Set<string>();
+  const limpio: ItemLibre[] = [];
+  for (const x of lista as Partial<ItemLibre>[]) {
+    const def = x?.id ? POR_ID[x.id] : undefined;
+    if (!def || vistos.has(def.id)) continue;
+    const ok = [x.x, x.y, x.w, x.h].every((n) => typeof n === "number" && Number.isFinite(n));
+    if (!ok) continue;
+    vistos.add(def.id);
+    limpio.push({ id: def.id, x: Math.min(Math.max(x.x!, 0), 0.98), y: Math.max(x.y!, 0), w: Math.min(Math.max(x.w!, 0.1), 1), h: Math.max(x.h!, 6) });
+  }
+  return limpio;
+}
+
+/** Lee la disposición guardada de esta persona; si solo existe la versión anterior (por tamaños), la convierte. */
+export function leerLayout(usuarioId: string): ItemLibre[] | null {
   try {
     const crudo = window.localStorage.getItem(clave(usuarioId));
-    if (!crudo) return null;
-    const lista = JSON.parse(crudo) as unknown;
-    if (!Array.isArray(lista)) return null;
-    const vistos = new Set<string>();
-    const limpio: ItemLayout[] = [];
-    for (const x of lista as { id?: string; tam?: string }[]) {
-      const def = x?.id ? POR_ID[x.id] : undefined;
-      if (!def || vistos.has(def.id)) continue;
-      vistos.add(def.id);
-      limpio.push({ id: def.id, tam: def.tamanos.includes(x.tam as Tam) ? (x.tam as Tam) : def.tamInicial });
-    }
-    return limpio;
+    if (crudo) return limpiarLibre(JSON.parse(crudo));
+    const antiguo = window.localStorage.getItem(claveV1(usuarioId));
+    if (!antiguo) return null;
+    const lista = JSON.parse(antiguo) as { id?: string; tam?: string }[];
+    const valida = lista
+      .filter((x) => x?.id && POR_ID[x.id])
+      .map((x) => ({ id: x.id as WidgetId, tam: (POR_ID[x.id!].tamanos.includes(x.tam as Tam) ? x.tam : POR_ID[x.id!].tamInicial) as Tam }));
+    return valida.length ? empaquetar(valida) : null;
   } catch {
     return null;
   }
 }
 
-export function guardarLayout(usuarioId: string, items: ItemLayout[]) {
+export function guardarLayout(usuarioId: string, items: ItemLibre[]) {
   try {
     window.localStorage.setItem(clave(usuarioId), JSON.stringify(items));
   } catch {
@@ -112,6 +167,7 @@ export function guardarLayout(usuarioId: string, items: ItemLayout[]) {
 export function borrarLayout(usuarioId: string) {
   try {
     window.localStorage.removeItem(clave(usuarioId));
+    window.localStorage.removeItem(claveV1(usuarioId));
   } catch {
     // nada que borrar
   }

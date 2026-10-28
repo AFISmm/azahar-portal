@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, type FormEvent, type PointerEvent as ReactPointerEvent } from "react";
 import { AudioLines, Loader2, LocateFixed, Mic, MicOff, Send, Settings2, Volume2, VolumeX, X } from "lucide-react";
-import { MascotaChatbot } from "./MascotaChatbot";
+import { useAuth } from "../auth/AuthContext";
+import { Asistente3D } from "./asistente3d/Asistente3D";
+import { ElegirAsistente, type EleccionAsistente } from "./asistente3d/ElegirAsistente";
 
 // ============================================================================
 // Asistente del portal: se puede ARRASTRAR a cualquier parte de la pantalla (y
@@ -22,6 +24,7 @@ interface Ajustes {
   nombre: string;
   genero: GeneroVoz;
   velocidad: number; // 0.8 – 1.3
+  tono: number; // tono de piel del personaje 3D (0–3)
 }
 
 interface PosicionRel {
@@ -51,6 +54,7 @@ declare global {
 const NOMBRE_POR_DEFECTO = "JARVIS";
 const STORAGE_AJUSTES = "azahar-chat-ajustes";
 const STORAGE_POSICION = "azahar-chat-posicion";
+const STORAGE_ELEGIDO = "azahar-chat-personaje-elegido"; // + ":" + id del empleado
 const STORAGE_MUTE = "jarvis-voz-desactivada";
 const STORAGE_GENERO_ANTIGUO = "jarvis-genero-voz";
 const MARGEN = 8; // px de margen al borde de la pantalla
@@ -89,6 +93,7 @@ function ajustesIniciales(): Ajustes {
     nombre: limpiarNombre(guardados?.nombre) || NOMBRE_POR_DEFECTO,
     genero: guardados?.genero === "masculina" || guardados?.genero === "femenina" ? guardados.genero : (generoAntiguo ?? "femenina"),
     velocidad,
+    tono: typeof guardados?.tono === "number" && guardados.tono >= 0 && guardados.tono <= 3 ? Math.round(guardados.tono) : 0,
   };
 }
 
@@ -255,7 +260,19 @@ function hablar(texto: string, ajustes: Pick<Ajustes, "genero" | "velocidad">, a
 // ---------------------------------------------------------------------------
 
 export function ChatbotWidget() {
+  const { empleado } = useAuth();
+  const claveElegido = `${STORAGE_ELEGIDO}:${empleado?.id ?? ""}`;
   const [ajustes, setAjustes] = useState<Ajustes>(ajustesIniciales);
+  // Al iniciar sesión por primera vez (en este navegador) se elige si el asistente es él o ella.
+  const [eligiendo, setEligiendo] = useState(() => {
+    if (typeof window === "undefined" || !empleado) return false;
+    try {
+      return window.localStorage.getItem(claveElegido) !== "1";
+    } catch {
+      return false;
+    }
+  });
+  const [cambiandoPersonaje, setCambiandoPersonaje] = useState(false);
   const nombre = ajustes.nombre;
 
   const [abierto, setAbierto] = useState(false);
@@ -409,6 +426,18 @@ export function ChatbotWidget() {
       guardarJson(STORAGE_AJUSTES, nuevo);
       return nuevo;
     });
+  }
+
+  function confirmarPersonaje(e: EleccionAsistente) {
+    actualizarAjustes({ genero: e.genero, tono: e.tono, nombre: limpiarNombre(e.nombre) || ajustes.nombre });
+    setMensajes((m) => (m.length <= 1 ? [saludoInicial(limpiarNombre(e.nombre) || ajustes.nombre)] : m));
+    try {
+      window.localStorage.setItem(claveElegido, "1");
+    } catch {
+      // sin almacenamiento: se volverá a preguntar la próxima vez
+    }
+    setEligiendo(false);
+    setCambiandoPersonaje(false);
   }
 
   function elegirGenero(g: GeneroVoz) {
@@ -718,7 +747,7 @@ export function ChatbotWidget() {
             title={esMovil ? undefined : "Arrastra para mover el asistente"}
           >
             <div className="flex min-w-0 items-center gap-2 text-cream-100">
-              <MascotaChatbot hablando={hablando} escuchando={escuchando} className="h-9 w-9 shrink-0 overflow-hidden rounded-full bg-cream-100 ring-1 ring-accent-300/70" />
+              <Asistente3D genero={ajustes.genero} tono={ajustes.tono} hablando={hablando} escuchando={escuchando} pensando={enviando} className="h-10 w-10 shrink-0 overflow-hidden rounded-full bg-cream-100 ring-1 ring-accent-300/70" />
               <div className="min-w-0 leading-tight">
                 <p className="truncate font-heading text-sm font-semibold">{nombre}</p>
                 <p className="truncate text-[11px] text-cream-200/80" aria-live="polite">
@@ -820,6 +849,14 @@ export function ChatbotWidget() {
 
               <button
                 type="button"
+                onClick={() => setCambiandoPersonaje(true)}
+                className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-[var(--border-subtle)] bg-[var(--surface-app)] px-3 py-1.5 text-xs font-medium text-[var(--text-primary)] transition hover:border-brand-800"
+              >
+                Cambiar de personaje (él / ella, tono de piel)
+              </button>
+
+              <button
+                type="button"
                 onClick={restablecerPosicion}
                 className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-[var(--border-subtle)] bg-[var(--surface-app)] px-3 py-1.5 text-xs font-medium text-[var(--text-primary)] transition hover:border-brand-800"
               >
@@ -918,9 +955,18 @@ export function ChatbotWidget() {
           aria-label={abierto ? `Cerrar a ${nombre}` : `Abrir a ${nombre}`}
           title={`${nombre} — asistente del Portal Azahar (arrástrame a donde quieras)`}
         >
-          {abierto ? <X className="h-5 w-5" strokeWidth={1.75} /> : <MascotaChatbot hablando={hablando} escuchando={escuchando} className="h-full w-full" />}
+          {abierto ? <X className="h-5 w-5" strokeWidth={1.75} /> : <Asistente3D genero={ajustes.genero} tono={ajustes.tono} hablando={hablando} escuchando={escuchando} pensando={enviando} className="h-full w-full" />}
         </button>
       </div>
+
+      {(eligiendo || cambiandoPersonaje) && (
+        <ElegirAsistente
+          primeraVez={eligiendo}
+          inicial={{ genero: ajustes.genero, tono: ajustes.tono, nombre: eligiendo && ajustes.nombre === NOMBRE_POR_DEFECTO ? (ajustes.genero === "masculina" ? "Mateo" : "Valentina") : ajustes.nombre }}
+          onConfirmar={confirmarPersonaje}
+          onCancelar={() => setCambiandoPersonaje(false)}
+        />
+      )}
     </>
   );
 }

@@ -149,7 +149,7 @@ Ambos exigen backend real (Postgres) y **no tienen modo demo**.
   y cierre Z, combos, reportes y propinas.
 
 **Permisos por módulo.** Se asignan por persona en Administración > Usuarios con
-una matriz de casillas **Ver / Editar** (Editar incluye Ver) para cinco módulos:
+una matriz de casillas **Ver / Editar** (Editar incluye Ver), con un **rol** por persona (Administrador, Gerencia, Calidad y trazabilidad, Operador POS, Empleado; ver `src/lib/roles.ts`), ordenada por cantidad de permisos y con un botón **Guardar** por fila (los cambios son borradores hasta guardarlos) para cinco módulos:
 `negocio` (gestión estratégica, comercial, operativa e información general),
 `rrhh` (solicitudes, incapacidades, documentos, empleados y nómina), `usuarios`,
 `trazabilidad` y `pos`. Se guardan en `empleados.permisos_modulos` (jsonb) y la API

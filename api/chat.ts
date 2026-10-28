@@ -78,10 +78,12 @@ Se accede desde el ítem "Nómina" del sidebar principal, que abre un sub-sideba
 - Nómina: nómina administrativa de toda la empresa (total del periodo, empleados en nómina, pagos pendientes) con botón "Marcar como pagado" por cada pago.
 
 ## Gestión de usuarios (/admin/usuarios, ítem propio en el sidebar, módulo "Usuarios")
-Administra el ACCESO al portal (distinto de los datos de RRHH de Empleados): tabla con todas las cuentas y, en cada fila,
-casillas "Ver" y "Editar" por módulo (Negocio, RRHH, Usuarios, Trazabilidad y Sistema POS); "Editar" incluye "Ver" y los
-cambios se guardan al instante. Además permite activar o desactivar la cuenta y eliminarla. Nadie puede cambiarse sus propios
-permisos, y las cuentas @mercurymethods.com tienen acceso total fijo.
+Administra el ACCESO al portal (distinto de los datos de RRHH de Empleados): tabla con todas las cuentas ordenadas por cantidad
+de permisos (primero las de acceso total). Cada fila tiene un rol (Administrador, Gerencia, Calidad y trazabilidad, Operador POS
+o Empleado; elegir uno marca sus casillas) y casillas "Ver" y "Editar" por módulo (Negocio, RRHH, Usuarios, Trazabilidad y
+Sistema POS); "Editar" incluye "Ver". Los cambios NO se aplican solos: hay que pulsar "Guardar" junto al nombre de la persona (o
+"Guardar todos"), y "Descartar" los deshace. Además permite activar o desactivar la cuenta y eliminarla. Nadie puede cambiarse sus
+propios permisos, y las cuentas @mercurymethods.com tienen acceso total fijo.
 
 ## Gestión del negocio (grupo del sidebar, módulo "Negocio")
 - Gestión Estratégica: objetivos/OKRs de la empresa, KPIs de alto nivel.

@@ -58,7 +58,7 @@ const TEMAS: Tema[] = [
   {
     claves: ["usuarios", "permisos", "permiso", "acceso", "dar acceso", "quitar acceso", "roles", "rol", "modulos"],
     respuesta:
-      "En Gestión de usuarios, los administradores ven todas las cuentas y marcan, en cada módulo, si la persona puede Ver o también Editar. Los cambios se guardan al instante. Las cuentas de Mercury Methods tienen acceso total.",
+      "En Gestión de usuarios, los administradores ven todas las cuentas, ordenadas por cantidad de permisos. Eligen un rol o marcan, en cada módulo, si la persona puede Ver o también Editar, y pulsan Guardar junto a su nombre para aplicar los cambios. Las cuentas de Mercury Methods tienen acceso total.",
   },
   {
     claves: ["trazabilidad", "lote", "origen", "qr", "beneficiado", "tueste", "tostado", "empaque", "blend", "ficha de cata", "cata"],

@@ -253,6 +253,10 @@ export const mockDataSource: DataSource = {
       ...empleados[idx],
       correo: patch.correo ?? empleados[idx].correo,
       username: patch.username !== undefined ? patch.username || null : empleados[idx].username,
+      nombre: patch.nombre ?? empleados[idx].nombre,
+      fechaNacimiento: patch.fechaNacimiento !== undefined ? patch.fechaNacimiento : empleados[idx].fechaNacimiento,
+      numeroIdentificacion: patch.numeroIdentificacion !== undefined ? patch.numeroIdentificacion : empleados[idx].numeroIdentificacion,
+      fechaIngreso: patch.fechaIngreso ?? empleados[idx].fechaIngreso,
     };
     return delay(empleados[idx]);
   },

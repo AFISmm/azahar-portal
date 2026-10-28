@@ -76,6 +76,11 @@ export interface PerfilPropioInput {
   correo?: string;
   password?: string;
   username?: string;
+  /** Solo se aceptan si la cuenta puede editar usuarios o RRHH; para el resto son de solo lectura. */
+  nombre?: string;
+  fechaNacimiento?: string | null;
+  numeroIdentificacion?: string | null;
+  fechaIngreso?: string;
 }
 
 export type PqrEstado = "pendiente" | "resuelta";

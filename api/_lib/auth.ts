@@ -8,6 +8,7 @@ import type { VercelRequest, VercelResponse } from "@vercel/node";
 import jwt from "jsonwebtoken";
 import { sql } from "./db.js";
 import { mapEmpleadoRow, type EmpleadoRow } from "./mappers.js";
+import { esAdminEfectivo } from "./acceso.js";
 
 export const SESSION_COOKIE_NAME = "azahar_session";
 
@@ -111,7 +112,7 @@ export async function requireAdmin(req: VercelRequest): Promise<{ empleadoId: st
   if (!empleado) {
     throw new HttpError(401, "La sesión ya no es válida.");
   }
-  if (empleado.rol !== "admin") {
+  if (!esAdminEfectivo(empleado)) {
     throw new HttpError(403, "Esta acción requiere rol de administrador.");
   }
   return { empleadoId, empleado };

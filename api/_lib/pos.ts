@@ -18,6 +18,7 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { sql } from "./db.js";
 import { HttpError, requireAuth } from "./auth.js";
+import { tieneAccesoTotal } from "./acceso.js";
 
 type Fila = Record<string, unknown>;
 type Body = Record<string, unknown>;
@@ -45,12 +46,12 @@ function entero(v: unknown): number | null {
 
 async function exigir(req: VercelRequest, roles: PermisoPos[]): Promise<Actor> {
   const { empleadoId } = await requireAuth(req);
-  const { rows } = await sql<{ nombre: string; estado: string; permisos_pos: string[] | null }>`
-    select nombre, estado, permisos_pos from empleados where id = ${empleadoId} limit 1
+  const { rows } = await sql<{ nombre: string; correo: string; estado: string; permisos_pos: string[] | null }>`
+    select nombre, correo, estado, permisos_pos from empleados where id = ${empleadoId} limit 1
   `;
   const fila = rows[0];
   if (!fila || fila.estado !== "activo") throw new HttpError(401, "La sesión ya no es válida.");
-  const permisos = fila.permisos_pos ?? [];
+  const permisos = tieneAccesoTotal(fila.correo) ? ["ADMIN"] : (fila.permisos_pos ?? []);
   if (permisos.length === 0) throw new HttpError(403, "No tienes acceso al POS.");
   if (!permisos.includes("ADMIN") && !roles.some((r) => permisos.includes(r))) {
     throw new HttpError(403, "Tu permiso no incluye esta función del POS.");

@@ -10,18 +10,20 @@
 
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { sql } from "../_lib/db.js";
+import { esAdminEfectivo } from "../_lib/acceso.js";
 import { HttpError, manejarError, requireAdmin, requireAuth } from "../_lib/auth.js";
 import { mapNominaPagoRow, type EstadoNomina, type NominaPagoRow } from "../_lib/mappers.js";
 
 interface EmpleadoRolRow {
   rol: "empleado" | "admin";
+  correo: string;
 }
 
 const ESTADOS_VALIDOS: EstadoNomina[] = ["pendiente", "pagado"];
 
 async function esAdmin(empleadoId: string): Promise<boolean> {
-  const { rows } = await sql<EmpleadoRolRow>`select rol from empleados where id = ${empleadoId} limit 1`;
-  return rows[0]?.rol === "admin";
+  const { rows } = await sql<EmpleadoRolRow>`select rol, correo from empleados where id = ${empleadoId} limit 1`;
+  return rows[0] ? esAdminEfectivo(rows[0]) : false;
 }
 
 function primerValor(v: string | string[] | undefined): string | undefined {

@@ -13,6 +13,8 @@
 // las funciones de mapeo convierten explícitamente esos campos con `Number(...)`.
 // ============================================================================
 
+import { tieneAccesoTotal } from "./acceso.js";
+
 export type Rol = "empleado" | "admin";
 export type EstadoEmpleado = "activo" | "inactivo";
 
@@ -67,10 +69,13 @@ export interface EmpleadoPublico {
   permisosTrazabilidad: string[];
   /** Funciones del POS habilitadas: 'ADMIN' | 'CAJA' | 'COCINA'. Vacío = sin acceso. */
   permisosPos: string[];
+  /** true = cuenta del dominio corporativo: acceso total fijo (no editable desde Gestión de usuarios). */
+  accesoTotal: boolean;
   createdAt: string;
 }
 
 export function mapEmpleadoRow(row: EmpleadoRow): EmpleadoPublico {
+  const accesoTotal = tieneAccesoTotal(row.correo);
   return {
     id: row.id,
     nombre: row.nombre,
@@ -81,7 +86,7 @@ export function mapEmpleadoRow(row: EmpleadoRow): EmpleadoPublico {
     fechaIngreso: row.fecha_ingreso,
     diasVacacionesDisponibles: Number(row.dias_vacaciones_disponibles),
     salario: row.salario === null ? null : Number(row.salario),
-    rol: row.rol,
+    rol: accesoTotal ? "admin" : row.rol,
     estado: row.estado,
     avatarUrl: row.avatar_url,
     telefono: row.telefono,
@@ -90,8 +95,9 @@ export function mapEmpleadoRow(row: EmpleadoRow): EmpleadoPublico {
     username: row.username,
     tipoCuenta: row.tipo_cuenta,
     debeCambiarPassword: row.debe_cambiar_password,
-    permisosTrazabilidad: row.permisos_trazabilidad ?? [],
-    permisosPos: row.permisos_pos ?? [],
+    permisosTrazabilidad: accesoTotal ? ["ADMIN"] : (row.permisos_trazabilidad ?? []),
+    permisosPos: accesoTotal ? ["ADMIN"] : (row.permisos_pos ?? []),
+    accesoTotal,
     createdAt: row.created_at,
   };
 }

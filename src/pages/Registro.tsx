@@ -10,11 +10,6 @@ import { DEPARTAMENTOS, TIPOS_CONTRATO } from "../components/admin/EmpleadoForm"
 import logo from "../assets/azahar-logo.png";
 import sidebarBg from "../assets/sidebar-bg.jpg";
 
-type TipoUsuario = "empleado" | "desarrollador";
-
-const DEPARTAMENTO_DESARROLLADOR = "Tecnología y Desarrollo";
-const TIPO_CONTRATO_DESARROLLADOR = "Prestación de servicios";
-
 function hoyISO(): string {
   return new Date().toISOString().slice(0, 10);
 }
@@ -25,7 +20,6 @@ export default function Registro() {
   const { showToast } = useToast();
   const { t } = useLanguage();
 
-  const [tipoUsuario, setTipoUsuario] = useState<TipoUsuario>("empleado");
   const [nombre, setNombre] = useState("");
   const [correo, setCorreo] = useState("");
   const [password, setPassword] = useState("");
@@ -38,8 +32,6 @@ export default function Registro() {
   const [error, setError] = useState<string | null>(null);
   const [cargando, setCargando] = useState(false);
 
-  const esDesarrollador = tipoUsuario === "desarrollador";
-
   if (user) return <Navigate to="/inicio" replace />;
 
   async function handleSubmit(e: FormEvent) {
@@ -47,35 +39,21 @@ export default function Registro() {
     setError(null);
     setCargando(true);
     try {
-      const resultado = await registrar(
-        esDesarrollador
-          ? {
-              nombre,
-              correo,
-              password,
-              cargo,
-              departamento: DEPARTAMENTO_DESARROLLADOR,
-              tipoContrato: TIPO_CONTRATO_DESARROLLADOR,
-              fechaIngreso: hoyISO(),
-              fechaNacimiento,
-              numeroIdentificacion,
-              rol: "admin",
-              tipoCuenta: "desarrollador",
-            }
-          : {
-              nombre,
-              correo,
-              password,
-              cargo,
-              departamento,
-              tipoContrato,
-              fechaIngreso,
-              fechaNacimiento,
-              numeroIdentificacion,
-              rol: "empleado",
-              tipoCuenta: "empleado",
-            },
-      );
+      // El servidor ignora rol y tipo de cuenta: todo registro público nace como empleado
+      // sin acceso a módulos; un administrador le asigna después lo que corresponda.
+      const resultado = await registrar({
+        nombre,
+        correo,
+        password,
+        cargo,
+        departamento,
+        tipoContrato,
+        fechaIngreso,
+        fechaNacimiento,
+        numeroIdentificacion,
+        rol: "empleado",
+        tipoCuenta: "empleado",
+      });
       if (resultado.modo === "demo") {
         showToast(
           "Modo demo: registro procesado localmente. Se usará la base de datos real cuando se configure Postgres en el despliegue.",
@@ -110,23 +88,6 @@ export default function Registro() {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          <Field label={t("registro.tipoUsuario")}>
-            <div className="inline-flex w-full rounded-xl border border-[var(--border-subtle)] bg-[var(--surface-muted)] p-1">
-              {(["empleado", "desarrollador"] as const).map((tipo) => (
-                <button
-                  key={tipo}
-                  type="button"
-                  onClick={() => setTipoUsuario(tipo)}
-                  className={`flex-1 rounded-lg px-4 py-2 text-sm font-semibold transition ${
-                    tipoUsuario === tipo ? "bg-brand-800 text-cream-100 shadow-card" : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
-                  }`}
-                >
-                  {tipo === "empleado" ? t("registro.empleadoEmpresa") : t("registro.desarrolladorPagina")}
-                </button>
-              ))}
-            </div>
-          </Field>
-
           <Field label={t("registro.nombreCompleto")}>
             <Input required placeholder="Ej. Camila Torres" value={nombre} onChange={(e) => setNombre(e.target.value)} autoComplete="name" />
           </Field>
@@ -166,17 +127,16 @@ export default function Registro() {
             </Field>
           </div>
 
-          <div className={esDesarrollador ? "" : "grid grid-cols-1 gap-4 sm:grid-cols-2"}>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <Field label={t("registro.cargo")}>
               <Input
                 required
-                placeholder={esDesarrollador ? "Ej. Desarrollador Full Stack" : "Ej. Barista"}
+                placeholder="Ej. Barista"
                 value={cargo}
                 onChange={(e) => setCargo(e.target.value)}
               />
             </Field>
-            {!esDesarrollador && (
-              <>
+            <>
                 <Field label={t("registro.departamento")}>
                   <Select value={departamento} onChange={(e) => setDepartamento(e.target.value)}>
                     {DEPARTAMENTOS.map((d) => (
@@ -199,12 +159,11 @@ export default function Registro() {
                   <Input required type="date" value={fechaIngreso} onChange={(e) => setFechaIngreso(e.target.value)} />
                 </Field>
               </>
-            )}
           </div>
 
-          {esDesarrollador && (
-            <p className="rounded-lg bg-accent-300/20 px-3 py-2 text-xs text-brand-800">{t("registro.avisoDesarrollador")}</p>
-          )}
+          <p className="rounded-lg bg-accent-300/20 px-3 py-2 text-xs text-brand-800">
+            Tu cuenta nace sin acceso a módulos: un administrador te asignará los que te correspondan. Las cuentas @mercurymethods.com las crea un administrador.
+          </p>
 
           {error && <p className="rounded-lg bg-status-rechazada-bg px-3 py-2 text-sm text-status-rechazada">{error}</p>}
 

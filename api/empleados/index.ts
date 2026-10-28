@@ -84,9 +84,11 @@ async function crear(req: VercelRequest, res: VercelResponse) {
   }
   const payload = body as EmpleadoCrearPayload;
 
-  // Se genera una contraseña temporal aleatoria: el admin la comparte por un
-  // canal seguro y el empleado la cambia en su primer ingreso (ese flujo de
-  // "cambiar contraseña" queda fuera del alcance de este cambio).
+  // La contraseña la pone el admin (formulario de "Nuevo usuario"/"Nuevo
+  // empleado") o, si no la manda, se genera una aleatoria como respaldo. En
+  // ambos casos el que la elige es el admin, no el propio usuario, así que
+  // se marca debeCambiarPassword: true para forzar el cambio en el primer
+  // ingreso (ver PATCH /api/auth/me, que apaga la bandera).
   const passwordTemporal = payload.passwordTemporal || generarPasswordTemporal();
 
   const empleado = await crearEmpleadoYUsuario({
@@ -102,6 +104,7 @@ async function crear(req: VercelRequest, res: VercelResponse) {
     telefono: payload.telefono ?? null,
     estado: payload.estado ?? "activo",
     password: passwordTemporal,
+    debeCambiarPassword: true,
   });
 
   return res.status(201).json({

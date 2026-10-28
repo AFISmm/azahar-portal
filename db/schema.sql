@@ -41,8 +41,17 @@ create table empleados (
   numero_identificacion text,
   username text unique,
   tipo_cuenta text not null default 'empleado' check (tipo_cuenta in ('empleado', 'desarrollador')),
+  -- true cuando la contraseña la puso un admin (alta manual) en vez del
+  -- propio usuario (autorregistro): fuerza el flujo de "cambiar contraseña"
+  -- en el primer ingreso antes de dejarlo usar el resto del portal. Se
+  -- apaga sola en la primera vez que el usuario cambia su contraseña
+  -- (ver PATCH /api/auth/me en api/auth/me.ts).
+  debe_cambiar_password boolean not null default false,
   created_at timestamptz not null default now()
 );
+
+-- Migración para una base ya existente (creada antes de este campo):
+--   alter table empleados add column if not exists debe_cambiar_password boolean not null default false;
 
 -- ----------------------------------------------------------------------------
 -- Tabla: solicitudes
@@ -170,4 +179,9 @@ create index idx_pqr_empleado on pqr (empleado_id);
 -- también desde la pestaña "Query":
 --
 --   update empleados set rol = 'admin' where correo = 'tu-correo@azaharcoffee.co';
+-- ----------------------------------------------------------------------------
+
+-- ----------------------------------------------------------------------------
+-- Módulo de Trazabilidad: ver db/trazabilidad.sql (tablas traz_* y la columna
+-- empleados.permisos_trazabilidad).
 -- ----------------------------------------------------------------------------

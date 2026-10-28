@@ -22,7 +22,12 @@ interface EmpleadoPatchPayload {
   estado?: "activo" | "inactivo";
   avatarUrl?: string | null;
   telefono?: string | null;
+  permisosTrazabilidad?: string[];
+  permisosPos?: string[];
 }
+
+const PERMISOS_TRAZABILIDAD = ["ADMIN", "FINCA", "BENEFICIADO", "TUESTE", "EMPAQUE"];
+const PERMISOS_POS = ["ADMIN", "CAJA", "COCINA"];
 
 function obtenerId(req: VercelRequest): string {
   const { id } = req.query;
@@ -79,6 +84,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const estado = body.estado ?? actual.estado;
       const avatarUrl = body.avatarUrl !== undefined ? body.avatarUrl : actual.avatar_url;
       const telefono = body.telefono !== undefined ? body.telefono : actual.telefono;
+      if (body.permisosTrazabilidad !== undefined) {
+        if (!Array.isArray(body.permisosTrazabilidad) || body.permisosTrazabilidad.some((p) => !PERMISOS_TRAZABILIDAD.includes(p))) {
+          throw new HttpError(400, "Permisos de trazabilidad inválidos.");
+        }
+      }
+      if (body.permisosPos !== undefined) {
+        if (!Array.isArray(body.permisosPos) || body.permisosPos.some((p) => !PERMISOS_POS.includes(p))) {
+          throw new HttpError(400, "Permisos de POS inválidos.");
+        }
+      }
 
       try {
         const { rows } = await sql<EmpleadoRow>`
@@ -98,7 +113,23 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           where id = ${id}
           returning *
         `;
-        return res.status(200).json({ ok: true, empleado: mapEmpleadoRow(rows[0]) });
+        // Los permisos de módulos van en un UPDATE aparte y SOLO si vienen en la
+        // petición: así editar un empleado sigue funcionando aunque la migración
+        // db/migrar-trazabilidad.mjs (que crea esas columnas) aún no se haya corrido.
+        let fila = rows[0];
+        if (body.permisosTrazabilidad !== undefined || body.permisosPos !== undefined) {
+          const trazabilidad = body.permisosTrazabilidad ?? fila.permisos_trazabilidad ?? [];
+          const pos = body.permisosPos ?? fila.permisos_pos ?? [];
+          const { rows: conPermisos } = await sql<EmpleadoRow>`
+            update empleados set
+              permisos_trazabilidad = ${trazabilidad as unknown as string},
+              permisos_pos = ${pos as unknown as string}
+            where id = ${id}
+            returning *
+          `;
+          fila = conPermisos[0];
+        }
+        return res.status(200).json({ ok: true, empleado: mapEmpleadoRow(fila) });
       } catch (err) {
         if (esErrorCorreoDuplicado(err)) {
           throw new HttpError(409, "Ya existe otro empleado con ese correo.");

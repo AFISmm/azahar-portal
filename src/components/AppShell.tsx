@@ -64,7 +64,9 @@ export function AppShell() {
         >
           <Menu className="h-5 w-5" strokeWidth={1.75} />
         </button>
-        <img src={logo} alt="Azahar Coffee Company" className="h-7 w-auto object-contain" />
+        <a href="https://mercury-methods.vercel.app/" rel="noreferrer" aria-label="Volver al sitio de Metis Intel">
+          <img src={logo} alt="Azahar Coffee Company" className="h-7 w-auto object-contain" />
+        </a>
         <p className="flex-1 truncate text-xs font-bold uppercase tracking-wider text-[var(--text-secondary)]">{t("sidebar.azaharCoffeeCompany")}</p>
         <div className="flex shrink-0 items-center gap-2">
           <HeaderControles />

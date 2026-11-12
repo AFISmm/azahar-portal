@@ -169,9 +169,14 @@ export function Sidebar({ abierto = false, onCerrar, oculto = false, onOcultar }
         >
           <PanelLeftClose className="h-4 w-4" strokeWidth={1.75} />
         </button>
-        <div className="flex items-center justify-center rounded-xl bg-white px-3 py-1.5 ring-1 ring-white/20">
+        <a
+          href="https://mercury-methods.vercel.app/"
+          rel="noreferrer"
+          aria-label="Volver al sitio de Metis Intel"
+          className="flex items-center justify-center rounded-xl bg-white px-3 py-1.5 ring-1 ring-white/20"
+        >
           <img src={logo} alt="Azahar Coffee Company" className="h-7 w-auto object-contain" />
-        </div>
+        </a>
         <p className="text-[11px] font-bold uppercase tracking-wider text-cream-200/80">{t("sidebar.azaharCoffeeCompany")}</p>
       </div>
 

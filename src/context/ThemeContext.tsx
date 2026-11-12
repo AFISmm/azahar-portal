@@ -1,7 +1,8 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 
 type Theme = "light" | "dark";
-const STORAGE_KEY = "azahar_theme";
+// v2: la paleta 60/30/10 (crema dominante) es el tema claro; todos arrancan en claro y el interruptor lo recuerda.
+const STORAGE_KEY = "azahar_theme_v2";
 
 interface ThemeContextValue {
   theme: Theme;
@@ -14,7 +15,7 @@ function leerThemeInicial(): Theme {
   if (typeof window === "undefined") return "light";
   const guardado = window.localStorage.getItem(STORAGE_KEY);
   if (guardado === "light" || guardado === "dark") return guardado;
-  return window.matchMedia?.("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+  return "light";
 }
 
 export function ThemeProvider({ children }: { children: ReactNode }) {

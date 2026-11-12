@@ -237,3 +237,46 @@ h1, h2, h3, h4, h5, h6 {
 .page-header-band .border-brand-800 { border-color: var(--color-cream-100); }
 .page-header-band .text-brand-800 { color: var(--color-cream-100); }
 .page-header-band .hover\:bg-cream-200:hover { background-color: rgba(239, 231, 214, 0.14); }
+
+/* ---------- Dashboard "vidrio" (inspirado en el video de referencia) ---------- */
+.dash-backdrop {
+  position: relative;
+  isolation: isolate;
+}
+.dash-backdrop::before {
+  content: "";
+  position: absolute;
+  inset: -2rem -2.5rem;
+  z-index: -1;
+  border-radius: 2rem;
+  background:
+    radial-gradient(60% 50% at 85% 8%, rgba(232, 100, 30, 0.35), transparent 70%),
+    radial-gradient(55% 45% at 5% 40%, rgba(58, 42, 34, 0.28), transparent 70%),
+    radial-gradient(50% 40% at 70% 95%, rgba(242, 160, 107, 0.35), transparent 70%);
+  filter: blur(28px);
+  pointer-events: none;
+}
+:root[data-theme="dark"] .dash-backdrop::before {
+  background:
+    radial-gradient(60% 50% at 85% 8%, rgba(232, 100, 30, 0.30), transparent 70%),
+    radial-gradient(55% 45% at 5% 40%, rgba(239, 231, 214, 0.08), transparent 70%),
+    radial-gradient(50% 40% at 70% 95%, rgba(232, 100, 30, 0.18), transparent 70%);
+}
+.glass {
+  background: color-mix(in srgb, var(--surface-card) 58%, transparent);
+  -webkit-backdrop-filter: blur(18px) saturate(150%);
+  backdrop-filter: blur(18px) saturate(150%);
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.5) inset, 0 12px 32px -14px rgba(58, 42, 34, 0.35);
+}
+:root[data-theme="dark"] .glass {
+  border-color: rgba(239, 231, 214, 0.12);
+  box-shadow: 0 1px 0 rgba(239, 231, 214, 0.08) inset, 0 12px 32px -14px rgba(0, 0, 0, 0.6);
+}
+.barra-degradado {
+  background: linear-gradient(to top, rgba(232, 100, 30, 0.35), rgba(232, 100, 30, 0.75));
+}
+.barra-degradado-activa {
+  background: linear-gradient(to top, #e8641e, #f2a06b 60%, #fbd9bf);
+  box-shadow: 0 0 18px rgba(232, 100, 30, 0.55);
+}

@@ -41,7 +41,7 @@ export function WidgetShell({ titulo, icono, children, onClick }: WidgetShellPro
             }
           : undefined
       }
-      className={`flex h-full min-h-0 flex-col overflow-hidden rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface-card)] p-4 shadow-card ${
+      className={`flex h-full min-h-0 flex-col overflow-hidden glass rounded-2xl p-4 ${
         onClick ? "cursor-pointer transition hover:border-accent-500/50" : ""
       }`}
     >

@@ -21,6 +21,7 @@ import {
   Info,
   Sprout,
   ChevronLeft,
+  PanelLeftClose,
   X,
   IdCard,
   MessageSquareWarning,
@@ -118,9 +119,12 @@ function itemClase(activo: boolean) {
 interface SidebarProps {
   abierto?: boolean;
   onCerrar?: () => void;
+  /** Escritorio: el menú está oculto (se desliza fuera de la pantalla). */
+  oculto?: boolean;
+  onOcultar?: () => void;
 }
 
-export function Sidebar({ abierto = false, onCerrar }: SidebarProps) {
+export function Sidebar({ abierto = false, onCerrar, oculto = false, onOcultar }: SidebarProps) {
   const { empleado, signOut } = useAuth();
   const { t } = useLanguage();
   const location = useLocation();
@@ -138,9 +142,9 @@ export function Sidebar({ abierto = false, onCerrar }: SidebarProps) {
 
   return (
     <aside
-      className={`fixed left-0 top-0 bottom-0 z-40 flex w-64 flex-col overflow-hidden border-r border-white/10 transition-transform duration-300 ease-in-out md:top-9 md:z-30 md:translate-x-0 ${
+      className={`fixed left-0 top-0 bottom-0 z-40 flex w-64 flex-col overflow-hidden border-r border-white/10 transition-transform duration-300 ease-in-out md:bottom-3 md:left-3 md:top-12 md:z-30 md:rounded-2xl md:border md:border-white/15 md:shadow-[0_18px_50px_-18px_rgba(0,0,0,0.6)] ${
         abierto ? "translate-x-0" : "-translate-x-full"
-      }`}
+      } ${oculto ? "md:-translate-x-[120%]" : "md:translate-x-0"}`}
     >
       <div
         className="absolute inset-0 -z-20 bg-cover bg-center"
@@ -156,6 +160,14 @@ export function Sidebar({ abierto = false, onCerrar }: SidebarProps) {
           aria-label="Cerrar menú"
         >
           <X className="h-4 w-4" strokeWidth={1.75} />
+        </button>
+        <button
+          onClick={onOcultar}
+          className="absolute right-3 top-3 hidden rounded-lg p-2 text-cream-200/70 transition hover:bg-white/10 hover:text-cream-100 md:block"
+          aria-label="Ocultar menú"
+          title="Ocultar menú"
+        >
+          <PanelLeftClose className="h-4 w-4" strokeWidth={1.75} />
         </button>
         <div className="flex items-center justify-center rounded-xl bg-white px-3 py-1.5 ring-1 ring-white/20">
           <img src={logo} alt="Azahar Coffee Company" className="h-7 w-auto object-contain" />

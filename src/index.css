@@ -280,3 +280,17 @@ h1, h2, h3, h4, h5, h6 {
   background: linear-gradient(to top, #e8641e, #f2a06b 60%, #fbd9bf);
   box-shadow: 0 0 18px rgba(232, 100, 30, 0.55);
 }
+
+/* Fondo de la app: la foto del sidebar, desenfocada, con velo del color del tema */
+.azahar-foto-fondo {
+  background-size: cover;
+  background-position: center;
+  transform: scale(1.08);
+  filter: blur(14px) saturate(1.1);
+}
+.azahar-velo-fondo {
+  background: linear-gradient(180deg, rgba(239, 231, 214, 0.72), rgba(239, 231, 214, 0.84));
+}
+:root[data-theme="dark"] .azahar-velo-fondo {
+  background: linear-gradient(180deg, rgba(42, 30, 24, 0.78), rgba(36, 25, 20, 0.88));
+}

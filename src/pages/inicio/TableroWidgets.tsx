@@ -1,3 +1,4 @@
+import { createPortal } from "react-dom";
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
 import { AlignVerticalJustifyStart, ArrowDown, ArrowUp, Check, Hand, Minus, MoveDiagonal2, Pencil, Plus, RotateCcw } from "lucide-react";
 import { useAuth } from "../../auth/AuthContext";
@@ -142,10 +143,12 @@ interface ItemProps {
   onSubir: () => void;
   onBajar: () => void;
   onPulsacionLarga: () => void;
+  /** Solo celular (apilado): toque simple sobre el widget, para abrir sus opciones. */
+  onToque: () => void;
 }
 
 function ItemWidget({
-  def, rect, tam, editando, apilado, activo, puedeSubir, puedeBajar, onIniciar, onMover, onSoltar, onQuitar, onSubir, onBajar, onPulsacionLarga,
+  def, rect, tam, editando, apilado, activo, puedeSubir, puedeBajar, onIniciar, onMover, onSoltar, onQuitar, onSubir, onBajar, onPulsacionLarga, onToque,
 }: ItemProps) {
   const temporizador = useRef<number | null>(null);
   const origen = useRef({ x: 0, y: 0 });
@@ -202,6 +205,13 @@ function ItemWidget({
           e.preventDefault();
           e.stopPropagation();
           largaDisparada.current = false;
+          return;
+        }
+        // en el celular, tocar un widget abre sus opciones (tamaño, lugar, quitar); los botones y enlaces propios siguen funcionando
+        if (apilado && !(e.target as HTMLElement).closest("a, button, input, select, textarea, [data-sin-opciones]")) {
+          e.preventDefault();
+          e.stopPropagation();
+          onToque();
         }
       }}
     >
@@ -294,6 +304,77 @@ function ItemWidget({
   );
 }
 
+interface HojaProps {
+  def: WidgetDef;
+  alto: number;
+  idx: number;
+  total: number;
+  onAltura: (h: number) => void;
+  onMover: (d: -1 | 1) => void;
+  onAgregar: () => void;
+  onQuitar: () => void;
+  onCerrar: () => void;
+}
+
+/** Hoja inferior del celular: al tocar un widget se elige su tamaño, su lugar o se quita; también permite agregar otro. */
+function HojaOpciones({ def, alto, idx, total, onAltura, onMover, onAgregar, onQuitar, onCerrar }: HojaProps) {
+  const maxFilas = Math.max(...def.tamanos.map((t) => DIM[t].rows));
+  const alturas = [
+    { et: "Compacto", h: REM_FILA - 1 },
+    ...(maxFilas >= 2
+      ? [
+          { et: "Alto", h: 2 * REM_FILA - 1 },
+          { et: "Muy alto", h: 3 * REM_FILA - 1 },
+        ]
+      : []),
+  ];
+  const actual = alturas.reduce((m, a) => (Math.abs(a.h - alto) < Math.abs(m.h - alto) ? a : m), alturas[0]);
+  const boton = "flex flex-1 items-center justify-center gap-1.5 rounded-xl border px-3 py-3 text-xs font-semibold transition disabled:opacity-40";
+  const neutro = "border-[var(--border-subtle)] text-[var(--text-primary)]";
+  // se dibuja en el <body>: un ancestro con transformación (la animación de entrada de la página) rompería el "fixed"
+  return createPortal(
+    <div className="fixed inset-0 z-50 flex items-end md:hidden" role="dialog" aria-label={`Opciones de ${def.titulo}`}>
+      <div className="absolute inset-0 bg-black/50" onClick={onCerrar} aria-hidden="true" />
+      <div className="glass relative w-full rounded-t-3xl p-5 pb-8" style={{ background: "color-mix(in srgb, var(--surface-card) 90%, transparent)" }}>
+        <div className="mx-auto mb-4 h-1 w-10 rounded-full bg-[var(--border-subtle)]" />
+        <p className="mb-4 flex items-center gap-2 font-heading text-base font-bold text-[var(--text-primary)]">
+          <span className="text-accent-500">{def.icono}</span>
+          {def.titulo}
+        </p>
+        <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-[var(--text-muted)]">Tamaño</p>
+        <div className="mb-4 flex gap-2">
+          {alturas.map((a) => (
+            <button key={a.et} type="button" onClick={() => onAltura(a.h)} className={`${boton} ${actual.et === a.et ? "border-accent-500 bg-accent-500 text-brand-900" : neutro}`}>
+              {a.et}
+            </button>
+          ))}
+        </div>
+        <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-[var(--text-muted)]">Lugar</p>
+        <div className="mb-4 flex gap-2">
+          <button type="button" disabled={idx <= 0} onClick={() => onMover(-1)} className={`${boton} ${neutro}`}>
+            <ArrowUp className="h-4 w-4" strokeWidth={2} /> Subir
+          </button>
+          <button type="button" disabled={idx >= total - 1} onClick={() => onMover(1)} className={`${boton} ${neutro}`}>
+            <ArrowDown className="h-4 w-4" strokeWidth={2} /> Bajar
+          </button>
+        </div>
+        <div className="flex gap-2">
+          <button type="button" onClick={onAgregar} className={`${boton} ${neutro}`}>
+            <Plus className="h-4 w-4" strokeWidth={2} /> Agregar otro
+          </button>
+          <button type="button" onClick={onQuitar} className={`${boton} border-status-rechazada text-status-rechazada`}>
+            <Minus className="h-4 w-4" strokeWidth={2.5} /> Quitar
+          </button>
+        </div>
+        <button type="button" onClick={onCerrar} className="mt-4 w-full rounded-xl bg-brand-800 py-3 text-sm font-semibold text-cream-100">
+          Listo
+        </button>
+      </div>
+    </div>,
+    document.body,
+  );
+}
+
 export function TableroWidgets({ config = CONFIG_INICIO }: { config?: ConfigTablero }) {
   const { catalogo: CATALOGO, porId: POR_ID, porDefecto: LAYOUT_POR_DEFECTO, leer: leerLayout, guardar: guardarLayout, borrar: borrarLayout } = config;
   const CLAVE_GUIA = config.claveGuia;
@@ -304,6 +385,7 @@ export function TableroWidgets({ config = CONFIG_INICIO }: { config?: ConfigTabl
   const [items, setItems] = useState<ItemLibre[]>(() => (usuarioId ? leerLayout(usuarioId) : null) ?? LAYOUT_POR_DEFECTO);
   const [editando, setEditando] = useState(false);
   const [galeria, setGaleria] = useState(false);
+  const [opciones, setOpciones] = useState<WidgetId | null>(null);
   const [vivo, setVivo] = useState<{ id: WidgetId; rect: Rect } | null>(null);
   const [guiaVista, setGuiaVista] = useState(() => {
     try {
@@ -478,11 +560,11 @@ export function TableroWidgets({ config = CONFIG_INICIO }: { config?: ConfigTabl
     <div>
       {/* Aviso de bienvenida (una sola vez): que se note que el inicio se puede personalizar */}
       {!editando && !guiaVista && (
-        <div className="mb-4 flex flex-wrap items-center gap-3 rounded-2xl border border-accent-500/40 bg-accent-300/15 px-4 py-3">
+        <div className="mb-4 flex flex-wrap items-center gap-3 glass rounded-2xl px-4 py-3">
           <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-accent-500 text-brand-900">
             <Hand className="h-5 w-5" strokeWidth={1.75} />
           </span>
-          <p className="min-w-0 flex-1 text-sm text-[var(--text-primary)]">
+          <p className="min-w-[14rem] flex-1 text-sm text-[var(--text-primary)]">
             <strong>{config.nombre.charAt(0).toUpperCase() + config.nombre.slice(1)} es tuyo.</strong> Pulsa <em>Personalizar</em> para mover los widgets a donde quieras, cambiar su tamaño desde la esquina inferior derecha de cada uno y agregar los que
             necesites.
           </p>
@@ -497,17 +579,16 @@ export function TableroWidgets({ config = CONFIG_INICIO }: { config?: ConfigTabl
 
       <div
         className={`z-20 mb-4 flex flex-wrap items-center justify-between gap-2 rounded-2xl ${
-          editando ? "sticky top-12 border border-accent-500/50 bg-[var(--surface-card)] px-4 py-2.5 shadow-card" : ""
+          editando ? "sticky top-12 glass border-accent-500/50 px-4 py-2.5" : ""
         }`}
       >
         {editando ? (
           <p className="min-w-0 flex-1 text-xs text-[var(--text-secondary)]">
             <strong className="text-[var(--text-primary)]">Modo personalizar:</strong>{" "}
-            {apilado ? "usa las flechas para ordenar" : "arrastra un widget para moverlo a donde quieras"}, cambia su tamaño con el arco de la esquina inferior derecha y quita los que no uses con el botón{" "}
-            <span className="font-semibold">−</span> de la esquina superior izquierda. Se guarda solo.
+            {apilado ? "toca un widget para cambiar su tamaño, su lugar o quitarlo" : "arrastra un widget para moverlo a donde quieras, cambia su tamaño con el arco de la esquina inferior derecha y quita los que no uses con el botón −"}. Se guarda solo.
           </p>
         ) : (
-          <p className="text-xs text-[var(--text-muted)]">Personaliza {config.nombre}: mueve, cambia el tamaño o agrega widgets. También puedes mantener pulsado uno.</p>
+          <p className="text-xs text-[var(--text-muted)]">Personaliza {config.nombre}: mueve, cambia el tamaño o agrega widgets. {apilado ? "Toca un widget para ver sus opciones." : "También puedes mantener pulsado uno."}</p>
         )}
         <div className="flex items-center gap-2">
           {editando && (
@@ -556,6 +637,7 @@ export function TableroWidgets({ config = CONFIG_INICIO }: { config?: ConfigTabl
               onSubir={() => mover1(item.id, -1)}
               onBajar={() => mover1(item.id, 1)}
               onPulsacionLarga={() => alternarEdicion(true)}
+              onToque={() => setOpciones(item.id)}
             />
           );
         })}
@@ -574,6 +656,26 @@ export function TableroWidgets({ config = CONFIG_INICIO }: { config?: ConfigTabl
             <Plus className="h-4 w-4" strokeWidth={1.75} /> Agregar un widget
           </Button>
         </div>
+      )}
+
+      {opciones && POR_ID[opciones] && items.some((x) => x.id === opciones) && (
+        <HojaOpciones
+          def={POR_ID[opciones]}
+          alto={items.find((x) => x.id === opciones)!.h}
+          idx={ordenApilado.indexOf(opciones)}
+          total={ordenApilado.length}
+          onAltura={(h) => commit(items.map((x) => (x.id === opciones ? { ...x, h } : x)))}
+          onMover={(d) => mover1(opciones, d)}
+          onAgregar={() => {
+            setOpciones(null);
+            setGaleria(true);
+          }}
+          onQuitar={() => {
+            commit(items.filter((x) => x.id !== opciones));
+            setOpciones(null);
+          }}
+          onCerrar={() => setOpciones(null)}
+        />
       )}
 
       <Modal open={galeria} onClose={() => setGaleria(false)} title="Agregar un widget" widthClassName="max-w-3xl">

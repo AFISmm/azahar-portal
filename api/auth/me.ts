@@ -249,7 +249,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
       const { rows } = await sql<EmpleadoRow>`select * from empleados where id = ${empleadoId} limit 1`;
       const fila = rows[0];
-      if (!fila) {
+      if (!fila || fila.estado !== "activo") {
         return res.status(401).json({ ok: false });
       }
 

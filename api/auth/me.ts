@@ -45,6 +45,7 @@ import { put } from "@vercel/blob";
 import { sql } from "../_lib/db.js";
 import { cumple, permisosEfectivos, tieneAccesoTotal } from "../_lib/acceso.js";
 import { HttpError, leerEmpleadoIdDeSesion, manejarError, requireAuth } from "../_lib/auth.js";
+import { aplicarCors } from "../_lib/cors.js";
 import { mapEmpleadoRow, mapPqrRow, type EmpleadoRow, type PqrEstado, type PqrRow } from "../_lib/mappers.js";
 
 const RONDAS_SAL = 10;
@@ -236,6 +237,7 @@ async function subirArchivo(req: VercelRequest, res: VercelResponse) {
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
+  if (aplicarCors(req, res)) return;
   try {
     if (req.method === "GET") {
       if (req.query.pqr === "destinos") return await listarDestinosPqr(req, res);

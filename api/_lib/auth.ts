@@ -60,22 +60,31 @@ function esPeticionSegura(req: VercelRequest): boolean {
  * petición es realmente HTTPS: en local (`vercel dev` sobre http plano) el
  * navegador descartaría una cookie `Secure` enviada por un origen no seguro,
  * dejando al usuario sin poder iniciar sesión.
+ *
+ * `SameSite=None` (en vez de `Lax`) solo en HTTPS: así el navegador la envía
+ * también cuando el acceso único (ver api/_lib/cors.ts) se inicia desde la
+ * landing de Metis Intel en otro dominio. `None` exige `Secure`, por eso va
+ * ligado a la misma condición.
  */
 export function setearCookieSesion(res: VercelResponse, token: string, req: VercelRequest): void {
+  const segura = esPeticionSegura(req);
   const atributos = [
     `${SESSION_COOKIE_NAME}=${encodeURIComponent(token)}`,
     "HttpOnly",
     "Path=/",
-    "SameSite=Lax",
+    `SameSite=${segura ? "None" : "Lax"}`,
     `Max-Age=${TREINTA_DIAS_EN_SEGUNDOS}`,
   ];
-  if (esPeticionSegura(req)) atributos.push("Secure");
+  if (segura) atributos.push("Secure");
   res.setHeader("Set-Cookie", atributos.join("; "));
 }
 
 /** Limpia la cookie de sesión (logout). */
-export function limpiarCookieSesion(res: VercelResponse): void {
-  res.setHeader("Set-Cookie", `${SESSION_COOKIE_NAME}=; HttpOnly; Path=/; SameSite=Lax; Max-Age=0`);
+export function limpiarCookieSesion(res: VercelResponse, req: VercelRequest): void {
+  const segura = esPeticionSegura(req);
+  const atributos = [`${SESSION_COOKIE_NAME}=`, "HttpOnly", "Path=/", `SameSite=${segura ? "None" : "Lax"}`, "Max-Age=0"];
+  if (segura) atributos.push("Secure");
+  res.setHeader("Set-Cookie", atributos.join("; "));
 }
 
 /** Lee y valida la cookie de sesión de la petición. Devuelve el id de empleado, o null si no hay sesión válida. */

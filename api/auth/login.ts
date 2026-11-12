@@ -18,6 +18,7 @@ import type { VercelRequest, VercelResponse } from "@vercel/node";
 import bcrypt from "bcryptjs";
 import { sql } from "../_lib/db.js";
 import { crearTokenSesion, limpiarCookieSesion, manejarError, setearCookieSesion } from "../_lib/auth.js";
+import { aplicarCors } from "../_lib/cors.js";
 import { mapEmpleadoRow, type EmpleadoRow } from "../_lib/mappers.js";
 
 interface LoginPayload {
@@ -49,17 +50,18 @@ async function login(req: VercelRequest, res: VercelResponse) {
   return res.status(200).json({ ok: true, empleado: mapEmpleadoRow(fila) });
 }
 
-async function logout(_req: VercelRequest, res: VercelResponse) {
-  limpiarCookieSesion(res);
+async function logout(req: VercelRequest, res: VercelResponse) {
+  limpiarCookieSesion(res, req);
   return res.status(200).json({ ok: true });
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
+  if (aplicarCors(req, res)) return;
   try {
     if (req.method === "POST") return await login(req, res);
     if (req.method === "DELETE") return await logout(req, res);
 
-    res.setHeader("Allow", "POST, DELETE");
+    res.setHeader("Allow", "POST, DELETE, OPTIONS");
     return res.status(405).json({ ok: false, mensaje: "Método no permitido." });
   } catch (err) {
     return manejarError(res, err);

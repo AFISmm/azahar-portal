@@ -3,8 +3,8 @@ import type { ButtonHTMLAttributes, InputHTMLAttributes, LabelHTMLAttributes, Re
 type Variant = "primary" | "secondary" | "outline" | "danger" | "ghost";
 
 const VARIANTES: Record<Variant, string> = {
-  primary: "bg-brand-800 text-cream-100 hover:bg-brand-900 focus-visible:outline-brand-800",
-  secondary: "bg-accent-500 text-brand-900 hover:bg-accent-300 focus-visible:outline-accent-500",
+  primary: "bg-accent-500 text-brand-900 hover:bg-accent-300 focus-visible:outline-accent-500",
+  secondary: "bg-brand-800 text-cream-100 ring-1 ring-cream-100/15 hover:bg-brand-900 focus-visible:outline-brand-800",
   outline: "border border-brand-800 text-brand-800 hover:bg-cream-200 focus-visible:outline-brand-800",
   danger: "bg-status-rechazada text-cream-100 hover:opacity-90 focus-visible:outline-status-rechazada",
   ghost: "text-[var(--text-secondary)] hover:bg-[var(--surface-muted)]",
@@ -28,7 +28,7 @@ export function Label(props: LabelHTMLAttributes<HTMLLabelElement>) {
 }
 
 const CONTROL_CLASS =
-  "w-full rounded-lg border border-[var(--border-subtle)] bg-[var(--surface-app)] px-3 py-2.5 text-sm text-[var(--text-primary)] outline-none transition focus:border-brand-800 focus:ring-2 focus:ring-brand-800/20 disabled:opacity-60";
+  "w-full rounded-lg border border-[var(--border-subtle)] bg-[var(--surface-app)] px-3 py-2.5 text-sm text-[var(--text-primary)] outline-none transition focus:border-accent-500 focus:ring-2 focus:ring-accent-500/30 disabled:opacity-60";
 
 export function Input(props: InputHTMLAttributes<HTMLInputElement>) {
   return <input {...props} className={`${CONTROL_CLASS} ${props.className ?? ""}`} />;

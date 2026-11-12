@@ -4,7 +4,7 @@
 export type EstadoHito = "hecho" | "listo-no-subido" | "bloqueado" | "pendiente";
 
 export const BITACORA = {
-  actualizado: "2026-10-28",
+  actualizado: "2026-11-09",
   hitos: [
     {
       id: "catalogo-alegra",
@@ -33,31 +33,49 @@ export const BITACORA = {
       detalle: "Se crearon 370501 (id 10805), 51159501 (id 10806) y 53152002 (id 10807). La cuenta 2335950101 se mapea a la existente 23359501. Las subcuentas 17102801, 51552001 y 52991001 las creó el equipo.",
     },
     {
-      id: "balance-2025",
-      fecha: "2026-10-26",
-      area: "Balance 2025",
-      titulo: "Nota contable NC-002 (22.591 líneas) lista, sin subir",
-      estado: "bloqueado" as EstadoHito,
+      id: "contactos-balance-2025",
+      fecha: "2026-11-09",
+      area: "Terceros",
+      titulo: "Contactos del balance 2025 creados en Alegra",
+      estado: "hecho" as EstadoHito,
       detalle:
-        "Débitos − créditos = $0,11 → línea de crédito de $0,11 en 42958105 'Ajuste al peso'. Cuentas acumulativas se llevan a su subcuenta de movimiento (nombre idéntico; si hay empate, menor código). Faltan 2.673 contactos en Alegra; el archivo de la Sra. Consuelo cubre 2.346. Bloqueo: Alegra responde error 502 al crear contactos.",
+        "Alegra volvió a permitir crear contactos (el error 502 ya no aparece). Quedaron 2.660 contactos listos: 2.644 creados y 8 que ya existían, cada uno confirmado por Alegra. Faltan 13 NIT de identificación dudosa (85 líneas sin tercero) que debe confirmar Consuelo.",
+    },
+    {
+      id: "balance-2025",
+      fecha: "2026-11-09",
+      area: "Balance 2025",
+      titulo: "Balance 2025 publicado en Alegra (22.591 líneas en 30 comprobantes)",
+      estado: "hecho" as EstadoHito,
+      detalle:
+        "Alegra no aceptó un comprobante único por tamaño, así que se publicó en 30 comprobantes del 31-dic-2025. Débitos y créditos iguales ($45.105.962.947) y saldo por cuenta y tercero igual al archivo en las 21.665 combinaciones. Dos cuentas las asignó Mercury Methods por criterio y requieren visto bueno de Consuelo: costo de ventas 61 en 61010501 y utilidad del ejercicio 3605 en 36050501.",
     },
     {
       id: "terceros-eneromar",
-      fecha: "2026-10-23",
+      fecha: "2026-11-09",
       area: "Terceros",
       titulo: "Terceros en comprobantes de enero–marzo 2026",
-      estado: "listo-no-subido" as EstadoHito,
+      estado: "hecho" as EstadoHito,
       detalle:
-        "Ninguno de los 2.039 comprobantes tenía tercero. Cruzados con el auxiliar de Siigo, el 75% de las líneas (4.233) se puede asignar con certeza. Script listo: 1.114 comprobantes / 2.615 líneas con NIT ya existentes en Alegra. Los 110 NIT que faltan esperan la creación de contactos.",
+        "1.378 de 1.382 comprobantes de enero a marzo quedaron con tercero asignado (solo a líneas inequívocas); revisada una muestra de 40 directamente en Alegra. Los 4 restantes (L 020, L 021, L 023 y L 024) no se pudieron editar porque usan la cuenta de costo de ventas, deshabilitada para movimientos: Yuly debe reactivarla un momento o editarlos a mano.",
     },
     {
       id: "nomina",
-      fecha: "2026-10-23",
+      fecha: "2026-11-09",
       area: "Nómina",
-      titulo: "Pagos de nómina del Banco de Bogotá (47 asientos)",
-      estado: "listo-no-subido" as EstadoHito,
+      titulo: "Pagos de nómina del Banco de Bogotá (47 asientos publicados)",
+      estado: "hecho" as EstadoHito,
       detalle:
-        "De 51 pagos dispersados: 4 ya estaban registrados como vacaciones (excluidos), 21 coinciden con liquidaciones y 26 son nómina mensual. Asiento: débito Salarios por pagar / crédito Banco de Bogotá 904, sin GMF. Causación mensual (abr–sep), 30 liquidaciones y 19 vacaciones ya estaban publicadas.",
+        "47 asientos publicados por $549.398.130 (abril a septiembre, sin GMF): débito Salarios por pagar / crédito Banco de Bogotá 904. El total en Alegra coincide con lo esperado; diferencia de $0,15 por redondeo. Del total de 51 pagos dispersados, 4 ya estaban registrados como vacaciones y se excluyeron.",
+    },
+    {
+      id: "ventas-modelo-consuelo",
+      fecha: "2026-11-09",
+      area: "Ventas y comprobantes",
+      titulo: "Ventas de tiendas con el modelo de Consuelo: prueba con septiembre",
+      estado: "pendiente" as EstadoHito,
+      detalle:
+        "392 comprobantes nuevos publicados en Alegra para septiembre. Siguen abiertos los 134 comprobantes diarios viejos ($703,4 M): la conexión automática de Alegra no permite anularlos (lista en Excel disponible). Falta que Consuelo valide septiembre y responda 5 dudas (cuenta de ICO, caja general, anular o eliminar), revertir el registro automático de las 6.428 facturas sincronizadas y extender el modelo de abril a agosto.",
     },
     {
       id: "conciliacion",
@@ -91,7 +109,7 @@ export const BITACORA = {
     { fecha: "2020-12-31", area: "Cierres históricos", titulo: "Cierres 2020, 2021 y 2022", estado: "pendiente" as EstadoHito, detalle: "Sin cierre publicado en Alegra. Estimado: una jornada de trabajo por año una vez se definan los años a cerrar." },
     { fecha: "2023-12-31", area: "Cierres históricos", titulo: "Cierre 2023: ajuste parcial", estado: "hecho" as EstadoHito, detalle: "Comprobante AC-114607 (id 114625). Parcial: solo 8 de 44 líneas (2,1% del valor) porque el archivo trae códigos de Siigo a nivel de grupo; con cuenta puente. Al publicarse tenía 9 líneas y $90.961.763; hoy en Alegra figura con 4 líneas y $26.663.801 (fue modificado después)." },
     { fecha: "2024-12-31", area: "Cierres históricos", titulo: "Cierre 2024: ajuste de saldos", estado: "hecho" as EstadoHito, detalle: "Comprobante AC-114608 (id 114627), 180 líneas, $5.245.904.607, con cuenta puente. Fuente: nc 2024.xlsx (cuentas de Alegra ya asignadas por el equipo de Azahar)." },
-    { fecha: "2025-12-31", area: "Balance 2025", titulo: "Nota contable NC-002 (22.591 líneas) lista, sin subir", estado: "bloqueado" as EstadoHito, detalle: "Por cuenta y tercero, $45.105.962.937 en débitos. Falta crear 2.673 contactos en Alegra (error 502)." },
+    { fecha: "2025-12-31", area: "Balance 2025", titulo: "Balance 2025 publicado (22.591 líneas en 30 comprobantes)", estado: "hecho" as EstadoHito, detalle: "Por cuenta y tercero, $45.105.962.947 en débitos y en créditos. Publicado el 9-nov-2026 tras crear 2.660 contactos; pendiente el visto bueno de Consuelo sobre dos cuentas y 13 NIT dudosos." },
     { fecha: "2026-03-31", area: "Ventas y comprobantes", titulo: "Enero–marzo 2026: ventas diarias y comprobantes de Siigo", estado: "hecho" as EstadoHito, detalle: "2.039 comprobantes en Alegra: 473 de ventas diarias por sede (resumen DIAN), 1.565 del diario de Siigo (tipos P, R, F, G, L, N, J) y 1 de vacaciones. Ninguno tiene tercero asociado; se preparó la asignación (ver Terceros)." },
     { fecha: "2026-09-30", area: "Nómina", titulo: "Nómina abril–septiembre 2026", estado: "hecho" as EstadoHito, detalle: "6 comprobantes mensuales (AC-114541 a AC-114546, ids 114552–114557) con el desglose de BUK, 30 liquidaciones ($113.604.863) y 19 vacaciones ($24.705.360). Nómina electrónica ante la DIAN: no habilitada (403)." },
     { fecha: "2026-10-12", area: "Compras", titulo: "Reclasificación de compras de abril, mayo y julio", estado: "hecho" as EstadoHito, detalle: "761 facturas (2.316 líneas) con el detalle real de Siigo: 743 de 751 reclasificadas; 8 no se pudieron editar (estado cerrado) y 9 con información incompleta. Quedan 479 partidas por clasificar y 24 facturas cerradas." },
@@ -104,18 +122,23 @@ export const BITACORA = {
     "Catálogo: los precios nuevos de pines y Tote Bag fueron confirmados como correctos.",
     "El archivo del OneDrive manda: Alegra se actualiza desde él cada martes a las 5:00 p. m.",
     "Las 7 ediciones rotativas sin precio quedan inactivas (el equipo de Azahar dirá si vuelven).",
+    "Método para evitar reprocesos: Consuelo aprueba cada frente en vista previa antes de publicar en Alegra.",
   ],
   pendientes: [
-    { responsable: "Yuly", tarea: "Llamar a soporte de Alegra por el error 502 al crear contactos.", bloquea: "Balance 2025 y terceros de enero–marzo" },
-    { responsable: "Equipo Azahar", tarea: "Confirmar si alguna de las 7 ediciones rotativas vuelve a venderse.", bloquea: "Precios del catálogo" },
+    { responsable: "Equipo Azahar", tarea: "Reporte de ventas del POS con IVA 5% y 19%, ICO y propinas.", bloquea: "Ventas de tiendas con el modelo definitivo" },
     { responsable: "Equipo Azahar", tarea: "Extractos de septiembre (Banco de Bogotá, Davivienda 7043/7050/7999, Fiducia) y reportes de PayU y Rappi.", bloquea: "Conciliación factura por factura" },
-    { responsable: "Equipo Azahar", tarea: "Confirmar si las 50 transferencias a caja menor ($24,1 M) son entre cuentas propias.", bloquea: "Clasificación de la conciliación" },
+    { responsable: "Consuelo", tarea: "Validar septiembre (392 comprobantes nuevos) y responder 5 dudas: cuenta de ICO, caja general y si lo anterior se anula o se elimina.", bloquea: "Extender el modelo de ventas a abril–agosto" },
+    { responsable: "Consuelo", tarea: "Confirmar 13 NIT del balance 2025 (85 líneas sin tercero).", bloquea: "Terceros completos del balance 2025" },
+    { responsable: "Consuelo", tarea: "Aprobar dos cuentas: costo de ventas 61 en 61010501 y utilidad del ejercicio 3605 en 36050501.", bloquea: "Dar por bueno el balance 2025" },
+    { responsable: "Consuelo y Yuly", tarea: "Clasificar 479 partidas de compras y revisar 24 facturas cerradas.", bloquea: "Cierre de compras" },
+    { responsable: "Yuly", tarea: "Anular en Alegra los 134 comprobantes diarios viejos de septiembre, o pedir a Alegra que la conexión automática pueda anularlos.", bloquea: "Evitar septiembre duplicado" },
+    { responsable: "Yuly", tarea: "Reactivar un momento la cuenta de costo de ventas, o editar a mano los 4 comprobantes L 020, L 021, L 023 y L 024.", bloquea: "Terceros de enero a marzo al 100%" },
+    { responsable: "Catalina", tarea: "Aclarar 50 movimientos \"transferencia cta suc virtual\" por $24,1 M (hoy en caja menor).", bloquea: "Clasificación de la conciliación" },
+    { responsable: "Azahar y Alegra", tarea: "Nómina electrónica ante la DIAN: Alegra responde error 403.", bloquea: "Cumplimiento tributario" },
+    { responsable: "Equipo Azahar", tarea: "Confirmar si alguna de las 7 ediciones rotativas vuelve a venderse.", bloquea: "Precios del catálogo" },
     { responsable: "Felipe", tarea: "Eliminar el Gesha duplicado (ID 64) de Alegra y su fila 48 del archivo.", bloquea: "Limpieza del catálogo" },
-    { responsable: "Felipe", tarea: "Autorizar la publicación de los 47 asientos de nómina del Banco de Bogotá.", bloquea: "Pago de salarios por pagar" },
-    { responsable: "Felipe", tarea: "Compartir el archivo del catálogo en OneDrive con el equipo de Azahar.", bloquea: "Edición del catálogo por Azahar" },
-    { responsable: "Mercury Methods", tarea: "Crear 2.673 contactos y subir el balance 2025 cuando Alegra resuelva el 502.", bloquea: "—" },
-    { responsable: "Mercury Methods", tarea: "Cierres contables de 2020 en adelante, 479 partidas de compras por clasificar y 24 facturas cerradas.", bloquea: "—" },
-    { responsable: "Mercury Methods", tarea: "Nómina electrónica ante la DIAN (Alegra no tiene el módulo habilitado, 403).", bloquea: "—" },
+    { responsable: "Mercury Methods", tarea: "Cierres contables de 2020, 2021 y 2022; reclasificar las cuentas puente de 2017, 2018, 2023 y 2024.", bloquea: "—" },
+    { responsable: "Mercury Methods", tarea: "Revertir el registro automático de las 6.428 facturas sincronizadas (requiere el auxiliar de Alegra de un día).", bloquea: "—" },
   ],
   scripts: [
     { archivo: "04_SCRIPTS_MIGRACION/asignar_terceros_eneromar2026.py", uso: "Asigna el tercero a las líneas de los comprobantes de enero–marzo (--plan, --test <id>, --lote N). Hace copia y verifica cada edición." },
@@ -135,7 +158,7 @@ export const BITACORA = {
   ],
   limitaciones: [
     "El portal muestra instantáneas de los resultados; no se conecta aún a Alegra en vivo.",
-    "Alegra responde error 502 al crear contactos desde el 20-oct-2026.",
+    "Alegra respondió error 502 al crear contactos del 20-oct al 9-nov-2026 (resuelto el 9-nov).",
     "El cruce de cobros 13050501 con facturas es por valor y fecha: sin número de factura ni cliente en el dataset de ventas.",
     "La tarea de los martes depende de que el computador esté encendido y con OneDrive abierto.",
   ],

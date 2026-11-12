@@ -8,7 +8,7 @@ import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { sql } from "../_lib/db.js";
 import { HttpError, manejarError, requireAuth, requireModulo } from "../_lib/auth.js";
 import { mapEmpleadoRow, type EmpleadoRow } from "../_lib/mappers.js";
-import { cumple, permisosEfectivos, sanearPermisos } from "../_lib/acceso.js";
+import { cumple, permisosEfectivos, sanearPermisos, tieneAccesoTotal } from "../_lib/acceso.js";
 
 interface EmpleadoPatchPayload {
   nombre?: string;
@@ -66,6 +66,19 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       if (!actual) throw new HttpError(404, "Empleado no encontrado.");
 
       const body = req.body as EmpleadoPatchPayload;
+
+      // Validación de los campos sensibles: sin esto, un editor de RR. HH. podría ponerse un correo del
+      // dominio de acceso total (@mercurymethods.com) y quedar como administrador de todo el portal.
+      if (body.rol !== undefined && body.rol !== "empleado" && body.rol !== "admin") throw new HttpError(400, "Rol no válido.");
+      if (body.estado !== undefined && body.estado !== "activo" && body.estado !== "inactivo") throw new HttpError(400, "Estado no válido.");
+      if (body.correo !== undefined) {
+        if (typeof body.correo !== "string" || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(body.correo.trim())) throw new HttpError(400, "Correo no válido.");
+        body.correo = body.correo.trim();
+        if (tieneAccesoTotal(body.correo) && !tieneAccesoTotal(actual.correo)) {
+          await requireModulo(req, "usuarios", "editar");
+          if (quienEdita === id) throw new HttpError(403, "No puedes darte acceso total a ti mismo.");
+        }
+      }
 
       // Se resuelve explícitamente cada columna editable (patch o valor
       // actual) y se hace un único UPDATE con todos los valores resultantes,

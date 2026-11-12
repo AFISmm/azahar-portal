@@ -843,7 +843,7 @@ export function ChatbotWidget() {
                   value={ajustes.velocidad}
                   onChange={(e) => actualizarAjustes({ velocidad: Number(e.target.value) })}
                   onPointerUp={() => hablar(`Así hablo a esta velocidad.`, ajustes)}
-                  className="w-full accent-brand-800"
+                  className="w-full accent-accent-500"
                 />
               </div>
 

@@ -80,7 +80,7 @@ export default function Registro() {
       <div className="absolute right-4 top-4 z-10">
         <LanguageSwitcher />
       </div>
-      <div className="w-full max-w-lg rounded-2xl border border-[var(--border-subtle)] bg-white p-8 shadow-card">
+      <div className="w-full max-w-lg rounded-2xl border border-[var(--border-subtle)] bg-cream-100 p-8 shadow-card">
         <div className="mb-7 flex flex-col items-center text-center">
           <img src={logo} alt="Azahar Coffee Company" className="mb-4 h-14 w-auto object-contain" />
           <h1 className="font-heading text-xl font-bold text-brand-900">{t("registro.titulo")}</h1>

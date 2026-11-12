@@ -58,20 +58,20 @@ export function IndicadoresTicker() {
   const celdas = (sufijo: string) =>
     indicadores.map((ind) => (
       <div key={`${ind.id}-${sufijo}`} className="flex shrink-0 items-center gap-2 px-5 py-2 text-xs">
-        <span className="font-semibold uppercase tracking-wide text-cream-100/70">{ind.nombre}</span>
-        <span className="font-mono font-semibold text-cream-100">{formatearValor(ind)}</span>
-        <span className={`font-mono font-semibold ${ind.variacion >= 0 ? "text-emerald-400" : "text-red-400"}`}>
-          {ind.variacion >= 0 ? "+" : ""}
+        <span className="font-semibold uppercase tracking-wide text-brand-900/75">{ind.nombre}</span>
+        <span className="font-mono font-semibold text-brand-900">{formatearValor(ind)}</span>
+        <span className="font-mono font-bold text-brand-900">
+          {ind.variacion >= 0 ? "▲ +" : "▼ "}
           {ind.variacionPct.toFixed(2)}%
         </span>
       </div>
     ));
 
   return (
-    <div className="fixed inset-x-0 top-0 z-40 flex h-9 items-center overflow-hidden border-b border-brand-900/40 bg-brand-900">
+    <div className="fixed inset-x-0 top-0 z-40 flex h-9 items-center overflow-hidden border-b border-brand-900/20 bg-accent-500">
       <button
         onClick={() => setPausado((p) => !p)}
-        className="z-10 flex h-full shrink-0 items-center justify-center border-r border-cream-100/10 bg-brand-900 px-3 text-cream-100/70 transition hover:text-cream-100"
+        className="z-10 flex h-full shrink-0 items-center justify-center border-r border-brand-900/20 bg-accent-500 px-3 text-brand-900/70 transition hover:text-brand-900"
         aria-label={pausado ? "Reanudar ticker" : "Pausar ticker"}
         title={pausado ? "Reanudar" : "Pausar"}
       >
@@ -79,9 +79,9 @@ export function IndicadoresTicker() {
       </button>
       <div className="flex-1 overflow-hidden">
         {!cargado ? (
-          <p className="px-5 text-xs text-cream-100/60">Cargando indicadores…</p>
+          <p className="px-5 text-xs text-brand-900/70">Cargando indicadores…</p>
         ) : indicadores.length === 0 ? (
-          <p className="px-5 text-xs text-cream-100/60">Indicadores no disponibles en este momento.</p>
+          <p className="px-5 text-xs text-brand-900/70">Indicadores no disponibles en este momento.</p>
         ) : (
           <div className="azahar-ticker-track flex w-max" data-pausado={pausado}>
             {celdas("a")}

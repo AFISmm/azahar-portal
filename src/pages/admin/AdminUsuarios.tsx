@@ -370,7 +370,7 @@ export default function AdminUsuarios() {
                                   <input
                                     type="checkbox"
                                     aria-label={`${emp.nombre} — ${m.nombre}: ${casilla}`}
-                                    className="h-4 w-4 accent-brand-800 disabled:cursor-not-allowed"
+                                    className="h-4 w-4 accent-accent-500 disabled:cursor-not-allowed"
                                     checked={casilla === "ver" ? !!nivel : nivel === "editar"}
                                     disabled={bloqueada || guardando}
                                     onChange={(e) => handleCambiarPermiso(emp, m.clave, casilla, e.target.checked)}

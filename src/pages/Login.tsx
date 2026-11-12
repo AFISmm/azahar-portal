@@ -52,7 +52,7 @@ export default function Login() {
         <LanguageSwitcher />
       </div>
 
-      <div className="w-full max-w-md rounded-2xl border border-[var(--border-subtle)] bg-white p-8 shadow-card">
+      <div className="w-full max-w-md rounded-2xl border border-[var(--border-subtle)] bg-cream-100 p-8 shadow-card">
 
         <div className="mb-7 flex flex-col items-center text-center">
           <img src={logo} alt="Azahar Coffee Company" className="mb-4 h-14 w-auto object-contain" />
@@ -106,7 +106,7 @@ export default function Login() {
           </Field>
 
           <label className="flex items-center gap-2 text-sm text-brand-600">
-            <input type="checkbox" className="h-4 w-4 accent-brand-800" checked={recordarme} onChange={(e) => setRecordarme(e.target.checked)} />
+            <input type="checkbox" className="h-4 w-4 accent-accent-500" checked={recordarme} onChange={(e) => setRecordarme(e.target.checked)} />
             Recordar mi correo en este equipo
           </label>
 

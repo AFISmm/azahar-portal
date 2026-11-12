@@ -6,7 +6,7 @@ import "leaflet/dist/leaflet.css";
 // Leaflet, que se rompe con bundlers si no se reconfigura su ruta de imágenes.
 const iconoAzahar = L.divIcon({
   className: "",
-  html: '<div style="width:16px;height:16px;border-radius:9999px;background:#c9852e;border:2px solid #2a1515;box-shadow:0 0 0 2px white;"></div>',
+  html: '<div style="width:16px;height:16px;border-radius:9999px;background:#e8641e;border:2px solid #3a2a22;box-shadow:0 0 0 2px white;"></div>',
   iconSize: [16, 16],
   iconAnchor: [8, 8],
 });

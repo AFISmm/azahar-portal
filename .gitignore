@@ -31,3 +31,11 @@ dist-ssr
 
 # Original de la imagen del chatbot (la versión optimizada está en src/assets/chatbot.png)
 /Chatbot.png
+
+# Material de trabajo de Azahar (contabilidad, migración, extractos, apps anteriores):
+# NO va al repositorio del portal. Contiene datos contables y bancarios reservados.
+/contabilidad/
+/referencias-apps-anteriores/
+/SistemaPOS/
+/*.xlsx
+/.claude/

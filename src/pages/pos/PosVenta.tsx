@@ -396,7 +396,7 @@ export default function PosVenta() {
 
               {puedeEditar && (
                 <label className="flex items-center gap-2 text-sm">
-                  <input type="checkbox" className="h-4 w-4 accent-brand-800" checked={actual.paraLlevar} onChange={(e) => void accion(() => posApi.paraLlevar(actual.id, e.target.checked))} />
+                  <input type="checkbox" className="h-4 w-4 accent-accent-500" checked={actual.paraLlevar} onChange={(e) => void accion(() => posApi.paraLlevar(actual.id, e.target.checked))} />
                   Para llevar
                 </label>
               )}

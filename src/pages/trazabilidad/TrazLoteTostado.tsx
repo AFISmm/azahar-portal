@@ -65,7 +65,7 @@ export default function TrazLoteTostado() {
                               return e.target.checked ? { ...s, [lv.id]: "" } : resto;
                             })
                           }
-                          className="h-4 w-4 accent-brand-800"
+                          className="h-4 w-4 accent-accent-500"
                         />
                         {lv.fincaNombre} <span className="text-[var(--text-muted)]">· {lv.tipoProceso ?? "sin proceso"}</span>
                       </span>

@@ -42,7 +42,7 @@ export default function LotePublico() {
           </div>
         )}
 
-        <ol className="space-y-0 rounded-2xl border border-brand-800/10 bg-white p-5 shadow-sm">
+        <ol className="space-y-0 rounded-2xl border border-brand-800/10 bg-cream-100 p-5 shadow-sm">
           {origenes.map((o, i) => (
             <li key={o.id} className="relative border-l-2 border-accent-500/50 pb-6 pl-5">
               <span className="absolute -left-[7px] top-0 h-3 w-3 rounded-full bg-accent-500" />

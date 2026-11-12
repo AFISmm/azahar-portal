@@ -2,22 +2,24 @@
 
 /* ------------------------------------------------------------------
    Portal Azahar — design tokens (Tailwind v4 CSS-first theme)
-   Paleta "café": marrón/oxblood (brand), caramelo (accent), crema.
+   Paleta 60 / 30 / 10: Cream Linen #EFE7D6 (60 %: fondos y superficies),
+   Espresso Bean #3A2A22 (30 %: sidebar, encabezados, texto, botones principales) y
+   Burnt Orange #E8641E (10 %: acentos, estado activo, llamadas a la acción).
    ------------------------------------------------------------------ */
 @theme {
-  /* Brand (marrón oxblood, tono real del logo) */
-  --color-brand-900: #2a1515;
-  --color-brand-800: #412020;
-  --color-brand-600: #6b3a32;
-  --color-brand-400: #9c6b5e;
+  /* Brand: Espresso Bean #3A2A22 y sus tonos */
+  --color-brand-900: #2a1e18;
+  --color-brand-800: #3a2a22;
+  --color-brand-600: #5c4538;
+  --color-brand-400: #8c7262;
 
-  /* Accent (caramelo / dorado cálido) */
-  --color-accent-500: #c9852e;
-  --color-accent-300: #e0b26b;
+  /* Accent: Burnt Orange #E8641E y su tono claro */
+  --color-accent-500: #e8641e;
+  --color-accent-300: #f2a06b;
 
-  /* Neutros cálidos */
-  --color-cream-100: #faf6f0;
-  --color-cream-200: #f1e9dd;
+  /* Cream Linen #EFE7D6 y su tono oscuro */
+  --color-cream-100: #efe7d6;
+  --color-cream-200: #ddd0b8;
 
   /* Estado de solicitudes */
   --color-status-pendiente: #d9972b;
@@ -32,7 +34,7 @@
   --font-heading: "Inter", "Segoe UI", system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", monospace;
 
-  --shadow-card: 0 1px 2px rgba(42, 21, 21, 0.06), 0 8px 24px -12px rgba(42, 21, 21, 0.18);
+  --shadow-card: 0 1px 2px rgba(58, 42, 34, 0.08), 0 8px 24px -12px rgba(58, 42, 34, 0.22);
 }
 
 /* ------------------------------------------------------------------
@@ -41,29 +43,29 @@
    ------------------------------------------------------------------ */
 :root {
   --surface-app: var(--color-cream-100);
-  --surface-card: #ffffff;
-  --surface-sidebar: #ffffff;
-  --surface-muted: var(--color-cream-200);
-  --border-subtle: #e7dccd;
-  --text-primary: var(--color-brand-900);
-  --text-secondary: #6f5a52;
-  --text-muted: #9a8b83;
+  --surface-card: #f6f0e2;
+  --surface-sidebar: var(--color-brand-800);
+  --surface-muted: #e4d9c3;
+  --border-subtle: #d6c9ae;
+  --text-primary: var(--color-brand-800);
+  --text-secondary: #5f4d42;
+  --text-muted: #76645a;
   /* modo edición de widgets: marco fino y agarre de la esquina */
-  --marco-edicion: rgba(107, 58, 50, 0.32);
-  --marco-agarre: rgba(107, 58, 50, 0.75);
+  --marco-edicion: rgba(58, 42, 34, 0.32);
+  --marco-agarre: rgba(58, 42, 34, 0.75);
 }
 
 html[data-theme="dark"] {
-  --surface-app: #1a1211;
-  --surface-card: #241917;
-  --surface-sidebar: #201613;
-  --surface-muted: #2c1f1c;
-  --border-subtle: #3a2b26;
-  --text-primary: #f5ece4;
-  --text-secondary: #cbb4a8;
-  --text-muted: #9c8177;
-  --marco-edicion: rgba(245, 236, 228, 0.42);
-  --marco-agarre: rgba(245, 236, 228, 0.85);
+  --surface-app: #2a1e18;
+  --surface-card: #3a2a22;
+  --surface-sidebar: #241914;
+  --surface-muted: #46342b;
+  --border-subtle: #54413a;
+  --text-primary: #efe7d6;
+  --text-secondary: #d3c6ae;
+  --text-muted: #a8967f;
+  --marco-edicion: rgba(239, 231, 214, 0.42);
+  --marco-agarre: rgba(239, 231, 214, 0.85);
 }
 
 * {
@@ -112,7 +114,7 @@ body {
 
 h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-heading);
-  color: var(--text-primary);
+  color: inherit; /* hereda del contenedor: texto crema sobre fondos espresso */
 }
 
 ::selection {
@@ -230,3 +232,8 @@ h1, h2, h3, h4, h5, h6 {
 @media (prefers-reduced-motion: reduce) {
   .mascota-parpado, .mascota-sonrisa, .mascota-respira, .mascota-cabeceo { animation: none; }
 }
+
+/* Botones "outline" dentro de la banda espresso del encabezado de página: se leen en crema */
+.page-header-band .border-brand-800 { border-color: var(--color-cream-100); }
+.page-header-band .text-brand-800 { color: var(--color-cream-100); }
+.page-header-band .hover\:bg-cream-200:hover { background-color: rgba(239, 231, 214, 0.14); }

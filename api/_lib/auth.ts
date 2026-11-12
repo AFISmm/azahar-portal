@@ -85,7 +85,7 @@ export function leerEmpleadoIdDeSesion(req: VercelRequest): string | null {
   const token = extraerCookie(cookieHeader, SESSION_COOKIE_NAME);
   if (!token) return null;
   try {
-    const payload = jwt.verify(token, obtenerAuthSecret());
+    const payload = jwt.verify(token, obtenerAuthSecret(), { algorithms: ["HS256"] });
     if (typeof payload === "object" && payload !== null && typeof (payload as { empleadoId?: unknown }).empleadoId === "string") {
       return (payload as { empleadoId: string }).empleadoId;
     }
@@ -100,6 +100,11 @@ export async function requireAuth(req: VercelRequest): Promise<{ empleadoId: str
   const empleadoId = leerEmpleadoIdDeSesion(req);
   if (!empleadoId) {
     throw new HttpError(401, "No hay una sesión activa. Inicia sesión de nuevo.");
+  }
+  // Una cuenta desactivada (o borrada) pierde el acceso al instante, aunque su cookie siga vigente.
+  const { rows } = await sql<{ estado: string }>`select estado from empleados where id = ${empleadoId} limit 1`;
+  if (!rows[0] || rows[0].estado !== "activo") {
+    throw new HttpError(401, "La sesión ya no es válida.");
   }
   return { empleadoId };
 }

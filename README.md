@@ -208,14 +208,24 @@ Administrador y Gerencia lo incluyen y las cuentas `@mercurymethods.com` lo tien
 
 **Filtro de fechas.** Todas las pantallas comparten una barra «Filtrar por fecha» (Desde / Hasta y atajos: todo el historial, cada año desde 2016, último trimestre). Se guarda en `sessionStorage` y se aplica a comprobantes, conciliación, nómina, terceros, catálogo, documentación y al archivo cargado. Lo que no tiene fechas propias (la lista de productos) se muestra completo.
 
-**De dónde salen los datos.** Son instantáneas generadas por `04_SCRIPTS_MIGRACION/descargar_comprobantes_alegra.py` (lee todos los comprobantes de Alegra) y por
-`04_SCRIPTS_MIGRACION/exportar_datos_portal_contable.py` (en la carpeta AzaharRetail, fuera de este repo) a
-`api/_lib/contableData/*.ts`. Se sirven únicamente por `GET /api/trazabilidad?r=contable-*` (misma función
-serverless que Trazabilidad y POS, por el límite de 12 de Vercel Hobby), con sesión y permiso `contable`.
-**No se importan desde `src/`**: todo lo que está en `src/` termina en el código público que descarga el
-navegador. En modo demo se usan datos de ejemplo inventados (`src/lib/contableDemo.ts`).
+**De dónde salen los datos.** Son instantáneas generadas por `04_SCRIPTS_MIGRACION/descargar_comprobantes_alegra.py`
+(lee todos los comprobantes de Alegra) y por `04_SCRIPTS_MIGRACION/exportar_datos_portal_contable.py`, que viven en
+la carpeta `contabilidad/` (fuera de git).
 
-Para actualizar los datos: correr el script exportador y desplegar. `bitacora.ts` se edita a mano.
+- **Con información personal o bancaria** (conciliación y movimientos del extracto Bancolombia, comprobantes, pagos
+  de nómina y terceros): el exportador los deja como JSON en `contabilidad/05_DATOS_INTERMEDIOS/portal_contable/`
+  y `node db/cargar-contable.mjs` los sube a la tabla `contable_datos` de la base del portal. **Nunca se versionan en
+  git** (ni se ponen en `api/_lib/contableData/`). La API los lee con `api/_lib/contableStore.ts`.
+- **Sin datos personales** (catálogo de productos, plan de cuentas y bitácora): siguen como módulos TypeScript en
+  `api/_lib/contableData/*.ts`; `bitacora.ts` se edita a mano.
+
+Se sirven únicamente por `GET /api/trazabilidad?r=contable-*` (misma función serverless que Trazabilidad y POS, por el
+límite de 12 de Vercel Hobby), con sesión y permiso `contable`. **No se importan desde `src/`**: todo lo que está en
+`src/` termina en el código público que descarga el navegador. En modo demo se usan datos de ejemplo inventados
+(`src/lib/contableDemo.ts`).
+
+Para actualizar los datos: correr el exportador y luego `POSTGRES_URL=<base> node db/cargar-contable.mjs`; no hace
+falta desplegar (la API refresca su copia en memoria cada 5 minutos).
 
 **Límites actuales:** el módulo es de consulta; no escribe en Alegra ni se conecta a Alegra en vivo (las
 credenciales de Alegra no están en este proyecto). Las escrituras en Alegra las hacen los scripts de

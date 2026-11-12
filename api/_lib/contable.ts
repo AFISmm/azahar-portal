@@ -14,21 +14,18 @@
 
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { requireModulo } from "./auth.js";
-import { CONCILIACION_BANCOLOMBIA } from "./contableData/conciliacionBancolombia.js";
-import { PAGOS_NOMINA } from "./contableData/pagosNomina.js";
-import { TERCEROS } from "./contableData/terceros.js";
 import { CATALOGO } from "./contableData/catalogo.js";
 import { BITACORA } from "./contableData/bitacora.js";
-import { COMPROBANTES, type Comprobante } from "./contableData/comprobantes.js";
+import { datosContables, type Comprobante } from "./contableStore.js";
 
 type Ruta = (req: VercelRequest, res: VercelResponse) => Promise<unknown>;
 
 /** Envuelve una consulta: exige sesión y permiso 'ver' en el módulo y responde JSON. */
-function consulta(datos: () => unknown): Ruta {
+function consulta(datos: () => unknown | Promise<unknown>): Ruta {
   return async (req, res) => {
     await requireModulo(req, "contable", "ver");
     res.setHeader("Cache-Control", "private, no-store");
-    return res.status(200).json({ ok: true, ...(datos() as object) });
+    return res.status(200).json({ ok: true, ...((await datos()) as object) });
   };
 }
 
@@ -49,6 +46,7 @@ const comprobantes: Ruta = async (req, res) => {
   const estado = param(req, "estado");
   const pagina = Math.max(1, Number.parseInt(param(req, "pagina"), 10) || 1);
 
+  const COMPROBANTES = await datosContables("comprobantes");
   const filtrados: Comprobante[] = COMPROBANTES.filter(
     (c) =>
       (!desde || c.fecha >= desde) &&
@@ -88,7 +86,7 @@ const comprobantes: Ruta = async (req, res) => {
 };
 
 /** Comprobantes de Alegra por mes (desde diciembre de 2016): demuestra qué hay contabilizado en cada período. */
-function actividadMensual() {
+function actividadMensual(COMPROBANTES: Comprobante[]) {
   const meses = new Map<string, { n: number; total: number; lineas: number; conTercero: number }>();
   for (const c of COMPROBANTES) {
     if (c.origen !== "alegra") continue;
@@ -103,8 +101,8 @@ function actividadMensual() {
   return [...meses.entries()].sort(([a], [b]) => (a < b ? -1 : 1)).map(([mes, v]) => ({ mes, ...v }));
 }
 
-function resumen() {
-  const c = CONCILIACION_BANCOLOMBIA;
+async function resumen() {
+  const [c, PAGOS_NOMINA, TERCEROS] = await Promise.all([datosContables("conciliacion"), datosContables("nomina"), datosContables("terceros")]);
   const abonos = c.mensual.reduce((s, m) => s + (m.abonos ?? 0), 0);
   const cargos = c.mensual.reduce((s, m) => s + (m.cargos ?? 0), 0);
   const cobrosConciliados = c.resumenCobros.reduce((s, m) => s + (m.conciliados ?? 0), 0);
@@ -133,10 +131,10 @@ function resumen() {
 
 export const CONTABLE_GET: Record<string, Ruta> = {
   "contable-resumen": consulta(resumen),
-  "contable-conciliacion": consulta(() => ({ conciliacion: CONCILIACION_BANCOLOMBIA })),
-  "contable-nomina": consulta(() => ({ nomina: PAGOS_NOMINA })),
-  "contable-terceros": consulta(() => ({ terceros: TERCEROS })),
+  "contable-conciliacion": consulta(async () => ({ conciliacion: await datosContables("conciliacion") })),
+  "contable-nomina": consulta(async () => ({ nomina: await datosContables("nomina") })),
+  "contable-terceros": consulta(async () => ({ terceros: await datosContables("terceros") })),
   "contable-catalogo": consulta(() => ({ catalogo: CATALOGO })),
-  "contable-bitacora": consulta(() => ({ bitacora: { ...BITACORA, actividad: actividadMensual() } })),
+  "contable-bitacora": consulta(async () => ({ bitacora: { ...BITACORA, actividad: actividadMensual(await datosContables("comprobantes")) } })),
   "contable-comprobantes": comprobantes,
 };

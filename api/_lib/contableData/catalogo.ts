@@ -1,7 +1,7 @@
-// GENERADO por 04_SCRIPTS_MIGRACION/exportar_datos_portal_contable.py (2026-10-28). No editar a mano.
+// GENERADO por 04_SCRIPTS_MIGRACION/exportar_datos_portal_contable.py (2026-11-11). No editar a mano.
 // Catálogo de productos de café, cambios aplicados y reglas de la sincronización semanal.
 export const CATALOGO = {
- "generado": "2026-10-28",
+ "generado": "2026-11-11",
  "archivo": "Archivofinalmm271026.xlsx (OneDrive de felipe.serna@mercurymethods.com)",
  "productos": [
   {

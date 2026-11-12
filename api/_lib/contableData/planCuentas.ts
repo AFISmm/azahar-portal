@@ -1,4 +1,4 @@
-// GENERADO por 04_SCRIPTS_MIGRACION/exportar_datos_portal_contable.py (2026-10-28). No editar a mano.
+// GENERADO por 04_SCRIPTS_MIGRACION/exportar_datos_portal_contable.py (2026-11-11). No editar a mano.
 // Plan de cuentas de Alegra (solo cuentas de movimiento) para elegir la cuenta en la conciliación bancaria.
 export const PLAN_CUENTAS = [
  {

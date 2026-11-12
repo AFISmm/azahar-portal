@@ -22,7 +22,7 @@ import { sql } from "./db.js";
 import { HttpError, requireModulo } from "./auth.js";
 import { CAMPOS, DESTINOS, sugerirDestino, type Destino, type EntradaSugerir } from "./contableIA.js";
 import { PLAN_CUENTAS } from "./contableData/planCuentas.js";
-import { MOVIMIENTOS_BANCOLOMBIA } from "./contableData/movimientosBancolombia.js";
+import { datosContables } from "./contableStore.js";
 
 type Ruta = (req: VercelRequest, res: VercelResponse) => Promise<unknown>;
 type Fila = Record<string, string>;
@@ -218,7 +218,7 @@ const movimientos: Ruta = async (req, res) => {
   const mes = texto(param(req, "mes"), 20); // "Abril 2026" o "2026-04"
   let filas: { clave: string; mes: string; fecha: string | null; descripcion: string; debito: number; credito: number; saldo: number | null; cuentaSugerida: string; cuentaSugeridaNombre: string | null; nitSugerido: string | null; terceroSugerido: string | null }[];
   if (fuente === FUENTE_BANCOLOMBIA) {
-    filas = MOVIMIENTOS_BANCOLOMBIA.filter((m) => !mes || m.mes === mes || (m.fecha ?? "").startsWith(mes)).map((m) => ({
+    filas = (await datosContables("movimientos")).filter((m) => !mes || m.mes === mes || (m.fecha ?? "").startsWith(mes)).map((m) => ({
       clave: m.clave, mes: m.mes, fecha: m.fecha, descripcion: m.descripcion, debito: m.debito, credito: m.credito, saldo: m.saldo,
       cuentaSugerida: m.cuenta, cuentaSugeridaNombre: m.cuentaNombre, nitSugerido: m.nit, terceroSugerido: m.tercero,
     }));

@@ -1,5 +1,6 @@
 import { PageHeader } from "../../components/PageHeader";
 import { Card } from "../../components/Card";
+import { BotonVerCertificado } from "../../components/CertificadoDemo";
 import { Button, Field, Input, Select } from "../../components/ui";
 import { fmtFecha, trazabilidadApi } from "../../lib/trazabilidadApi";
 import {
@@ -107,11 +108,7 @@ export default function TrazCertificacion() {
                         </p>
                       )}
                     </div>
-                    {(c.certificadoUrl || c.urlVerificacion) && (
-                      <a href={c.certificadoUrl ?? c.urlVerificacion ?? undefined} target="_blank" rel="noreferrer" className="shrink-0 rounded-lg border border-brand-800 px-2.5 py-1.5 text-xs font-bold text-brand-800 hover:bg-cream-200">
-                        Ver certificado ↗
-                      </a>
-                    )}
+                    <BotonVerCertificado certificacion={c} />
                   </div>
                 </li>
               );

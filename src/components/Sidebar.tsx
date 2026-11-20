@@ -37,6 +37,7 @@ import {
   UsersRound,
   Boxes,
   BookOpen,
+  Truck,
 } from "lucide-react";
 import { useAcceso } from "../auth/acceso";
 import type { Modulo } from "../lib/types";
@@ -87,6 +88,7 @@ const TRAZABILIDAD_ITEMS: { to: string; label: string; Icon: typeof Home; nivel:
   { to: "/trazabilidad/ficha-cata", label: "Ficha de cata", Icon: ClipboardList, nivel: "ver" },
   { to: "/trazabilidad/lote-tostado", label: "Tueste", Icon: Flame, nivel: "ver" },
   { to: "/trazabilidad/lote-empaque", label: "Empaque y QR", Icon: Package, nivel: "ver" },
+  { to: "/trazabilidad/despachos", label: "Despachos en vivo", Icon: Truck, nivel: "ver" },
   { to: "/trazabilidad/auditoria", label: "Auditoría", Icon: History, nivel: "editar" },
 ];
 

@@ -48,6 +48,7 @@ import TrazLoteTostado from "./pages/trazabilidad/TrazLoteTostado";
 import TrazLoteEmpaque from "./pages/trazabilidad/TrazLoteEmpaque";
 import TrazLoteEmpaqueDetalle from "./pages/trazabilidad/TrazLoteEmpaqueDetalle";
 import TrazAuditoria from "./pages/trazabilidad/TrazAuditoria";
+import TrazDespachos from "./pages/trazabilidad/TrazDespachos";
 import ContableLayout from "./pages/contable/ContableLayout";
 import ContableInicio from "./pages/contable/ContableInicio";
 import ContableComprobantes from "./pages/contable/ContableComprobantes";
@@ -104,6 +105,7 @@ export default function App() {
                   <Route path="/trazabilidad/lote-tostado" element={<TrazLoteTostado />} />
                   <Route path="/trazabilidad/lote-empaque" element={<TrazLoteEmpaque />} />
                   <Route path="/trazabilidad/lote-empaque/:id" element={<TrazLoteEmpaqueDetalle />} />
+                  <Route path="/trazabilidad/despachos" element={<TrazDespachos />} />
                   <Route path="/trazabilidad/auditoria" element={<TrazAuditoria />} />
 
                   {/* POS: el acceso lo decide empleado.permisosModulos.pos (ver / editar; cada pagina lo valida y la API tambien). */}

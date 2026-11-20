@@ -144,6 +144,8 @@ interface RespuestaGemini {
   candidates?: { content?: { parts?: { text?: string }[] } }[];
 }
 
+import { claveGemini } from "./gemini.js";
+
 const MODELO = process.env.GEMINI_MODEL || "gemini-3-flash-preview";
 
 function instrucciones(soloClasificar: boolean): string {
@@ -166,7 +168,7 @@ ${
 
 /** Pide la sugerencia a Gemini. Devuelve null si no hay llave o la IA no respondió algo utilizable. */
 async function consultarIA(e: EntradaSugerir): Promise<Sugerencia | null> {
-  const apiKey = process.env.GEMINI_API_KEY;
+  const apiKey = claveGemini();
   if (!apiKey) return null;
   const binario = !!e.archivoBase64 && !!e.mime;
   const muestra = e.muestra.slice(0, 15).map((f) => Object.fromEntries(Object.entries(f).map(([k, v]) => [k, String(v).slice(0, 80)])));

@@ -25,7 +25,10 @@
 //                                    resolverla.
 // POST /api/auth/me?subirArchivo=1&nombre=<nombreArchivo>
 //                                 -> sube un archivo (cualquier tipo/imagen)
-//                                    a Vercel Blob y devuelve { url, nombre }.
+//                                    a Vercel Blob y devuelve { url, nombre }. Por defecto va a un store
+//                                    PRIVADO (adjuntos de PQR); con &publico=1 (solo Trazabilidad) al público.
+// GET /api/auth/me?archivo=<url>  -> descarga un adjunto de PQR (privado) si eres su dueño, el destinatario
+//                                    o tienes acceso total.
 //                                    El cuerpo de la petición ES el archivo
 //                                    crudo (no JSON): el cliente hace
 //                                    fetch(..., { headers: { "Content-Type":
@@ -41,10 +44,11 @@
 
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import bcrypt from "bcryptjs";
-import { put } from "@vercel/blob";
+import { Readable } from "node:stream";
+import { get, put } from "@vercel/blob";
 import { sql } from "../_lib/db.js";
 import { cumple, permisosEfectivos, tieneAccesoTotal } from "../_lib/acceso.js";
-import { HttpError, leerEmpleadoIdDeSesion, manejarError, requireAuth } from "../_lib/auth.js";
+import { HttpError, leerEmpleadoIdDeSesion, manejarError, requireAuth, requireModulo } from "../_lib/auth.js";
 import { aplicarCors } from "../_lib/cors.js";
 import { mapEmpleadoRow, mapPqrRow, type EmpleadoRow, type PqrEstado, type PqrRow } from "../_lib/mappers.js";
 
@@ -223,17 +227,64 @@ async function actualizarEstadoPqr(req: VercelRequest, res: VercelResponse, pqrI
   return res.status(200).json({ ok: true, pqr: mapPqrRow(actualizadas[0]) });
 }
 
+// Los adjuntos de una PQR son datos de empleados (pueden traer soportes médicos, cédulas, etc.): van a un store
+// PRIVADO de Vercel Blob (BLOB_PRIVATE_READ_WRITE_TOKEN) y solo se leen a través de GET /api/auth/me?archivo=<url>,
+// que comprueba quién es el que pregunta. Las fotos y certificados de Trazabilidad (subirArchivo=1&publico=1) sí se
+// muestran en la página pública del lote y siguen en el store público (BLOB_READ_WRITE_TOKEN). Si falta el token
+// privado NO se cae al store público: se rechaza la subida.
 async function subirArchivo(req: VercelRequest, res: VercelResponse) {
-  const { empleadoId } = await requireAuth(req);
+  const publico = req.query.publico === "1";
+  const { empleadoId } = publico ? await requireModulo(req, "trazabilidad", "editar") : await requireAuth(req);
   const nombreParam = req.query.nombre;
   const nombreOriginal = (Array.isArray(nombreParam) ? nombreParam[0] : nombreParam) || "archivo";
-  if (!process.env.BLOB_READ_WRITE_TOKEN) {
-    throw new HttpError(500, "El almacenamiento de archivos no está configurado (falta BLOB_READ_WRITE_TOKEN).");
+  const token = publico ? process.env.BLOB_READ_WRITE_TOKEN : process.env.BLOB_PRIVATE_READ_WRITE_TOKEN;
+  if (!token) {
+    throw new HttpError(
+      500,
+      publico
+        ? "El almacenamiento de archivos no está configurado (falta BLOB_READ_WRITE_TOKEN)."
+        : "El almacenamiento privado de archivos no está configurado (falta BLOB_PRIVATE_READ_WRITE_TOKEN).",
+    );
   }
 
-  const rutaBlob = `pqr/${empleadoId}-${Date.now()}-${nombreOriginal}`;
-  const blob = await put(rutaBlob, req, { access: "public", contentType: req.headers["content-type"] || undefined });
+  const rutaBlob = `${publico ? "traz" : "pqr"}/${empleadoId}-${Date.now()}-${nombreOriginal}`;
+  const blob = await put(rutaBlob, req, {
+    access: publico ? "public" : "private",
+    token,
+    contentType: req.headers["content-type"] || undefined,
+  });
   return res.status(200).json({ ok: true, url: blob.url, nombre: nombreOriginal });
+}
+
+// GET /api/auth/me?archivo=<url> -> entrega un adjunto de PQR. Solo si la URL pertenece a una PQR y quien pregunta es
+// quien la radicó, el desarrollador destinatario o una cuenta con acceso total (@mercurymethods.com).
+async function descargarArchivoPqr(req: VercelRequest, res: VercelResponse) {
+  const { empleadoId } = await requireAuth(req);
+  const urlParam = req.query.archivo;
+  const url = Array.isArray(urlParam) ? urlParam[0] : urlParam;
+  if (!url) throw new HttpError(400, "Falta el archivo.");
+  const { rows } = await sql<PqrRow>`
+    select * from pqr where adjunto_url = ${url} or respuesta_adjunto_url = ${url} limit 1
+  `;
+  const pqr = rows[0];
+  if (!pqr) throw new HttpError(404, "Archivo no encontrado.");
+  const { rows: filasEmpleado } = await sql<EmpleadoRow>`select * from empleados where id = ${empleadoId} limit 1`;
+  const permitido =
+    pqr.empleado_id === empleadoId || pqr.admin_destino_id === empleadoId || tieneAccesoTotal(filasEmpleado[0]?.correo);
+  if (!permitido) throw new HttpError(403, "No tienes acceso a este archivo.");
+
+  const esAntiguoPublico = /\.public\.blob\.vercel-storage\.com\//.test(url);
+  if (esAntiguoPublico) return res.redirect(302, url); // adjuntos subidos antes del cambio, aún en el store público
+  const token = process.env.BLOB_PRIVATE_READ_WRITE_TOKEN;
+  if (!token) throw new HttpError(500, "El almacenamiento privado de archivos no está configurado.");
+  const resultado = await get(url, { access: "private", token });
+  if (!resultado || resultado.statusCode !== 200) throw new HttpError(404, "Archivo no encontrado.");
+  const nombre = (pqr.adjunto_url === url ? pqr.adjunto_nombre : pqr.respuesta_adjunto_nombre) ?? "adjunto";
+  res.setHeader("Content-Type", resultado.blob.contentType || "application/octet-stream");
+  res.setHeader("Content-Disposition", `inline; filename*=UTF-8''${encodeURIComponent(nombre)}`);
+  res.setHeader("Cache-Control", "private, no-store");
+  res.setHeader("X-Content-Type-Options", "nosniff");
+  Readable.fromWeb(resultado.stream as import("node:stream/web").ReadableStream).pipe(res);
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -243,6 +294,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       if (req.query.pqr === "destinos") return await listarDestinosPqr(req, res);
       if (req.query.pqr === "recibidas") return await listarPqrRecibidas(req, res);
       if (req.query.pqr === "mias") return await listarPqrPropias(req, res);
+      if (req.query.archivo) return await descargarArchivoPqr(req, res);
 
       const empleadoId = leerEmpleadoIdDeSesion(req);
       if (!empleadoId) {

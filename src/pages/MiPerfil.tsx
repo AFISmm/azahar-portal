@@ -11,6 +11,7 @@ import { useLanguage } from "../context/LanguageContext";
 import { PageHeader } from "../components/PageHeader";
 import { Card } from "../components/Card";
 import { Button, Field, Input, Select, Textarea } from "../components/ui";
+import { enlaceAdjuntoPqr } from "../lib/archivosPqr";
 
 const ESTADO_ESTILO: Record<Pqr["estado"], string> = {
   pendiente: "bg-status-pendiente-bg text-status-pendiente",
@@ -193,7 +194,7 @@ export default function MiPerfil() {
                       </p>
                       {p.adjuntoUrl && (
                         <a
-                          href={p.adjuntoUrl}
+                          href={enlaceAdjuntoPqr(p.adjuntoUrl)}
                           target="_blank"
                           rel="noreferrer"
                           className="mt-1.5 inline-flex items-center gap-1 text-xs font-semibold text-brand-800 hover:underline"
@@ -208,7 +209,7 @@ export default function MiPerfil() {
                           <p className="mt-1 text-sm text-[var(--text-secondary)]">{p.comentario}</p>
                           {p.respuestaAdjuntoUrl && (
                             <a
-                              href={p.respuestaAdjuntoUrl}
+                              href={enlaceAdjuntoPqr(p.respuestaAdjuntoUrl)}
                               target="_blank"
                               rel="noreferrer"
                               className="mt-1.5 inline-flex items-center gap-1 text-xs font-semibold text-status-aprobada hover:underline"

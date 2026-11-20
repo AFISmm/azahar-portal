@@ -149,7 +149,7 @@ export const trazabilidadApi = {
 
   /** Sube evidencia (foto/PDF) a Vercel Blob; reutiliza el endpoint de subida del portal. */
   async subirArchivo(archivo: File): Promise<string> {
-    const respuesta = await fetch(`/api/auth/me?subirArchivo=1&nombre=${encodeURIComponent(archivo.name)}`, {
+    const respuesta = await fetch(`/api/auth/me?subirArchivo=1&publico=1&nombre=${encodeURIComponent(archivo.name)}`, {
       method: "POST",
       credentials: "include",
       headers: { "Content-Type": archivo.type || "application/octet-stream" },

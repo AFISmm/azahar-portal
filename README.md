@@ -177,8 +177,9 @@ nueva basta aplicar los cinco `.sql` en ese orden y crear el primer admin
 (ver `db/schema.sql`, "Bootstrap").
 
 **Variables de entorno de producción:** `POSTGRES_URL`, `AUTH_SECRET`,
-`VITE_ENABLE_BACKEND=true`, `BLOB_READ_WRITE_TOKEN` (store **público**, lo usan
-las fotos y certificados), y opcionales `GEMINI_API_KEY`, `GOOGLE_CLIENT_ID` y
+`VITE_ENABLE_BACKEND=true`, `BLOB_READ_WRITE_TOKEN` (store **público**, solo las fotos y certificados
+de Trazabilidad que se ven en la página pública del lote), `BLOB_PRIVATE_READ_WRITE_TOKEN` (store **privado** de Vercel Blob:
+adjuntos de PQR, que solo se leen vía `/api/auth/me?archivo=`; sin este token la subida se rechaza), y opcionales `GEMINI_API_KEY` (solo se usa si además `GEMINI_PLAN_DE_PAGO=1`, es decir, plan de pago con contrato de tratamiento de datos; ver `api/_lib/gemini.ts`), `GOOGLE_CLIENT_ID` y
 `GOOGLE_CLIENT_SECRET`.
 
 ## Módulo Gestión Contable

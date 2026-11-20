@@ -19,6 +19,7 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { manejarError, requireAuth } from "./_lib/auth.js";
 import { responderLocal } from "./_lib/chatLocal.js";
+import { claveGemini } from "./_lib/gemini.js";
 
 const GEMINI_MODEL = process.env.GEMINI_MODEL || "gemini-3-flash-preview";
 
@@ -153,7 +154,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(405).json({ ok: false, mensaje: "Método no permitido. Usa POST." });
   }
 
-  const apiKey = process.env.GEMINI_API_KEY;
+  const apiKey = claveGemini();
 
   try {
     const { empleadoId } = await requireAuth(req);
@@ -166,7 +167,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const nombreAsistente = (body.nombreAsistente ?? "").replace(/[^\p{L}\p{N} _-]/gu, "").trim().slice(0, 20) || "JARVIS";
     const modoVoz = body.modoVoz === true;
 
-    // Sin GEMINI_API_KEY no se deja al asistente mudo: se responde con la guía básica de módulos (sin IA).
+    // Sin llave de Gemini de plan de pago (ver api/_lib/gemini.ts) no se deja al asistente mudo: se responde con la guía básica de módulos (sin IA).
     if (!apiKey) {
       return res.status(200).json({ ok: true, respuesta: responderLocal(mensaje, nombreAsistente), modo: "basico" });
     }

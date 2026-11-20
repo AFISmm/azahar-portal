@@ -1,6 +1,8 @@
 {
   "rewrites": [
     { "source": "/api/fincas", "destination": "/api/trazabilidad?r=gestion-fincas" },
+    { "source": "/api/auth/google", "destination": "/api/auth/login?r=google" },
+    { "source": "/api/auth/google/callback", "destination": "/api/auth/login?r=google-cb" },
     { "source": "/((?!api/).*)", "destination": "/index.html" }
   ],
   "headers": [

@@ -8,6 +8,7 @@ import { AppShell } from "./components/AppShell";
 
 import Login from "./pages/Login";
 import Registro from "./pages/Registro";
+import Verificar2FA from "./pages/Verificar2FA";
 import InicioMercado from "./pages/InicioMercado";
 import CadenaProduccion from "./pages/CadenaProduccion";
 import Inicio from "./pages/Inicio";
@@ -70,6 +71,7 @@ export default function App() {
             <Routes>
               <Route path="/login" element={<Login />} />
               <Route path="/registro" element={<Registro />} />
+              <Route path="/verificar-2fa" element={<Verificar2FA />} />
               {/* Ficha pública del QR de la bolsa: sin sesión. */}
               <Route path="/lote/:id" element={<LotePublico />} />
 

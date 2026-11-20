@@ -73,6 +73,8 @@ const GESTION_NEGOCIO: { to: string; claveLabel: ClaveTraduccion; Icon: typeof H
   { to: "/gestion-operativa", claveLabel: "sidebar.gestionOperativa", Icon: Sprout, modulo: "operativa" },
   { to: "/contable", claveLabel: "sidebar.gestionContable", Icon: Calculator, modulo: "contable" },
   { to: "/informacion-general", claveLabel: "sidebar.informacionGeneral", Icon: Info, modulo: "informacion" },
+  // Cotiza tu plan: antes vivía en el portal del equipo de Metis Nexa; solo lo ve quien administra usuarios.
+  { to: "/cotiza-tu-plan", claveLabel: "sidebar.cotizaPlan", Icon: Receipt, modulo: "usuarios" },
 ];
 
 // Trazabilidad y POS: cada ítem pide un nivel mínimo en su módulo ('ver' | 'editar'),

@@ -28,6 +28,7 @@ import AdminUsuarios from "./pages/admin/AdminUsuarios";
 import AdminNomina from "./pages/admin/AdminNomina";
 import GestionPqr from "./pages/admin/GestionPqr";
 import MiPerfil from "./pages/MiPerfil";
+import CotizaPlan from "./pages/CotizaPlan";
 
 import GestionEstrategica from "./pages/GestionEstrategica";
 import GestionComercial from "./pages/GestionComercial";
@@ -136,6 +137,8 @@ export default function App() {
                   {/* Gestión de usuarios (y PQR, que la atienden las cuentas de desarrollador o quien gestiona usuarios) */}
                   <Route element={<ModuloRoute modulos="usuarios" />}>
                     <Route path="/admin/usuarios" element={<AdminUsuarios />} />
+                    {/* Cotiza tu plan: la cotización llega a Metis Nexa como ticket de compra (solo administración). */}
+                    <Route path="/cotiza-tu-plan" element={<CotizaPlan />} />
                   </Route>
                   <Route path="/admin/pqr" element={<GestionPqr />} />
 

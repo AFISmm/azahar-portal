@@ -17,6 +17,7 @@ import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { sql } from "../_lib/db.js";
 import { cumple, permisosEfectivos } from "../_lib/acceso.js";
 import { HttpError, manejarError, requireAuth, requireModulo } from "../_lib/auth.js";
+import { cotizar } from "../_lib/cotizacion.js";
 import { mapSolicitudRow, type SolicitudEstado, type SolicitudRow, type SolicitudTipo } from "../_lib/mappers.js";
 
 interface EmpleadoRolRow {
@@ -94,6 +95,8 @@ async function resolver(req: VercelRequest, res: VercelResponse) {
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
     if (req.method === "GET") return await listar(req, res);
+    // «Cotiza tu plan» comparte esta función (el plan Hobby de Vercel limita a 12 funciones serverless).
+    if (req.method === "POST" && primerValor(req.query.r) === "cotizacion") return await cotizar(req, res);
     if (req.method === "POST") return await crear(req, res);
     if (req.method === "PATCH") return await resolver(req, res);
 

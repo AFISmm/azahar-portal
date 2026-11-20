@@ -18,6 +18,8 @@
 // ============================================================================
 
 import type { VercelRequest, VercelResponse } from "@vercel/node";
+import { timingSafeEqual } from "node:crypto";
+import { sql } from "./_lib/db.js";
 
 interface Indicador {
   id: string;
@@ -84,7 +86,38 @@ async function obtenerYahoo(simbolo: string, id: string, nombre: string, unidad:
   }
 }
 
-export default async function handler(_req: VercelRequest, res: VercelResponse) {
+/**
+ * GET /api/indicadores?r=salud — estado de las conexiones de este portal, para la Oficina Virtual del portal del
+ * equipo de Metis Nexa. Solo responde con la clave compartida (COTIZA_SHARED_SECRET); no expone ningún dato.
+ * Comparte esta función porque el plan Hobby de Vercel limita a 12 funciones serverless.
+ */
+async function salud(req: VercelRequest, res: VercelResponse) {
+  const secreto = process.env.COTIZA_SHARED_SECRET;
+  const dado = String(req.headers.authorization ?? "").replace(/^Bearers+/i, "");
+  const a = Buffer.from(dado);
+  const b = Buffer.from(secreto ?? "");
+  if (!secreto || secreto.length < 24 || a.length !== b.length || !timingSafeEqual(a, b)) {
+    return res.status(401).json({ ok: false, mensaje: "No autorizado." });
+  }
+  let db = false;
+  try {
+    await sql`select 1`;
+    db = true;
+  } catch {
+    db = false;
+  }
+  res.setHeader("Cache-Control", "no-store");
+  return res.status(200).json({
+    ok: true,
+    db,
+    // «configurado» = existe la clave; no se hace una llamada de pago para comprobarla
+    gemini: !!process.env.GEMINI_API_KEY,
+    blob: !!(process.env.BLOB_READ_WRITE_TOKEN || process.env.BLOB_PRIVATE_READ_WRITE_TOKEN),
+  });
+}
+
+export default async function handler(req: VercelRequest, res: VercelResponse) {
+  if (req.query.r === "salud") return salud(req, res);
   try {
     const [trm, wti, cafe, oro] = await Promise.all([
       obtenerTRM(),

@@ -48,6 +48,7 @@ import TrazLoteTostado from "./pages/trazabilidad/TrazLoteTostado";
 import TrazLoteEmpaque from "./pages/trazabilidad/TrazLoteEmpaque";
 import TrazLoteEmpaqueDetalle from "./pages/trazabilidad/TrazLoteEmpaqueDetalle";
 import TrazAuditoria from "./pages/trazabilidad/TrazAuditoria";
+import OficinaVirtual from "./pages/OficinaVirtual";
 import TrazDespachos from "./pages/trazabilidad/TrazDespachos";
 import ContableLayout from "./pages/contable/ContableLayout";
 import ContableInicio from "./pages/contable/ContableInicio";
@@ -154,6 +155,7 @@ export default function App() {
                     <Route path="/gestion-comercial" element={<GestionComercial />} />
                   </Route>
                   <Route element={<ModuloRoute modulos="operativa" />}>
+                    <Route path="/oficina-virtual" element={<OficinaVirtual />} />
                     <Route path="/gestion-operativa" element={<GestionOperativa />} />
                   </Route>
                   <Route element={<ModuloRoute modulos="informacion" />}>

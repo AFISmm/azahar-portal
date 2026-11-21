@@ -26,8 +26,6 @@ import {
   IdCard,
   MessageSquareWarning,
   Coffee,
-  ChefHat,
-  ShoppingCart,
   Flame,
   History,
   Package,
@@ -38,9 +36,10 @@ import {
   Boxes,
   BookOpen,
   Truck,
+  Building2,
+  ChevronDown,
 } from "lucide-react";
 import { useAcceso } from "../auth/acceso";
-import type { Modulo } from "../lib/types";
 import { useAuth } from "../auth/AuthContext";
 import { useLanguage } from "../context/LanguageContext";
 import { IS_DEMO_MODE } from "../lib/dataSource";
@@ -68,17 +67,17 @@ const ADMINISTRACION: { to: string; claveLabel: ClaveTraduccion; Icon: typeof Ho
   { to: "/admin/nomina", claveLabel: "sidebar.adminNomina", Icon: Receipt },
 ];
 
-const GESTION_NEGOCIO: { to: string; claveLabel: ClaveTraduccion; Icon: typeof Home; modulo: Modulo }[] = [
-  { to: "/gestion-estrategica", claveLabel: "sidebar.gestionEstrategica", Icon: Compass, modulo: "estrategica" },
-  { to: "/gestion-comercial", claveLabel: "sidebar.gestionComercial", Icon: Store, modulo: "comercial" },
-  { to: "/gestion-operativa", claveLabel: "sidebar.gestionOperativa", Icon: Sprout, modulo: "operativa" },
-  { to: "/contable", claveLabel: "sidebar.gestionContable", Icon: Calculator, modulo: "contable" },
-  { to: "/informacion-general", claveLabel: "sidebar.informacionGeneral", Icon: Info, modulo: "informacion" },
-  // Cotiza tu plan: antes vivía en el portal del equipo de Metis Nexa; solo lo ve quien administra usuarios.
-  { to: "/cotiza-tu-plan", claveLabel: "sidebar.cotizaPlan", Icon: Receipt, modulo: "usuarios" },
-];
+interface ItemMenu {
+  to: string;
+  claveLabel: ClaveTraduccion;
+  Icon: typeof Home;
+  visible: boolean;
+  /** Prefijos de ruta que mantienen abierto el grupo (además de `to`). */
+  prefijos?: string[];
+  hijos?: ItemMenu[];
+}
 
-// Trazabilidad y POS: cada ítem pide un nivel mínimo en su módulo ('ver' | 'editar'),
+// Trazabilidad: cada ítem pide un nivel mínimo en su módulo ('ver' | 'editar'),
 // que se asigna en Gestión de usuarios. La API valida lo mismo.
 const TRAZABILIDAD_ITEMS: { to: string; label: string; Icon: typeof Home; nivel: "ver" | "editar" }[] = [
   { to: "/trazabilidad", label: "Resumen", Icon: Home, nivel: "ver" },
@@ -90,12 +89,6 @@ const TRAZABILIDAD_ITEMS: { to: string; label: string; Icon: typeof Home; nivel:
   { to: "/trazabilidad/lote-empaque", label: "Empaque y QR", Icon: Package, nivel: "ver" },
   { to: "/trazabilidad/despachos", label: "Despachos en vivo", Icon: Truck, nivel: "ver" },
   { to: "/trazabilidad/auditoria", label: "Auditoría", Icon: History, nivel: "editar" },
-];
-
-const POS_ITEMS: { to: string; label: string; Icon: typeof Home; nivel: "ver" | "editar" }[] = [
-  { to: "/pos", label: "Caja", Icon: ShoppingCart, nivel: "editar" },
-  { to: "/pos/cocina", label: "Cocina", Icon: ChefHat, nivel: "ver" },
-  { to: "/pos/historial", label: "Historial", Icon: ClipboardList, nivel: "ver" },
 ];
 
 // Gestión Contable: todo el módulo es de consulta ('ver'); el cargue de archivos se procesa en el navegador.
@@ -139,10 +132,40 @@ export function Sidebar({ abierto = false, onCerrar, oculto = false, onOcultar }
   const acceso = useAcceso();
   const tieneTraz = acceso.ver("trazabilidad");
   const enTraz = location.pathname.startsWith("/trazabilidad");
-  const tienePos = acceso.ver("pos");
-  const enPos = location.pathname.startsWith("/pos");
   const enContable = location.pathname.startsWith("/contable");
-  const enNomina = !enTraz && !enPos && !enContable && !enPaginaIndependiente && (location.pathname.startsWith("/nomina") || location.pathname.startsWith("/admin"));
+  const esDesarrollador = empleado?.tipoCuenta === "desarrollador";
+  // Orden del menú principal. Trazabilidad cuelga de Gestión Comercial; Nómina, Gestión de usuarios, PQR y
+  // Cotiza tu plan cuelgan de Gestión Operativa. El Sistema POS ya no aparece en el menú.
+  const menu: ItemMenu[] = [
+    { to: "/gestion-estrategica", claveLabel: "sidebar.gestionEstrategica", Icon: Compass, visible: acceso.ver("estrategica") },
+    {
+      to: acceso.ver("comercial") ? "/gestion-comercial" : "/trazabilidad",
+      claveLabel: "sidebar.gestionComercial",
+      Icon: Store,
+      visible: acceso.ver("comercial") || tieneTraz,
+      prefijos: ["/gestion-comercial", "/trazabilidad"],
+      hijos: [{ to: "/trazabilidad", claveLabel: "sidebar.trazabilidad", Icon: Coffee, visible: tieneTraz }],
+    },
+    {
+      to: acceso.ver("operativa") ? "/gestion-operativa" : "/nomina/inicio",
+      claveLabel: "sidebar.gestionOperativa",
+      Icon: Sprout,
+      visible: true,
+      prefijos: ["/gestion-operativa", "/nomina", "/admin", "/cotiza-tu-plan"],
+      hijos: [
+        { to: "/nomina/inicio", claveLabel: "sidebar.nomina", Icon: Banknote, visible: true, prefijos: ["/nomina"] },
+        { to: "/admin/usuarios", claveLabel: "sidebar.gestionUsuarios", Icon: UserCog, visible: acceso.ver("usuarios") },
+        { to: "/admin/pqr", claveLabel: "sidebar.gestionPqr", Icon: MessageSquareWarning, visible: esDesarrollador },
+        { to: "/cotiza-tu-plan", claveLabel: "sidebar.cotizaPlan", Icon: Receipt, visible: acceso.ver("usuarios") },
+      ],
+    },
+    { to: "/contable", claveLabel: "sidebar.gestionContable", Icon: Calculator, visible: acceso.ver("contable") },
+    { to: "/oficina-virtual", claveLabel: "sidebar.oficinaVirtual", Icon: Building2, visible: true },
+    { to: "/informacion-general", claveLabel: "sidebar.informacionGeneral", Icon: Info, visible: acceso.ver("informacion") },
+  ];
+  const rutaActiva = (item: { to: string; prefijos?: string[] }) =>
+    [item.to, ...(item.prefijos ?? [])].some((pref) => location.pathname === pref || location.pathname.startsWith(`${pref}/`));
+  const enNomina = !enTraz && !enContable && !enPaginaIndependiente && (location.pathname.startsWith("/nomina") || location.pathname.startsWith("/admin"));
 
   return (
     <aside
@@ -203,28 +226,10 @@ export function Sidebar({ abierto = false, onCerrar, oculto = false, onOcultar }
               ))}
             </div>
           </div>
-        ) : enPos ? (
-          <div>
-            <button
-              onClick={() => navigate("/inicio")}
-              className="mb-2 flex w-full items-center gap-2 rounded-lg px-3 py-1.5 text-[13px] font-semibold text-cream-200/80 transition hover:bg-white/10 hover:text-cream-100"
-            >
-              <ChevronLeft className="h-4 w-4 shrink-0" strokeWidth={1.75} />
-              {t("sidebar.pos")}
-            </button>
-            <div className="space-y-0.5">
-              {POS_ITEMS.filter(({ nivel }) => (nivel === "editar" ? acceso.editar("pos") : acceso.ver("pos"))).map(({ to, label, Icon }) => (
-                <NavLink key={to} to={to} end className={({ isActive }) => itemClase(isActive)}>
-                  <Icon className="h-4 w-4 shrink-0" strokeWidth={1.75} />
-                  {label}
-                </NavLink>
-              ))}
-            </div>
-          </div>
         ) : enTraz ? (
           <div>
             <button
-              onClick={() => navigate("/inicio")}
+              onClick={() => navigate("/gestion-comercial")}
               className="mb-2 flex w-full items-center gap-2 rounded-lg px-3 py-1.5 text-[13px] font-semibold text-cream-200/80 transition hover:bg-white/10 hover:text-cream-100"
             >
               <ChevronLeft className="h-4 w-4 shrink-0" strokeWidth={1.75} />
@@ -242,7 +247,7 @@ export function Sidebar({ abierto = false, onCerrar, oculto = false, onOcultar }
         ) : enNomina ? (
           <div>
             <button
-              onClick={() => navigate("/inicio")}
+              onClick={() => navigate("/gestion-operativa")}
               className="mb-2 flex w-full items-center gap-2 rounded-lg px-3 py-1.5 text-[13px] font-semibold text-cream-200/80 transition hover:bg-white/10 hover:text-cream-100"
             >
               <ChevronLeft className="h-4 w-4 shrink-0" strokeWidth={1.75} />
@@ -283,44 +288,29 @@ export function Sidebar({ abierto = false, onCerrar, oculto = false, onOcultar }
               </NavLink>
             </div>
 
-            {GESTION_NEGOCIO.some((g) => acceso.ver(g.modulo)) && (
-              <div>
-                <p className="mb-1 px-3 text-[10px] font-bold uppercase tracking-wider text-cream-200/60">{t("sidebar.gestionNegocio")}</p>
-                <div className="space-y-0.5">
-                  {GESTION_NEGOCIO.filter((g) => acceso.ver(g.modulo)).map(({ to, claveLabel, Icon }) => (
-                    <NavLink key={to} to={to} className={({ isActive }) => itemClase(isActive)}>
-                      <Icon className="h-4 w-4 shrink-0" strokeWidth={1.75} />
-                      {t(claveLabel)}
-                    </NavLink>
-                  ))}
+            {menu.filter((item) => item.visible).map((item) => {
+              const hijos = (item.hijos ?? []).filter((h) => h.visible);
+              const abierto = hijos.length > 0 && rutaActiva(item);
+              return (
+                <div key={item.claveLabel} className="space-y-0.5">
+                  <NavLink to={item.to} className={() => itemClase(rutaActiva(item) && hijos.length === 0)}>
+                    <item.Icon className="h-4 w-4 shrink-0" strokeWidth={1.75} />
+                    <span className="flex-1">{t(item.claveLabel)}</span>
+                    {hijos.length > 0 && <ChevronDown className={`h-3.5 w-3.5 shrink-0 transition ${abierto ? "rotate-180" : ""}`} strokeWidth={1.75} />}
+                  </NavLink>
+                  {abierto && (
+                    <div className="ml-4 space-y-0.5 border-l border-white/15 pl-2">
+                      {hijos.map((h) => (
+                        <NavLink key={h.to} to={h.to} className={() => itemClase(rutaActiva(h))}>
+                          <h.Icon className="h-4 w-4 shrink-0" strokeWidth={1.75} />
+                          {t(h.claveLabel)}
+                        </NavLink>
+                      ))}
+                    </div>
+                  )}
                 </div>
-              </div>
-            )}
-
-            {tienePos && (
-              <div className="space-y-0.5">
-                <NavLink to={acceso.editar("pos") ? "/pos" : "/pos/cocina"} className={({ isActive }) => itemClase(isActive)}>
-                  <ShoppingCart className="h-4 w-4 shrink-0" strokeWidth={1.75} />
-                  {t("sidebar.pos")}
-                </NavLink>
-              </div>
-            )}
-
-            {tieneTraz && (
-              <div className="space-y-0.5">
-                <NavLink to="/trazabilidad" className={({ isActive }) => itemClase(isActive)}>
-                  <Coffee className="h-4 w-4 shrink-0" strokeWidth={1.75} />
-                  {t("sidebar.trazabilidad")}
-                </NavLink>
-              </div>
-            )}
-
-            <div className="space-y-0.5">
-              <NavLink to="/nomina/inicio" className={({ isActive }) => itemClase(isActive)}>
-                <Banknote className="h-4 w-4 shrink-0" strokeWidth={1.75} />
-                {t("sidebar.nomina")}
-              </NavLink>
-            </div>
+              );
+            })}
 
             <div className="space-y-0.5">
               <NavLink to="/mi-perfil" className={({ isActive }) => itemClase(isActive)}>
@@ -328,24 +318,6 @@ export function Sidebar({ abierto = false, onCerrar, oculto = false, onOcultar }
                 {t("sidebar.miPerfil")}
               </NavLink>
             </div>
-
-            {acceso.ver("usuarios") && (
-              <div className="space-y-0.5">
-                <NavLink to="/admin/usuarios" className={({ isActive }) => itemClase(isActive)}>
-                  <UserCog className="h-4 w-4 shrink-0" strokeWidth={1.75} />
-                  {t("sidebar.gestionUsuarios")}
-                </NavLink>
-              </div>
-            )}
-
-            {empleado?.tipoCuenta === "desarrollador" && (
-              <div className="space-y-0.5">
-                <NavLink to="/admin/pqr" className={({ isActive }) => itemClase(isActive)}>
-                  <MessageSquareWarning className="h-4 w-4 shrink-0" strokeWidth={1.75} />
-                  {t("sidebar.gestionPqr")}
-                </NavLink>
-              </div>
-            )}
           </>
         )}
       </nav>

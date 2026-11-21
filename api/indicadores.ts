@@ -20,6 +20,9 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { timingSafeEqual } from "node:crypto";
 import { sql } from "./_lib/db.js";
+import { HttpError, manejarError, requireAuth } from "./_lib/auth.js";
+import { claveGemini } from "./_lib/gemini.js";
+import { evaluar, sondearAlegra } from "./_lib/estadoConexiones.js";
 
 interface Indicador {
   id: string;
@@ -116,17 +119,52 @@ async function salud(req: VercelRequest, res: VercelResponse) {
   });
 }
 
+async function leerIndicadores(): Promise<Indicador[]> {
+  const [trm, wti, cafe, oro] = await Promise.all([
+    obtenerTRM(),
+    obtenerYahoo("CL=F", "wti", "Petróleo WTI", "US$/barril", "Mercado NYMEX (vía Yahoo Finance)"),
+    obtenerYahoo("KC=F", "cafe", "Café arábica (ICE, contrato KC)", "US¢/libra", "ICE Futures (vía Yahoo Finance)"),
+    obtenerYahoo("GC=F", "oro", "Oro", "US$/oz troy", "COMEX (vía Yahoo Finance)"),
+  ]);
+  return [trm, wti, cafe, oro].filter((i): i is Indicador => i !== null);
+}
+
+/**
+ * GET /api/indicadores?r=estado (también /api/azahar/estado) — estado en vivo de las conexiones, para el módulo
+ * «Oficina Virtual». Requiere sesión. No expone claves: solo si existen y si responden. Comparte función por el límite de 12.
+ */
+let cacheEstado: { at: number; conexiones: unknown } | null = null;
+async function estado(req: VercelRequest, res: VercelResponse) {
+  try {
+    await requireAuth(req);
+  } catch (err) {
+    if (err instanceof HttpError) return res.status(err.status).json({ ok: false, mensaje: err.message });
+    return manejarError(res, err);
+  }
+  if (!cacheEstado || Date.now() - cacheEstado.at > 20_000) {
+    const [indicadores, db, alegra] = await Promise.all([
+      leerIndicadores().then((l) => l.length, () => null),
+      sql`select 1`.then(() => true, () => false),
+      sondearAlegra(),
+    ]);
+    const conexiones = evaluar({
+      indicadores,
+      db,
+      gemini: { llave: !!process.env.GEMINI_API_KEY, planDePago: claveGemini() !== null },
+      blob: { publico: !!process.env.BLOB_READ_WRITE_TOKEN, privado: !!process.env.BLOB_PRIVATE_READ_WRITE_TOKEN },
+      alegra,
+    });
+    cacheEstado = { at: Date.now(), conexiones };
+  }
+  res.setHeader("Cache-Control", "no-store");
+  return res.status(200).json({ ok: true, at: new Date(cacheEstado.at).toISOString(), conexiones: cacheEstado.conexiones });
+}
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.query.r === "salud") return salud(req, res);
+  if (req.query.r === "estado") return estado(req, res);
   try {
-    const [trm, wti, cafe, oro] = await Promise.all([
-      obtenerTRM(),
-      obtenerYahoo("CL=F", "wti", "Petróleo WTI", "US$/barril", "Mercado NYMEX (vía Yahoo Finance)"),
-      obtenerYahoo("KC=F", "cafe", "Café arábica (ICE, contrato KC)", "US¢/libra", "ICE Futures (vía Yahoo Finance)"),
-      obtenerYahoo("GC=F", "oro", "Oro", "US$/oz troy", "COMEX (vía Yahoo Finance)"),
-    ]);
-
-    const indicadores = [trm, wti, cafe, oro].filter((i): i is Indicador => i !== null);
+    const indicadores = await leerIndicadores();
 
     res.setHeader("Cache-Control", "public, max-age=60, s-maxage=60, stale-while-revalidate=120");
     return res.status(200).json({ ok: true, actualizado: new Date().toISOString(), indicadores });

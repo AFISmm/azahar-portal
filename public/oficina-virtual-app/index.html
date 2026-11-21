@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="es" data-theme="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#0b0b0d" />
+    <title>Oficina Virtual · Metis Nexa Inc.</title>
+    <link rel="icon" type="image/png" href="./brand/logo-simple.png" />
+    <script type="module" crossorigin src="./assets/index-DHx-m7CS.js"></script>
+    <link rel="stylesheet" crossorigin href="./assets/index-4n4EKRz6.css">
+  </head>
+  <body>
+    <div id="app">
+      <header id="topbar">
+        <div class="brand">
+          <span class="logo-chip"><img src="./brand/logo-secundario.png" alt="Metis Nexa Inc." /></span>
+          <span class="brand-title">Oficina Virtual</span>
+        </div>
+        <div id="stats" class="stats-chips" aria-live="polite"></div>
+        <div class="top-actions">
+          <button class="btn gold" id="btn-board">Tablero</button>
+          <button class="btn" id="btn-cerebro">Mando</button>
+          <button class="btn" id="btn-ceo"><span class="long">Panel del CEO</span><span class="short">CEO</span></button>
+          <select class="btn lang" id="lang" aria-label="Idioma"><option value="es">Español</option><option value="en">English</option><option value="pt">Português</option></select>
+          <button class="btn" id="btn-team">Equipo</button>
+          <button class="btn ghost icon-btn menu-btn" id="btn-menu" title="Menú" aria-label="Menú">☰</button>
+          <button class="btn ghost icon-btn" id="btn-theme" title="Cambiar tema claro/oscuro" aria-label="Cambiar tema">◐</button>
+        </div>
+      </header>
+
+      <aside id="side">
+        <details id="cams" class="lst" open><summary>Salas y áreas</summary><nav id="cams-body" aria-label="Salas y áreas"></nav></details>
+        <div id="lists">
+          <div class="lists-actions">
+            <button class="btn gold small" data-list-act="asignar">+ Asignar tarea</button>
+            <button class="btn small" data-list-act="solicitud">+ Solicitud</button>
+          </div>
+          <details id="teams" class="lst"><summary>Equipos en trabajo</summary><div id="teams-body"></div></details>
+          <details id="free" class="lst"><summary>Agentes libres</summary><div id="free-body"></div></details>
+          <details id="recep" class="lst"><summary>Recepción</summary><div id="recep-body"></div></details>
+          <details id="skills" class="lst"><summary>SKILLS</summary><div id="skills-body"></div></details>
+        </div>
+      </aside>
+
+      <main id="stage">
+        <div id="labels"></div>
+        <div id="rot" aria-label="Girar la oficina">
+          <button data-rot="-1" title="Girar a la izquierda (Q)" aria-label="Girar a la izquierda">⟲</button>
+          <span id="rot-deg">0°</span>
+          <button data-rot="1" title="Girar a la derecha (E)" aria-label="Girar a la derecha">⟳</button>
+          <button data-tilt="1" title="Inclinar hacia arriba (R)" aria-label="Inclinar hacia arriba">▲</button>
+          <button data-tilt="-1" title="Inclinar hacia abajo (F)" aria-label="Inclinar hacia abajo">▼</button>
+        </div>
+        <div class="hint-bar">Arrastra con el clic izquierdo para girar 360° e inclinar · clic derecho o Mayús + arrastrar para mover · rueda para acercar · clic en un agente para ver su ficha</div>
+      </main>
+
+      <aside id="panel" aria-live="polite"></aside>
+      <div id="modal-root"></div>
+      <div id="toasts"></div>
+    </div>
+  </body>
+</html>

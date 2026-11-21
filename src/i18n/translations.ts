@@ -262,7 +262,7 @@ const es = {
 
   "inicioMercado.breadcrumb": "Portal Azahar",
   "inicioMercado.titulo": "Inicio",
-  "inicioMercado.descripcion": "Panorama de mercado y producción de café para Azahar Coffee Company: cifras globales, cadena de valor y precios de referencia.",
+  "inicioMercado.descripcion": "Resumen con los indicadores más importantes de cada módulo. Si un módulo aún no tiene datos, verás datos DEMO (marcados con la etiqueta DEMO).",
   "inicioMercado.cardBaseMundial": "Base de datos mundial del café",
   "inicioMercado.interanual": "interanual",
   "inicioMercado.cardValorBolsa": "Valor del café en bolsa",
@@ -953,7 +953,7 @@ const en: Record<keyof typeof es, string> = {
 
   "inicioMercado.breadcrumb": "Azahar Portal",
   "inicioMercado.titulo": "Home",
-  "inicioMercado.descripcion": "Coffee market and production overview for Azahar Coffee Company: global figures, value chain, and reference prices.",
+  "inicioMercado.descripcion": "Summary of the most important indicators from every module. If a module has no data yet, you will see DEMO data (marked with the DEMO tag).",
   "inicioMercado.cardBaseMundial": "Global coffee database",
   "inicioMercado.interanual": "year over year",
   "inicioMercado.cardValorBolsa": "Coffee market price",
@@ -1644,7 +1644,7 @@ const pt: Record<keyof typeof es, string> = {
 
   "inicioMercado.breadcrumb": "Portal Azahar",
   "inicioMercado.titulo": "Início",
-  "inicioMercado.descripcion": "Panorama de mercado e produção de café para a Azahar Coffee Company: números globais, cadeia de valor e preços de referência.",
+  "inicioMercado.descripcion": "Resumo dos indicadores mais importantes de cada módulo. Se um módulo ainda não tem dados, você verá dados DEMO (marcados com a etiqueta DEMO).",
   "inicioMercado.cardBaseMundial": "Base de dados mundial do café",
   "inicioMercado.interanual": "interanual",
   "inicioMercado.cardValorBolsa": "Valor do café na bolsa",
@@ -2335,7 +2335,7 @@ const fr: Record<keyof typeof es, string> = {
 
   "inicioMercado.breadcrumb": "Portail Azahar",
   "inicioMercado.titulo": "Accueil",
-  "inicioMercado.descripcion": "Aperçu du marché et de la production de café pour Azahar Coffee Company : chiffres mondiaux, chaîne de valeur et prix de référence.",
+  "inicioMercado.descripcion": "Résumé des indicateurs les plus importants de chaque module. Si un module n'a pas encore de données, vous verrez des données DEMO (marquées de l'étiquette DEMO).",
   "inicioMercado.cardBaseMundial": "Base de données mondiale du café",
   "inicioMercado.interanual": "sur un an",
   "inicioMercado.cardValorBolsa": "Cours du café en bourse",

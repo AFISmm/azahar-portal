@@ -8,6 +8,9 @@ import {
   WidgetBaseMundial, WidgetCadenaProduccion, WidgetProduccionAgricola, WidgetValorBolsa, WidgetVariacionIndustrial,
 } from "./widgetsMercado";
 import {
+  RContable, REquipo, REstrategica, RFincas, RIndicadores, RMiNomina, RPorAprobar, RPqr, RSolicitudes, RTiendas, RTrazabilidad,
+} from "./widgetsResumen";
+import {
   WidgetAccesosRapidos, WidgetCertificadosFincas, WidgetEquipo, WidgetIndicadores, WidgetMisSolicitudes, WidgetPorAprobar,
   WidgetProductoTop, WidgetProximoPago, WidgetReloj, WidgetSaludo, WidgetTiendas, WidgetTrazabilidad,
 } from "./widgetsPortal";
@@ -20,6 +23,8 @@ import {
 export type WidgetId =
   | "saludo" | "proximo-pago" | "mis-solicitudes" | "reloj" | "indicadores" | "accesos-rapidos"
   | "base-mundial" | "valor-bolsa" | "variacion-industrial" | "produccion-agricola" | "cadena-produccion"
+  // Resumen: lo más importante de cada módulo (con datos DEMO si aún no hay reales)
+  | "r-mi-nomina" | "r-solicitudes" | "r-por-aprobar" | "r-equipo" | "r-trazabilidad" | "r-tiendas" | "r-fincas" | "r-contable" | "r-estrategica" | "r-pqr" | "r-indicadores"
   | "por-aprobar" | "equipo" | "tiendas" | "certificados-fincas" | "producto-top" | "trazabilidad"
   // Gestión Contable (ver src/pages/contable/widgetsContable.tsx)
   | "c-comprobantes" | "c-terceros" | "c-catalogo" | "c-conciliacion" | "c-cobros" | "c-nomina" | "c-hitos" | "c-pendientes"
@@ -61,6 +66,22 @@ export const CATALOGO: WidgetDef[] = [
   { id: "producto-top", titulo: "Productos más vendidos", descripcion: "Ranking de productos (datos de ejemplo).", icono: ic(Trophy), tamanos: ["M", "L"], tamInicial: "M", modulo: "comercial", render: (t) => <WidgetProductoTop tam={t} /> },
   { id: "trazabilidad", titulo: "Trazabilidad del café", descripcion: "Fincas, lotes y últimos empaques con su ficha pública.", icono: ic(Coffee), tamanos: ["S", "M", "L"], tamInicial: "M", modulo: "trazabilidad", render: (t) => <WidgetTrazabilidad tam={t} /> },
 ];
+
+// Resumen del Inicio: indicadores principales de cada módulo (no hay de POS: decisión del producto).
+const RESUMEN: WidgetDef[] = [
+  { id: "r-mi-nomina", titulo: "Resumen · Mi nómina", descripcion: "Tu próximo pago y tus días de vacaciones (demo si no hay datos).", icono: ic(Banknote), tamanos: ["S", "M"], tamInicial: "M", render: (t) => <RMiNomina tam={t} /> },
+  { id: "r-solicitudes", titulo: "Resumen · Mis solicitudes", descripcion: "Pendientes, aprobadas y rechazadas (demo si no hay datos).", icono: ic(ClipboardList), tamanos: ["S", "M"], tamInicial: "S", render: (t) => <RSolicitudes tam={t} /> },
+  { id: "r-por-aprobar", titulo: "Resumen · Por aprobar", descripcion: "Solicitudes del equipo que esperan respuesta (demo si no hay datos).", icono: ic(FileCheck2), tamanos: ["S", "M"], tamInicial: "S", modulo: "rrhh", render: (t) => <RPorAprobar tam={t} /> },
+  { id: "r-equipo", titulo: "Resumen · Equipo", descripcion: "Personas, activas y áreas (demo si no hay datos).", icono: ic(Users), tamanos: ["S", "M"], tamInicial: "M", modulo: ["usuarios", "rrhh"], render: (t) => <REquipo tam={t} /> },
+  { id: "r-trazabilidad", titulo: "Resumen · Trazabilidad", descripcion: "Fincas y lotes verdes, tostados y empacados (demo si no hay datos).", icono: ic(Coffee), tamanos: ["S", "M"], tamInicial: "M", modulo: "trazabilidad", render: (t) => <RTrazabilidad tam={t} /> },
+  { id: "r-tiendas", titulo: "Resumen · Ventas por tienda", descripcion: "Ventas del mes y tiendas activas (demo si no hay datos).", icono: ic(Store), tamanos: ["M", "L", "XL"], tamInicial: "L", modulo: "comercial", render: (t) => <RTiendas tam={t} /> },
+  { id: "r-fincas", titulo: "Resumen · Certificados de fincas", descripcion: "Certificados, por vencer y vencidos (demo si no hay datos).", icono: ic(Award), tamanos: ["M"], tamInicial: "M", modulo: "operativa", render: () => <RFincas /> },
+  { id: "r-contable", titulo: "Resumen · Gestión contable", descripcion: "Conciliación, terceros y pagos de nómina por subir (demo si no hay datos).", icono: ic(Layers), tamanos: ["M"], tamInicial: "M", modulo: "contable", render: (t) => <RContable tam={t} /> },
+  { id: "r-estrategica", titulo: "Resumen · Gestión estratégica", descripcion: "Indicadores estratégicos (cifras de ejemplo: DEMO).", icono: ic(TrendingUp), tamanos: ["M"], tamInicial: "M", modulo: "estrategica", render: (t) => <REstrategica tam={t} /> },
+  { id: "r-pqr", titulo: "Resumen · PQR", descripcion: "Peticiones, quejas y reclamos pendientes y resueltos (demo si no hay datos).", icono: ic(ClipboardList), tamanos: ["S", "M"], tamInicial: "M", render: () => <RPqr /> },
+  { id: "r-indicadores", titulo: "Resumen · Indicadores económicos", descripcion: "TRM, café, petróleo y oro (demo si no hay conexión).", icono: ic(Gauge), tamanos: ["M", "W"], tamInicial: "W", render: (t) => <RIndicadores tam={t} /> },
+];
+CATALOGO.push(...RESUMEN);
 
 export const POR_ID: Record<string, WidgetDef> = Object.fromEntries(CATALOGO.map((w) => [w.id, w]));
 
@@ -112,20 +133,24 @@ export function dimsIniciales(tam: Tam): { w: number; h: number } {
   return { w: nc / 4 - SEP_X, h: nf * REM_FILA - 1 };
 }
 
-/** Disposición inicial: saludo + pago + solicitudes arriba y, debajo, los cinco widgets de mercado originales. */
+/** Disposición inicial: resumen con lo más importante de cada módulo (los widgets de mercado siguen disponibles en «Agregar»). */
 export const LAYOUT_POR_DEFECTO: ItemLibre[] = empaquetar([
   { id: "saludo", tam: "M" },
-  { id: "proximo-pago", tam: "S" },
-  { id: "mis-solicitudes", tam: "S" },
-  { id: "base-mundial", tam: "W" },
-  { id: "valor-bolsa", tam: "XL" },
-  { id: "variacion-industrial", tam: "L" },
-  { id: "produccion-agricola", tam: "L" },
-  { id: "cadena-produccion", tam: "W" },
+  { id: "r-mi-nomina", tam: "M" },
+  { id: "r-solicitudes", tam: "S" },
+  { id: "r-por-aprobar", tam: "S" },
+  { id: "r-equipo", tam: "M" },
+  { id: "r-indicadores", tam: "W" },
+  { id: "r-tiendas", tam: "L" },
+  { id: "r-trazabilidad", tam: "M" },
+  { id: "r-contable", tam: "M" },
+  { id: "r-estrategica", tam: "M" },
+  { id: "r-fincas", tam: "M" },
+  { id: "r-pqr", tam: "M" },
 ]);
 
 const claveV1 = (usuarioId: string) => `azahar-inicio-widgets-v1:${usuarioId}`;
-const clave = (usuarioId: string) => `azahar-inicio-widgets-v2:${usuarioId}`;
+const clave = (usuarioId: string) => `azahar-inicio-widgets-v3:${usuarioId}`;
 
 function limpiarLibre(lista: unknown, porId: Record<string, WidgetDef> = POR_ID): ItemLibre[] | null {
   if (!Array.isArray(lista)) return null;

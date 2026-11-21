@@ -1,7 +1,6 @@
 import { CalendarDays } from "lucide-react";
 import { useLanguage } from "../context/LanguageContext";
 import { TableroWidgets } from "./inicio/TableroWidgets";
-import { BandaKpi } from "./inicio/BandaKpi";
 
 // Inicio: tablero de widgets personalizable (mover, cambiar tamaño, agregar y quitar).
 // Los widgets y su catálogo viven en src/pages/inicio/. Encabezado y tarjetas de vidrio, como el dashboard de referencia.
@@ -22,7 +21,6 @@ export default function InicioMercado() {
           {hoy}
         </span>
       </div>
-      <BandaKpi />
       <TableroWidgets />
     </div>
   );

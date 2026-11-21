@@ -22,7 +22,7 @@ import { timingSafeEqual } from "node:crypto";
 import { sql } from "./_lib/db.js";
 import { HttpError, manejarError, requireAuth } from "./_lib/auth.js";
 import { claveGemini } from "./_lib/gemini.js";
-import { evaluar, sondearAlegra } from "./_lib/estadoConexiones.js";
+import { evaluar, motivoSeguro, sondearAlegra } from "./_lib/estadoConexiones.js";
 
 interface Indicador {
   id: string;
@@ -142,22 +142,25 @@ async function estado(req: VercelRequest, res: VercelResponse) {
     return manejarError(res, err);
   }
   if (!cacheEstado || Date.now() - cacheEstado.at > 20_000) {
-    const [indicadores, db, alegra] = await Promise.all([
+    const [indicadores, dbRes, alegra] = await Promise.all([
       leerIndicadores().then((l) => l.length, () => null),
-      sql`select 1`.then(() => true, () => false),
+      sql`select 1`.then(() => ({ ok: true as const }), (e: unknown) => ({ ok: false as const, error: motivoSeguro(e) })),
       sondearAlegra(),
     ]);
     const conexiones = evaluar({
       indicadores,
-      db,
+      db: dbRes.ok,
+      dbError: dbRes.ok ? undefined : dbRes.error,
       gemini: { llave: !!process.env.GEMINI_API_KEY, planDePago: claveGemini() !== null },
       blob: { publico: !!process.env.BLOB_READ_WRITE_TOKEN, privado: !!process.env.BLOB_PRIVATE_READ_WRITE_TOKEN },
-      alegra,
+      alegra: alegra.estado,
+      alegraError: alegra.error,
     });
     cacheEstado = { at: Date.now(), conexiones };
   }
   res.setHeader("Cache-Control", "no-store");
-  return res.status(200).json({ ok: true, at: new Date(cacheEstado.at).toISOString(), conexiones: cacheEstado.conexiones });
+  // sinVerificacion: este portal no ofrece confirmar conexiones a mano (la oficina oculta el botón «Verificar»)
+  return res.status(200).json({ ok: true, sinVerificacion: true, at: new Date(cacheEstado.at).toISOString(), conexiones: cacheEstado.conexiones });
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {

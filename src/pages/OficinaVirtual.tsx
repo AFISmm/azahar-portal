@@ -25,7 +25,7 @@ export default function OficinaVirtual() {
           title="Oficina Virtual de Azahar Coffee"
           src={`/oficina-virtual-app/index.html?empresa=azahar&tema=${theme === "dark" ? "oscuro" : "claro"}`}
           onLoad={() => setCargada(true)}
-          className="h-[calc(100vh-15rem)] min-h-[28rem] w-full border-0 bg-transparent"
+          className="h-[calc(100dvh-11rem)] min-h-[34rem] w-full border-0 bg-transparent md:h-[calc(100vh-15rem)] md:min-h-[28rem]"
           allow="fullscreen"
         />
       </div>

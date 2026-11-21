@@ -22,10 +22,12 @@ interface WidgetShellProps {
   icono: ReactNode;
   children: ReactNode;
   onClick?: () => void;
+  /** Los datos que muestra son de demostración (no hay datos reales todavía). */
+  demo?: boolean;
 }
 
 /** Marco común de todos los widgets: tarjeta con título que ocupa toda la celda de la cuadrícula. */
-export function WidgetShell({ titulo, icono, children, onClick }: WidgetShellProps) {
+export function WidgetShell({ titulo, icono, children, onClick, demo }: WidgetShellProps) {
   return (
     <div
       onClick={onClick}
@@ -48,6 +50,11 @@ export function WidgetShell({ titulo, icono, children, onClick }: WidgetShellPro
       <h3 className="mb-2 flex shrink-0 items-center gap-2 font-heading text-[11px] font-semibold uppercase tracking-wide text-[var(--text-secondary)]">
         <span className="shrink-0">{icono}</span>
         <span className="truncate">{titulo}</span>
+        {demo && (
+          <span title="Aún no hay datos reales: se muestran datos de demostración" className="ml-auto shrink-0 rounded-full bg-accent-500/15 px-2 py-0.5 text-[9px] font-bold tracking-wider text-accent-500">
+            DEMO
+          </span>
+        )}
       </h3>
       <div className="min-h-0 flex-1">{children}</div>
     </div>

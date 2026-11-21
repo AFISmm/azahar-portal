@@ -150,7 +150,7 @@ async function estado(req: VercelRequest, res: VercelResponse) {
     const conexiones = evaluar({
       indicadores,
       db: dbRes.ok,
-      dbError: dbRes.ok ? undefined : dbRes.error,
+      dbError: "error" in dbRes ? dbRes.error : undefined,
       gemini: { llave: !!process.env.GEMINI_API_KEY, planDePago: claveGemini() !== null },
       blob: { publico: !!process.env.BLOB_READ_WRITE_TOKEN, privado: !!process.env.BLOB_PRIVATE_READ_WRITE_TOKEN },
       alegra: alegra.estado,

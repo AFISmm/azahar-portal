@@ -6,7 +6,7 @@
 
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 
-const ORIGENES_PERMITIDOS = ["https://mercury-methods.vercel.app", "https://mi-landingpage-six.vercel.app"];
+const ORIGENES_PERMITIDOS = ["https://metisnexa-inc.vercel.app", "https://mercury-methods.vercel.app", "https://mi-landingpage-six.vercel.app"];
 
 /** Aplica las cabeceras CORS si el origen de la petición está en la lista blanca. Devuelve true si se manejó un preflight OPTIONS (ya respondido). */
 export function aplicarCors(req: VercelRequest, res: VercelResponse): boolean {

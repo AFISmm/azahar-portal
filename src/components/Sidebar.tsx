@@ -197,7 +197,7 @@ export function Sidebar({ abierto = false, onCerrar, oculto = false, onOcultar }
           <PanelLeftClose className="h-4 w-4" strokeWidth={1.75} />
         </button>
         <a
-          href="https://mercury-methods.vercel.app/"
+          href="https://metisnexa-inc.vercel.app/"
           rel="noreferrer"
           aria-label="Volver al sitio de Metis Intel"
           className="flex items-center justify-center rounded-xl bg-white px-3 py-1.5 ring-1 ring-white/20"
